@@ -85,6 +85,10 @@ npm run preview
 
 All processing is done locally in your browser. No server backend is used for report generation, and no data is sent to external servers.
 
+## TODO
+
+- **GitHub Pages Deployment**: Fix the 404 error at https://rocketmobster.github.io/warpcorereports/ - GitHub Pages is not correctly serving the deployed site. Need to troubleshoot deployment configuration in next session.
+
 ---
 
 "Live long and prosper! 🖖"
