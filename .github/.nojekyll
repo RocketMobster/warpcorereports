@@ -1,0 +1,2 @@
+# This file ensures GitHub recognizes this repository as a GitHub Pages site
+# The actual content is built and deployed to the gh-pages branch via GitHub Actions
