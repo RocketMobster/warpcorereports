@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: dark; }
+body { @apply bg-[#0b0d16] text-slate-100; }
+
+/* --- LCARS helpers --- */
+.lcars-card { @apply rounded-2xl p-0 border border-slate-700 bg-[#101425] overflow-hidden relative; }
+.lcars-rail { position:absolute; left:0; top:0; bottom:0; width:10px; background:#ff9966; }
+.lcars-rail-alt { background:#66ccff; }
+.lcars-rail-accent { background:#ff6699; }
+.lcars-body { @apply pl-4 md:pl-6 pr-4 py-4; margin-left:10px; }
+.lcars-label { @apply block text-xs uppercase tracking-widest text-slate-400 mb-1; }
+.lcars-small { @apply text-xs text-slate-300; }
+.lcars-input { @apply bg-slate-900 rounded-md px-3 py-2 text-sm border border-slate-700; }
+.lcars-btn { @apply px-2 py-1 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm; }
+.lcars-btn-locked { @apply bg-amber-600 hover:bg-amber-500; }
+.lcars-cta { @apply bg-amber-500 hover:bg-amber-400 text-black font-semibold px-3 py-2 rounded-xl; }

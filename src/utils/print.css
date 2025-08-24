@@ -1,0 +1,120 @@
+/* Print-specific styles for the Starfleet Engineering Report */
+
+@media print {
+  /* Hide unnecessary elements when printing */
+  body * {
+    visibility: hidden;
+  }
+  
+  /* Only show the report content */
+  #printable-report, #printable-report * {
+    visibility: visible;
+  }
+  
+  /* Position the report at the top of the page */
+  #printable-report {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background-color: white !important;
+    color: black !important;
+    padding: 15px;
+  }
+  
+  /* Basic styling for the report content */
+  #printable-report .rounded-2xl {
+    border: none !important;
+    box-shadow: none !important;
+  }
+  
+  #printable-report .px-6,
+  #printable-report .p-6,
+  #printable-report .py-4 {
+    padding: 0 !important;
+  }
+  
+  /* Override space-y utility */
+  #printable-report .space-y-6 > * + * {
+    margin-top: 0.5rem !important;
+  }
+  
+  /* Header styling */
+  #printable-report .bg-\[\#12182c\] {
+    background-color: white !important;
+    border-bottom: 1px solid #ccc !important;
+    color: black !important;
+    padding-bottom: 10px !important;
+    margin-bottom: 10px !important;
+  }
+  
+  /* Background color overrides */
+  #printable-report .bg-\[\#0f1426\] {
+    background-color: white !important;
+  }
+  
+  /* Text color overrides */
+  #printable-report .text-slate-400,
+  #printable-report .text-slate-200,
+  #printable-report .text-amber-400,
+  #printable-report .text-amber-300 {
+    color: black !important;
+  }
+  
+  /* Section styling */
+  #printable-report section {
+    margin-bottom: 10px !important;
+    page-break-inside: avoid;
+  }
+  
+  /* Figure container */
+  #printable-report .grid {
+    display: block !important;
+  }
+  
+  /* Figure styling */
+  #printable-report .figure-container {
+    page-break-inside: avoid;
+    margin-bottom: 15px !important;
+  }
+  
+  /* Charts */
+  #printable-report svg {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+  
+  /* Font sizes */
+  #printable-report h3 {
+    font-size: 18px !important;
+    margin-top: 10px !important;
+    margin-bottom: 5px !important;
+  }
+  
+  #printable-report h4 {
+    font-size: 16px !important;
+    margin-top: 10px !important;
+    margin-bottom: 5px !important;
+  }
+  
+  #printable-report p {
+    font-size: 12px !important;
+    line-height: 1.5 !important;
+  }
+  
+  /* Lists */
+  #printable-report ul,
+  #printable-report ol {
+    margin-left: 20px !important;
+  }
+  
+  #printable-report li {
+    font-size: 12px !important;
+    line-height: 1.5 !important;
+  }
+  
+  /* Remove the page break that was causing the issue */
+  /* #printable-report section:nth-of-type(1) {
+    page-break-before: always;
+  } */
+}
