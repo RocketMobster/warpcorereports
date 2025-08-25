@@ -36,7 +36,7 @@
   
   /* Override space-y utility */
   #printable-report .space-y-6 > * + * {
-    margin-top: 0.5rem !important;
+    margin-top: 0.75rem !important; /* Reduced from default */
   }
   
   /* Header styling */
@@ -63,7 +63,8 @@
   
   /* Section styling */
   #printable-report section {
-    margin-bottom: 10px !important;
+    margin-top: 0 !important;
+    margin-bottom: 0.75rem !important;
     page-break-inside: avoid;
   }
   
@@ -100,6 +101,11 @@
   #printable-report p {
     font-size: 12px !important;
     line-height: 1.5 !important;
+  }
+  
+  /* Special handling for the abstract section to prevent large gap */
+  #printable-report section:first-of-type {
+    margin-bottom: 0.5rem !important;
   }
   
   /* Lists */
