@@ -45,22 +45,24 @@ export default function App() {
         console.log("Decoded shared report info:", reportInfo);
         
         // Generate a consistent seed from the reportId to ensure the same report is generated
-        const seedFromReportId = reportInfo.originalSeed || reportId;
+        const seedFromReportId = reportInfo.originalSeed || reportInfo.seed || reportId;
         
         // Generate a report based on the decoded information
         const cfg: GeneratorConfig = {
           problemsCount: reportInfo.problemCount || 3,
           graphsEnabled: true,
-          graphsCount: 3,
+          graphsCount: reportInfo.graphsCount || 3,
           signatoryName: reportInfo.preparedBy || "Shared Report Viewer",
-          signatoryRank: "Lieutenant",
+          signatoryRank: reportInfo.signatoryRank || "Lieutenant",
           vessel: reportInfo.vessel || "USS Enterprise",
           stardate: reportInfo.stardate,
-          problemDetailLevel: 3,
+          problemDetailLevel: reportInfo.problemDetailLevel || 3,
           humorLevel: reportInfo.humorLevel || 5,
           figureBias: reportInfo.figureBias || "auto",
           seed: seedFromReportId // Use the original seed if available, otherwise use the reportId
         };
+        
+        console.log("Generating shared report with config:", cfg);
         
         // Generate a report with these parameters
         handleGenerate(cfg);

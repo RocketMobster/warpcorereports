@@ -41,7 +41,13 @@ export const generateShareableLink = async (report: Report, format?: "pdf" | "do
     problemCount: report.problems.length,
     originalSeed: report.originalSeed || "", // Store the original seed if available
     humorLevel: report.humorLevel || 5,
-    figureBias: report.figureBias || "auto"
+    figureBias: report.figureBias || "auto",
+    // Store the signatoryRank separately for better regeneration
+    signatoryRank: report.header.preparedBy.rank,
+    // Store more details for better reproducibility
+    graphsCount: report.figures?.length || 3,
+    problemDetailLevel: 3, // Default if not available
+    seed: report.originalSeed || "" // Another place to store the seed
   };
   
   // Serialize and encode the data
@@ -129,50 +135,9 @@ IMPORTANT: You must manually attach this file to this email before sending.
   try {
     console.log("Opening email client with mailto link:", mailtoLink);
     
-    // Create a plain visible anchor element for better compatibility
-    const mailAnchor = document.createElement('a');
-    mailAnchor.setAttribute('href', mailtoLink);
-    mailAnchor.setAttribute('target', '_blank');
-    mailAnchor.style.display = 'block';
-    mailAnchor.style.position = 'absolute';
-    mailAnchor.style.top = '-9999px';
-    mailAnchor.style.left = '-9999px';
-    mailAnchor.innerText = 'Open email client';
-    
-    document.body.appendChild(mailAnchor);
-    
-    // User needs to click this for email client to work properly in modern browsers
-    const userNotice = document.createElement('div');
-    userNotice.style.position = 'fixed';
-    userNotice.style.top = '20px';
-    userNotice.style.left = '50%';
-    userNotice.style.transform = 'translateX(-50%)';
-    userNotice.style.backgroundColor = '#ffc107';
-    userNotice.style.color = 'black';
-    userNotice.style.padding = '15px 20px';
-    userNotice.style.borderRadius = '5px';
-    userNotice.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
-    userNotice.style.zIndex = '9999';
-    userNotice.style.textAlign = 'center';
-    userNotice.innerText = 'Click here to open your email client';
-    userNotice.style.cursor = 'pointer';
-    
-    // When user clicks notice, trigger the email link
-    userNotice.onclick = () => {
-      mailAnchor.click();
-      setTimeout(() => {
-        document.body.removeChild(userNotice);
-      }, 500);
-    };
-    
-    document.body.appendChild(userNotice);
-    
-    // Auto-remove notice after 10 seconds
-    setTimeout(() => {
-      if (document.body.contains(userNotice)) {
-        document.body.removeChild(userNotice);
-      }
-    }, 10000);
+    // Email click message is now handled in the ShareDialog component directly
+    // We'll provide a direct URL opening method here
+    window.location.href = mailtoLink;
     
     return true;
   } catch (error) {

@@ -56,6 +56,7 @@ export interface Report {
   humorLevel?: number;
   figureBias?: FigureBias;
   originalSeed?: string; // Add original seed to enable recreation of the same report
+  problemDetailLevel?: number; // Store the problem detail level for recreation
 }
 
 export type FigureType = "line" | "bar" | "scatter" | "gauge" | "pie" | "area" | "radar" | "heatmap" | "step" | "boxplot";

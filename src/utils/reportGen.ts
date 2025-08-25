@@ -288,9 +288,16 @@ export function generateReport(cfg: GeneratorConfig & { crewManifest?: CrewMembe
   // Track used humorous details to avoid repeats
   const usedBalancedDetails = new Set<string>();
   const usedAbsurdDetails = new Set<string>();
-  const seedNum = seedFromConfig(cfg.seed, cfg.signatoryName || cfg.stardate);
+  
+  // Ensure we have a valid seed
+  const seedValue = cfg.seed || (cfg.signatoryName ? cfg.signatoryName + (cfg.stardate || "") : Date.now().toString());
+  const seedNum = seedFromConfig(seedValue, cfg.signatoryName || cfg.stardate);
   const rnd = xorshift32(seedNum);
   const humor = cfg.humorLevel ?? 0;
+  
+  // Store the original seed for reproducibility
+  const originalSeed = seedValue?.toString();
+  
   // Use provided crew manifest if available
   // Crew manifest: random size if not provided
   const crewManifest = cfg.crewManifest && cfg.crewManifest.length ? [...cfg.crewManifest] : generateCrewManifest(typeof cfg.crewCount === 'number' ? cfg.crewCount : undefined, cfg.seed);
@@ -645,7 +652,9 @@ export function generateReport(cfg: GeneratorConfig & { crewManifest?: CrewMembe
     figures,
     crewManifest,
     humorLevel: humor,
-    originalSeed: cfg.seed?.toString() // Store the original seed for sharing purposes
+    figureBias: cfg.figureBias || "auto",
+    originalSeed: originalSeed, // Use our enhanced seed tracking
+    problemDetailLevel: cfg.problemDetailLevel || 3
   };
   return report;
 }

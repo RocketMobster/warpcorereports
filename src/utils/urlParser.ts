@@ -44,13 +44,22 @@ export const decodeSharedReportId = (reportId: string): any | null => {
       const jsonData = JSON.parse(decoded);
       return jsonData;
     } catch (jsonError) {
+      console.warn("Failed to parse as JSON, falling back to legacy format", jsonError);
+      
       // Fall back to the old format (hyphen-separated string)
       const parts = decoded.split('-');
       
       if (parts.length >= 2) {
-        const result: { title: string, stardate: string, vessel?: string } = {
+        const result: { 
+          title: string, 
+          stardate: string, 
+          vessel?: string,
+          originalSeed?: string // Add seed to legacy format too
+        } = {
           title: parts[0],
-          stardate: parts[1]
+          stardate: parts[1],
+          // Store the reportId as the seed to ensure consistent regeneration
+          originalSeed: reportId
         };
         
         // Extract vessel if available (parts[2])
