@@ -83,20 +83,20 @@ STARFLEET ENGINEERING REPORT
 Title: ${report.header.title}
 Stardate: ${report.header.stardate}
 Vessel: ${report.header.vessel}
-Prepared By: ${report.header.preparedBy.rank} ${report.header.preparedBy.name}, ${report.header.preparedBy.division}
-Submitted To: ${report.header.submittedTo}
+Prepared By: ${report.header.preparedBy.rank} ${report.header.preparedBy.name}
 
 ABSTRACT
 --------
-${report.abstract}
+${report.abstract.slice(0, 500)}${report.abstract.length > 500 ? '...' : ''}
 
 PROBLEMS SUMMARY
 ---------------
-${report.problems.map((p, i) => `${i+1}. ${p.title}`).join('\\n')}
+${report.problems.slice(0, 5).map((p, i) => `${i+1}. ${p.title}`).join('\\n')}
+${report.problems.length > 5 ? `...(${report.problems.length - 5} more problems)` : ''}
 
 CONCLUSION
 ---------
-${report.conclusion}
+${report.conclusion.slice(0, 300)}${report.conclusion.length > 300 ? '...' : ''}
 
 `;
 
@@ -125,26 +125,19 @@ IMPORTANT: You must manually attach this file to this email before sending.
   const mailtoLink = `mailto:${emailAddress}?subject=${encodedSubject}&body=${encodedBody}`;
   
   try {
-    // Create a temporary anchor element to bypass potential security restrictions
-    const tempLink = document.createElement('a');
-    tempLink.href = mailtoLink;
-    tempLink.style.display = 'none';
-    document.body.appendChild(tempLink);
+    console.log("Opening email client with mailto link:", mailtoLink);
     
-    // Try to open the email client
-    tempLink.click();
+    // Use window.open instead of hidden anchor to ensure the browser prioritizes the action
+    const mailWindow = window.open(mailtoLink, '_blank');
     
-    // Clean up
-    setTimeout(() => {
-      document.body.removeChild(tempLink);
-    }, 100);
-    
-    // As a fallback, also try the traditional method
-    setTimeout(() => {
+    // If window.open returns null, the popup was likely blocked
+    if (!mailWindow) {
+      console.warn("Email popup may have been blocked. Trying fallback method...");
+      
+      // Try the direct location change as a fallback
       window.location.href = mailtoLink;
-    }, 200);
+    }
     
-    // Return true to indicate that we tried to open the email client
     return true;
   } catch (error) {
     console.error("Error opening email client:", error);
@@ -180,6 +173,11 @@ export const shareReport = async (report: Report, options: ShareOptions): Promis
         options.emailSubject,
         options.includeFormat
       );
+      
+      // Alert the user if the email client couldn't be opened
+      if (!emailSuccess) {
+        alert("Unable to open your email client automatically. You may need to check your browser settings or manually open your email application.");
+      }
       
       // Return whether the email client was opened successfully
       return emailSuccess;
