@@ -57,7 +57,8 @@ export default function App() {
           vessel: reportInfo.vessel || "USS Enterprise",
           stardate: reportInfo.stardate,
           problemDetailLevel: 3,
-          humorLevel: 5,
+          humorLevel: reportInfo.humorLevel || 5,
+          figureBias: reportInfo.figureBias || "auto",
           seed: seedFromReportId // Use the original seed if available, otherwise use the reportId
         };
         

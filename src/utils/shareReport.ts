@@ -32,14 +32,16 @@ export const generateShareableLink = async (report: Report, format?: "pdf" | "do
   const basePath = isGitHubPages ? '/warpcorereports' : '';
   
   // Extract key data to recreate the report
-  // Include enough details to generate a similar report but not all data
+  // Include enough details to generate the exact same report
   const reportData = {
     title: report.header.title,
     stardate: report.header.stardate,
     vessel: report.header.vessel,
     preparedBy: `${report.header.preparedBy.rank} ${report.header.preparedBy.name}`,
     problemCount: report.problems.length,
-    originalSeed: report.originalSeed || "" // Store the original seed if available
+    originalSeed: report.originalSeed || "", // Store the original seed if available
+    humorLevel: report.humorLevel || 5,
+    figureBias: report.figureBias || "auto"
   };
   
   // Serialize and encode the data
@@ -127,16 +129,50 @@ IMPORTANT: You must manually attach this file to this email before sending.
   try {
     console.log("Opening email client with mailto link:", mailtoLink);
     
-    // Use window.open instead of hidden anchor to ensure the browser prioritizes the action
-    const mailWindow = window.open(mailtoLink, '_blank');
+    // Create a plain visible anchor element for better compatibility
+    const mailAnchor = document.createElement('a');
+    mailAnchor.setAttribute('href', mailtoLink);
+    mailAnchor.setAttribute('target', '_blank');
+    mailAnchor.style.display = 'block';
+    mailAnchor.style.position = 'absolute';
+    mailAnchor.style.top = '-9999px';
+    mailAnchor.style.left = '-9999px';
+    mailAnchor.innerText = 'Open email client';
     
-    // If window.open returns null, the popup was likely blocked
-    if (!mailWindow) {
-      console.warn("Email popup may have been blocked. Trying fallback method...");
-      
-      // Try the direct location change as a fallback
-      window.location.href = mailtoLink;
-    }
+    document.body.appendChild(mailAnchor);
+    
+    // User needs to click this for email client to work properly in modern browsers
+    const userNotice = document.createElement('div');
+    userNotice.style.position = 'fixed';
+    userNotice.style.top = '20px';
+    userNotice.style.left = '50%';
+    userNotice.style.transform = 'translateX(-50%)';
+    userNotice.style.backgroundColor = '#ffc107';
+    userNotice.style.color = 'black';
+    userNotice.style.padding = '15px 20px';
+    userNotice.style.borderRadius = '5px';
+    userNotice.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+    userNotice.style.zIndex = '9999';
+    userNotice.style.textAlign = 'center';
+    userNotice.innerText = 'Click here to open your email client';
+    userNotice.style.cursor = 'pointer';
+    
+    // When user clicks notice, trigger the email link
+    userNotice.onclick = () => {
+      mailAnchor.click();
+      setTimeout(() => {
+        document.body.removeChild(userNotice);
+      }, 500);
+    };
+    
+    document.body.appendChild(userNotice);
+    
+    // Auto-remove notice after 10 seconds
+    setTimeout(() => {
+      if (document.body.contains(userNotice)) {
+        document.body.removeChild(userNotice);
+      }
+    }, 10000);
     
     return true;
   } catch (error) {
