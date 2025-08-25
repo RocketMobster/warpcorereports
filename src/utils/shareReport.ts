@@ -23,8 +23,13 @@ export const generateShareableLink = async (report: Report, format?: "pdf" | "do
   // In a real application, this would make an API call to store the report
   // and return a unique URL that could be used to access it
   
-  // Encode detailed report information in the URL
+  // Get the base URL including any base path (important for GitHub Pages)
   const baseUrl = window.location.origin;
+  
+  // Detect if we're running on GitHub Pages by checking the hostname
+  const isGitHubPages = window.location.hostname.includes('github.io');
+  // Add the repository name as base path if on GitHub Pages
+  const basePath = isGitHubPages ? '/warpcorereports' : '';
   
   // Extract key data to recreate the report
   // Include enough details to generate a similar report but not all data
@@ -41,8 +46,8 @@ export const generateShareableLink = async (report: Report, format?: "pdf" | "do
   const reportDataStr = JSON.stringify(reportData);
   const reportId = btoa(reportDataStr).replace(/=/g, '');
   
-  // Create a shareable URL with the report ID
-  const shareUrl = `${baseUrl}/#/shared-report/${reportId}`;
+  // Create a shareable URL with the report ID, including the base path
+  const shareUrl = `${baseUrl}${basePath}/#/shared-report/${reportId}`;
   
   // If a specific format is requested, attach it to the URL
   const fullUrl = format ? `${shareUrl}?format=${format}` : shareUrl;
