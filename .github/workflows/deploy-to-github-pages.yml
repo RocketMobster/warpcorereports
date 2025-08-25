@@ -32,18 +32,13 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
+        
+      # We don't need to manually modify vite.config.ts since we've already
+      # set the base path conditionally in the file
       - name: Build
         run: npm run build
-        
-      # Adjust the base path in vite.config.ts dynamically
-      - name: Update base path in vite.config.ts
-        run: |
-          sed -i 's/defineConfig({/defineConfig({base: "\/warpcorereports\/",/g' vite.config.ts
-          cat vite.config.ts
-
-      - name: Build with correct base path
-        run: npm run build
+        env:
+          NODE_ENV: production
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
@@ -51,3 +46,10 @@ jobs:
           folder: dist
           branch: gh-pages
           clean: true
+          
+      # Create a .nojekyll file in the gh-pages branch to ensure GitHub Pages serves files correctly
+      - name: Create .nojekyll file
+        run: |
+          cd dist
+          touch .nojekyll
+        shell: bash
