@@ -24,6 +24,8 @@ export default function App() {
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [isSharedLink, setIsSharedLink] = useState(false);
   const [sharedLinkFormat, setSharedLinkFormat] = useState<"pdf" | "docx" | "txt" | undefined>(undefined);
+  // Chart editing state
+  const [chartEditingEnabled, setChartEditingEnabled] = useState(false);
 
   // Check if we're opening a shared report link
   useEffect(() => {
@@ -149,6 +151,17 @@ export default function App() {
     // Update the current crew count
     setCurrentCrewCount(crewCount);
     // Let the CrewManifestPanel handle the generation via its effect
+  };
+
+  // Handler for report updates from the chart editor
+  const handleReportUpdate = (updatedReport: Report) => {
+    setReport(updatedReport);
+    console.log("Report updated with modified charts");
+  };
+  
+  // Toggle chart editing mode
+  const toggleChartEditing = () => {
+    setChartEditingEnabled(prev => !prev);
   };
 
   const exportTxt = () => {
@@ -315,13 +328,17 @@ export default function App() {
     saveAs(blob, "engineering_report.docx");
   };
 
-  const printReport = () => {
+  const handlePrint = () => {
     if (!report) return;
     
     // We need to wait for all SVG charts to render properly
     setTimeout(() => {
       window.print();
     }, 500);
+  };
+  
+  const handleShare = () => {
+    setIsShareDialogOpen(true);
   };
 
   return (
@@ -357,21 +374,57 @@ export default function App() {
             onRegenerate={regenerateCrewManifest}
           />
         )}
-        <div className="flex gap-3 mb-6">
+        <div className="flex flex-wrap gap-3 mb-6">
           <button onClick={exportTxt} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700">Download TXT</button>
           <button onClick={exportPdf} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700">Download PDF</button>
           <button onClick={exportDocx} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700">Download DOCX</button>
-          <button onClick={printReport} className="px-3 py-2 rounded-xl bg-amber-600 text-black font-bold border border-amber-500">Print Report</button>
+          <button onClick={handlePrint} className="px-3 py-2 rounded-xl bg-amber-600 text-black font-bold border border-amber-500">Print Report</button>
           <button 
-            onClick={() => setIsShareDialogOpen(true)} 
+            onClick={handleShare} 
             className="px-3 py-2 rounded-xl bg-blue-600 text-white font-bold border border-blue-500"
             disabled={!report}
           >
             Share Report
           </button>
+          
+          {report && (
+            <button 
+              onClick={toggleChartEditing} 
+              className={`px-3 py-2 rounded-xl font-bold border ${
+                chartEditingEnabled 
+                  ? 'bg-purple-600 border-purple-500 text-white' 
+                  : 'bg-slate-800 border-slate-700 text-white'
+              }`}
+            >
+              {chartEditingEnabled ? 'Exit Chart Editing' : 'Edit Charts'}
+            </button>
+          )}
         </div>
         
-        {report ? <ReportPreview report={report} /> : <div>No report yet.</div>}
+        {report ? (
+          <>
+            <ReportPreview 
+              report={report} 
+              onReportUpdate={handleReportUpdate}
+              editEnabled={chartEditingEnabled} 
+            />
+            
+            {chartEditingEnabled && (
+              <div className="mt-4 p-3 bg-purple-900 text-white rounded-lg">
+                <div className="flex items-center gap-2 font-bold">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                    <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                  </svg>
+                  Chart Edit Mode Enabled
+                </div>
+                <p className="text-sm mt-1">Hover over any chart and click the edit icon to modify it. Your changes will be saved automatically.</p>
+              </div>
+            )}
+          </>
+        ) : (
+          <div>No report yet.</div>
+        )}
         
         {report && (
           <ShareDialog 
