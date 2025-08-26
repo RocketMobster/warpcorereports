@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import LCARSChart from "./LCARSChart";
 import ChartEditor from "./ChartEditor";
 import { Figure } from "../types";
@@ -14,6 +14,11 @@ export default function FigureView({ fig, onFigureUpdate, editEnabled = false }:
   const [currentFigure, setCurrentFigure] = useState<Figure>(fig);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const accent = LCARS.accents[(fig.index ?? 0) % LCARS.accents.length];
+  
+  // Update local state when the figure prop changes
+  useEffect(() => {
+    setCurrentFigure(fig);
+  }, [fig]);
 
   // Handle figure update from the editor
   const handleFigureUpdate = (updatedFigure: Figure) => {

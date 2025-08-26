@@ -121,9 +121,10 @@ export default function App() {
     
     console.log("Generated report with seed:", r.originalSeed);
     
-    setReport(r);
-    setConfig(configToUse);
-    setLastCfg(configToUse);
+    // Force a new report object to trigger updates
+    setReport({...r});
+    setConfig({...configToUse});
+    setLastCfg({...configToUse});
   };
 
   // Update both crew manifest and report when crew changes
@@ -169,7 +170,8 @@ export default function App() {
     // Clone the config and update the seed
     const newConfig = {
       ...config,
-      seed: newSeed
+      seed: newSeed,
+      stardate: (50000 + Math.random() * 9999).toFixed(1) // Also generate a new stardate
     };
     
     // Generate a new report with the updated config

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Report, Figure } from "../types";
 import FigureView from "./FigureView";
 
@@ -11,6 +11,12 @@ interface ReportPreviewProps {
 export default function ReportPreview({ report, onReportUpdate, editEnabled = false }: ReportPreviewProps) {
   // Create a local copy of the report to track changes
   const [currentReport, setCurrentReport] = useState<Report>(report);
+  
+  // Update local state when the report prop changes
+  useEffect(() => {
+    console.log("ReportPreview received new report with seed:", report.originalSeed);
+    setCurrentReport(report);
+  }, [report]);
 
   // Handle figure updates
   const handleFigureUpdate = (updatedFigure: Figure) => {
