@@ -97,14 +97,19 @@ export default function App() {
     // Always clone the config to avoid mutating the original
     const configToUse = { ...cfg };
     
-    // Preserve the seed if it's already defined to ensure consistent reports
+    // Ensure stardate is set if not already provided
+    if (!configToUse.stardate) {
+      configToUse.stardate = (50000 + Math.random() * 9999).toFixed(1);
+    }
+    
+    // Always respect explicitly provided seeds
     if (configToUse.seed) {
-      console.log("Using provided seed:", configToUse.seed);
+      console.log("Using explicitly provided seed:", configToUse.seed);
     } 
-    // Otherwise create a deterministic seed from signatory and stardate
+    // Otherwise create a deterministic seed
     else if (configToUse.signatoryName) {
       configToUse.seed = configToUse.signatoryName + (configToUse.stardate || "") + Date.now().toString();
-      console.log("Created new seed:", configToUse.seed);
+      console.log("Created new seed from signatory:", configToUse.seed);
     }
     
     // Generate the report with the enhanced config
@@ -151,6 +156,24 @@ export default function App() {
     // Update the current crew count
     setCurrentCrewCount(crewCount);
     // Let the CrewManifestPanel handle the generation via its effect
+  };
+
+  // Regenerate the entire report with a new seed
+  const regenerateReport = () => {
+    if (!config) return;
+    
+    // Create a new seed
+    const newSeed = Date.now().toString(36);
+    console.log("Regenerating report with new seed:", newSeed);
+    
+    // Clone the config and update the seed
+    const newConfig = {
+      ...config,
+      seed: newSeed
+    };
+    
+    // Generate a new report with the updated config
+    handleGenerate(newConfig);
   };
 
   // Handler for report updates from the chart editor
@@ -365,7 +388,7 @@ export default function App() {
           onGenerate={handleGenerate}
           onPreviewCrew={handlePreviewCrewToggle}
           manifestPanelOpen={manifestPanelOpen}
-          onRegenerate={regenerateCrewManifest}
+          onRegenerate={regenerateReport}
         />
         {manifestPanelOpen && (
           <CrewManifestPanel 
