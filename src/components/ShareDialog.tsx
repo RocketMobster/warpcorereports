@@ -38,31 +38,54 @@ export default function ShareDialog({ report, isOpen, onClose }: ShareDialogProp
         emailSubject: emailSubject
       };
       
-      const result = await shareReport(report, options);
+      // For email sharing, first generate and download the file if a format is selected
+      if (shareMethod === "email" && options.includeFormat) {
+        console.log(`Generating ${options.includeFormat} file for email sharing...`);
+        
+        try {
+          // Directly generate the file based on selected format
+          if (options.includeFormat === "pdf") {
+            await shareReport(report, { 
+              ...options, 
+              includeFormat: "pdf",
+              format: "email" // Force email format to ensure file generation
+            });
+          } else if (options.includeFormat === "docx") {
+            await shareReport(report, { 
+              ...options, 
+              includeFormat: "docx",
+              format: "email" // Force email format to ensure file generation
+            });
+          } else if (options.includeFormat === "txt") {
+            await shareReport(report, { 
+              ...options, 
+              includeFormat: "txt",
+              format: "email" // Force email format to ensure file generation
+            });
+          }
+          
+          console.log(`${options.includeFormat.toUpperCase()} file generated successfully`);
+          setShareComplete(true);
+          
+        } catch (fileError) {
+          console.error(`Error generating ${options.includeFormat} file:`, fileError);
+          setErrorMessage(`Error generating ${options.includeFormat.toUpperCase()} file. Please try again.`);
+        }
+      } else if (shareMethod === "link") {
+        // For link sharing, generate the URL
+        const result = await shareReport(report, options);
+        
+        if (typeof result === "string") {
+          setShareLink(result);
+          setShareComplete(true);
+        }
+      }
       
       // Update the state to match what was actually used
       if (explicitFormat) {
         setIncludeFormat(explicitFormat);
       }
       
-      if (shareMethod === "link" && typeof result === "string") {
-        setShareLink(result);
-        setShareComplete(true);
-      } else if (shareMethod === "email") {
-        // Check if the email client was successfully opened
-        const emailSuccess = result === true;
-        
-        setShareComplete(true);
-        
-        // If we failed to open the email client, show an error message
-        if (!emailSuccess) {
-          setErrorMessage(
-            "Unable to open your email client automatically. The report has been downloaded. " +
-            "Please manually open your email client, create a new message to " + emailAddress + 
-            ", and attach the downloaded file."
-          );
-        }
-      }
     } catch (error) {
       console.error("Error sharing report:", error);
       setErrorMessage("There was an error sharing your report. Please try again.");
@@ -212,8 +235,10 @@ export default function ShareDialog({ report, isOpen, onClose }: ShareDialogProp
                   Click the button below to open your email client:
                 </p>
                 
-                <a 
-                  href={`mailto:${emailAddress}?subject=${encodeURIComponent(`Starfleet Engineering Report - ${report.header.vessel}`)}&body=${encodeURIComponent(`
+                <button 
+                  onClick={() => {
+                    // Generate the email body
+                    const emailBody = `
 STARFLEET ENGINEERING REPORT
 ===========================
 Title: ${report.header.title}
@@ -235,16 +260,34 @@ CONCLUSION
 ${report.conclusion}
 
 NOTE: Please attach the downloaded ${includeFormat?.toUpperCase()} file to this email before sending.
-`)}`}
+`;
+                    
+                    const encodedBody = encodeURIComponent(emailBody);
+                    const encodedSubject = encodeURIComponent(`Starfleet Engineering Report - ${report.header.vessel}`);
+                    const mailtoLink = `mailto:${emailAddress}?subject=${encodedSubject}&body=${encodedBody}`;
+                    
+                    // Use window.open instead of window.location.href for better compatibility
+                    try {
+                      console.log("Opening email client with link:", mailtoLink);
+                      const mailWindow = window.open(mailtoLink, "_blank");
+                      
+                      // Fall back if window.open fails (e.g., due to popup blockers)
+                      if (!mailWindow) {
+                        console.warn("Failed to open mail client in new window - falling back to current window");
+                        window.location.href = mailtoLink;
+                      }
+                    } catch (error) {
+                      console.error("Error opening email client:", error);
+                      alert("There was an error opening your email client. Please try a different browser or create an email manually.");
+                    }
+                  }}
                   className="flex items-center justify-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-lg font-bold w-full mb-3 hover:bg-blue-700"
-                  target="_blank"
-                  rel="noopener noreferrer"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                     <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4Zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2Zm13 2.383-4.708 2.825L15 11.105V5.383Zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741ZM1 11.105l4.708-2.897L1 5.383v5.722Z"/>
                   </svg>
                   Open Email Client
-                </a>
+                </button>
                 
                 <div className="text-xs text-slate-300">
                   <div className="flex gap-2 items-center mb-1">

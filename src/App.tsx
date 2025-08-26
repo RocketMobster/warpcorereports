@@ -44,8 +44,9 @@ export default function App() {
       if (reportInfo) {
         console.log("Decoded shared report info:", reportInfo);
         
-        // Generate a consistent seed from the reportId to ensure the same report is generated
+        // Ensure we use the original seed for consistency in regenerating the same report
         const seedFromReportId = reportInfo.originalSeed || reportInfo.seed || reportId;
+        console.log("Using seed from shared report:", seedFromReportId);
         
         // Generate a report based on the decoded information
         const cfg: GeneratorConfig = {
@@ -59,7 +60,7 @@ export default function App() {
           problemDetailLevel: reportInfo.problemDetailLevel || 3,
           humorLevel: reportInfo.humorLevel || 5,
           figureBias: reportInfo.figureBias || "auto",
-          seed: seedFromReportId // Use the original seed if available, otherwise use the reportId
+          seed: seedFromReportId // Use the original seed to ensure same report
         };
         
         console.log("Generating shared report with config:", cfg);
@@ -91,10 +92,31 @@ export default function App() {
   const getRandomCrewSize = () => randint(3, 10, Math.random);
 
   const handleGenerate = (cfg: GeneratorConfig) => {
-    const r = generateReport({ ...cfg, crewManifest, problemDetailLevel: cfg.problemDetailLevel });
+    // Always clone the config to avoid mutating the original
+    const configToUse = { ...cfg };
+    
+    // Preserve the seed if it's already defined to ensure consistent reports
+    if (configToUse.seed) {
+      console.log("Using provided seed:", configToUse.seed);
+    } 
+    // Otherwise create a deterministic seed from signatory and stardate
+    else if (configToUse.signatoryName) {
+      configToUse.seed = configToUse.signatoryName + (configToUse.stardate || "") + Date.now().toString();
+      console.log("Created new seed:", configToUse.seed);
+    }
+    
+    // Generate the report with the enhanced config
+    const r = generateReport({ 
+      ...configToUse, 
+      crewManifest,
+      problemDetailLevel: configToUse.problemDetailLevel 
+    });
+    
+    console.log("Generated report with seed:", r.originalSeed);
+    
     setReport(r);
-    setConfig(cfg);
-    setLastCfg(cfg);
+    setConfig(configToUse);
+    setLastCfg(configToUse);
   };
 
   // Update both crew manifest and report when crew changes

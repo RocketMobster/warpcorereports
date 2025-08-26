@@ -46,9 +46,11 @@ export const generateShareableLink = async (report: Report, format?: "pdf" | "do
     signatoryRank: report.header.preparedBy.rank,
     // Store more details for better reproducibility
     graphsCount: report.figures?.length || 3,
-    problemDetailLevel: 3, // Default if not available
+    problemDetailLevel: report.problemDetailLevel || 3,
     seed: report.originalSeed || "" // Another place to store the seed
   };
+  
+  console.log("Creating share link with report data:", reportData);
   
   // Serialize and encode the data
   const reportDataStr = JSON.stringify(reportData);
@@ -135,9 +137,16 @@ IMPORTANT: You must manually attach this file to this email before sending.
   try {
     console.log("Opening email client with mailto link:", mailtoLink);
     
-    // Email click message is now handled in the ShareDialog component directly
-    // We'll provide a direct URL opening method here
-    window.location.href = mailtoLink;
+    // Use window.open instead of window.location.href for better compatibility
+    // This prevents page navigation and keeps the app open
+    const mailWindow = window.open(mailtoLink, "_blank");
+    
+    // Check if the window was successfully opened
+    if (!mailWindow) {
+      console.warn("Failed to open mail client - popup may be blocked");
+      // Fall back to location.href if window.open fails (e.g., due to popup blockers)
+      window.location.href = mailtoLink;
+    }
     
     return true;
   } catch (error) {
