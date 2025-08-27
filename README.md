@@ -87,7 +87,7 @@ All processing is done locally in your browser. No server backend is used for re
 
 ## TODO
 
-- **GitHub Pages Deployment**: Fix the 404 error at https://rocketmobster.github.io/warpcorereports/ - GitHub Pages is not correctly serving the deployed site. Need to troubleshoot deployment configuration in next session.
+- **Report Share Feature**: Fix the error when generating DOCX files during report sharing. The issue occurs when trying to download a shared report in DOCX format. Need to investigate the DOCX generation pipeline in the next session.
 
 ---
 
