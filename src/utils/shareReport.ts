@@ -3,6 +3,7 @@ import { jsPDF } from "jspdf";
 import { saveAs } from "file-saver";
 import { buildDocx } from "./docxExport";
 import { reportToTxt } from "./reportGen";
+import { Document, Packer, Paragraph, HeadingLevel, TextRun, AlignmentType } from "docx";
 // @ts-ignore
 import { Canvg } from "canvg";
 
@@ -372,14 +373,129 @@ const generatePdfForShare = async (report: Report): Promise<void> => {
 };
 
 const generateDocxForShare = async (report: Report): Promise<void> => {
-  const doc = await buildDocx(report);
+  try {
+    console.log("Starting DOCX generation...");
+    
+    // Add a small delay to ensure SVG elements are fully rendered
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Check if chart SVG elements exist
+    if (report.figures && report.figures.length > 0) {
+      const missingCharts = report.figures.filter(f => !document.getElementById(f.id));
+      if (missingCharts.length > 0) {
+        console.warn(`Warning: ${missingCharts.length} chart elements not found in DOM`);
+      }
+    }
+    
+    // Generate the DOCX document
+    const doc = await buildDocx(report);
+    
+    // Create a filename with the vessel name and stardate
+    const safeVesselName = report.header.vessel.replace(/\s+/g, '_');
+    const safeStardate = report.header.stardate.replace(/\./g, '-');
+    const filename = `Starfleet_Engineering_Report_${safeVesselName}_SD${safeStardate}.docx`;
+    
+    // Save the file
+    saveAs(doc, filename);
+    console.log("DOCX generation completed successfully");
+  } catch (error) {
+    console.error("Error generating DOCX:", error);
+    // Create a simple fallback DOCX without charts if there was an error
+    try {
+      console.log("Attempting to create simplified DOCX without charts...");
+      await generateSimplifiedDocx(report);
+    } catch (fallbackError) {
+      console.error("Even simplified DOCX generation failed:", fallbackError);
+      throw new Error("Failed to generate DOCX document: " + String(error));
+    }
+  }
+};
+
+// Fallback function to generate a simplified DOCX without charts
+const generateSimplifiedDocx = async (report: Report): Promise<void> => {
+  const doc = new Document({
+    sections: [
+      {
+        properties: {},
+        children: [
+          new Paragraph({
+            text: report.header.title,
+            heading: HeadingLevel.HEADING_1,
+            alignment: AlignmentType.CENTER
+          }),
+          new Paragraph({
+            text: "",
+            spacing: { after: 100 }
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: "Stardate: ", bold: true }),
+              new TextRun(report.header.stardate)
+            ]
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: "Vessel: ", bold: true }),
+              new TextRun(report.header.vessel)
+            ]
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: "Prepared By: ", bold: true }),
+              new TextRun(`${report.header.preparedBy.rank} ${report.header.preparedBy.name}, ${report.header.preparedBy.division}`)
+            ]
+          }),
+          new Paragraph({ 
+            text: "Abstract", 
+            heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200 }
+          }),
+          new Paragraph({
+            text: report.abstract,
+            spacing: { after: 150 }
+          }),
+          ...report.problems.flatMap((p, i) => [
+            new Paragraph({ 
+              text: `Problem ${i+1}: ${p.title}`, 
+              heading: HeadingLevel.HEADING_2,
+              spacing: { before: 200 }
+            }),
+            new Paragraph({
+              text: p.summary,
+              spacing: { after: 150 }
+            }),
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: "Note: Charts are not available in this simplified version",
+                  italics: true
+                })
+              ],
+              spacing: { after: 150 }
+            })
+          ]),
+          new Paragraph({ 
+            text: "Conclusion", 
+            heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200 }
+          }),
+          new Paragraph({
+            text: report.conclusion,
+            spacing: { after: 150 }
+          })
+        ]
+      }
+    ]
+  });
+  
+  const blob = await Packer.toBlob(doc);
   
   // Create a filename with the vessel name and stardate
   const safeVesselName = report.header.vessel.replace(/\s+/g, '_');
   const safeStardate = report.header.stardate.replace(/\./g, '-');
-  const filename = `Starfleet_Engineering_Report_${safeVesselName}_SD${safeStardate}.docx`;
+  const filename = `Starfleet_Engineering_Report_${safeVesselName}_SD${safeStardate}_simplified.docx`;
   
-  saveAs(doc, filename);
+  saveAs(blob, filename);
 };
 
 const generateTxtForShare = async (report: Report): Promise<void> => {

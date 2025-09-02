@@ -132,48 +132,65 @@ export async function buildDocx(report: Report) {
             const ctx = canvas.getContext("2d");
             
             if (ctx) {
-              // Convert SVG to PNG
-              const pngData = await (async () => {
-                const v = await Canvg.fromString(ctx, svgString);
-                await v.render();
-                return canvas.toDataURL("image/png");
-              })();
-              
-              // Add image to document
-              const imageRun = new ImageRun({
-                data: pngData.split(',')[1],
-                transformation: {
-                  width: width * 0.75,
-                  height: height * 0.75
-                }
-              });
-              
-              parts.push(
-                new Paragraph({
-                  children: [imageRun],
-                  spacing: { after: 120 }
-                })
-              );
+              try {
+                // Convert SVG to PNG with timeout for safety
+                const pngData = await Promise.race([
+                  (async () => {
+                    const v = await Canvg.fromString(ctx, svgString);
+                    await v.render();
+                    return canvas.toDataURL("image/png");
+                  })(),
+                  new Promise<string>((_, reject) => 
+                    setTimeout(() => reject(new Error("Chart conversion timed out")), 5000)
+                  )
+                ]);
+                
+                // Add image to document
+                const imageRun = new ImageRun({
+                  data: pngData.split(',')[1],
+                  transformation: {
+                    width: width * 0.75,
+                    height: height * 0.75
+                  }
+                });
+                
+                parts.push(
+                  new Paragraph({
+                    children: [imageRun],
+                    spacing: { after: 120 }
+                  })
+                );
+              } catch (conversionError) {
+                console.error("Error converting chart to image:", conversionError);
+                parts.push(
+                  new Paragraph({
+                    text: "⚠️ Chart unavailable - Conversion error",
+                    spacing: { after: 120 }
+                  })
+                );
+              }
             } else {
               parts.push(
                 new Paragraph({
-                  text: "⚠️ Chart unavailable - Contact the author",
+                  text: "⚠️ Chart unavailable - Canvas context unavailable",
                   spacing: { after: 120 }
                 })
               );
             }
           } catch (error) {
+            console.error("Error processing SVG element:", error);
             parts.push(
               new Paragraph({
-                text: "⚠️ Chart unavailable - Contact the author",
+                text: "⚠️ Chart unavailable - SVG processing error",
                 spacing: { after: 120 }
               })
             );
           }
         } else {
+          console.warn(`Chart element with ID ${f.id} not found or not an SVG element`);
           parts.push(
             new Paragraph({
-              text: "⚠️ Chart unavailable - Contact the author",
+              text: "⚠️ Chart unavailable - Element not found",
               spacing: { after: 120 }
             })
           );

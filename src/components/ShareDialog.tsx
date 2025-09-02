@@ -51,11 +51,18 @@ export default function ShareDialog({ report, isOpen, onClose }: ShareDialogProp
               format: "email" // Force email format to ensure file generation
             });
           } else if (options.includeFormat === "docx") {
-            await shareReport(report, { 
-              ...options, 
-              includeFormat: "docx",
-              format: "email" // Force email format to ensure file generation
-            });
+            try {
+              await shareReport(report, { 
+                ...options, 
+                includeFormat: "docx",
+                format: "email" // Force email format to ensure file generation
+              });
+              console.log("DOCX file generated successfully");
+            } catch (docxError) {
+              console.error("Error generating DOCX file:", docxError);
+              setErrorMessage(`Error generating DOCX file. A simplified version without charts has been created instead.`);
+              // We don't throw here because we still want the user to be able to proceed with the simplified version
+            }
           } else if (options.includeFormat === "txt") {
             await shareReport(report, { 
               ...options, 

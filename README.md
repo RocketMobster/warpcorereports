@@ -85,9 +85,10 @@ npm run preview
 
 All processing is done locally in your browser. No server backend is used for report generation, and no data is sent to external servers.
 
-## TODO
+## Recent Fixes
 
-- **Report Share Feature**: Fix the error when generating DOCX files during report sharing. The issue occurs when trying to download a shared report in DOCX format. Need to investigate the DOCX generation pipeline in the next session.
+- **Report Share Feature**: Fixed the error when generating DOCX files during report sharing. The application now properly generates DOCX files with charts, and falls back to a simplified version if chart rendering fails.
+- **Report Regeneration**: Fixed an issue where regenerating reports or changing seeds didn't update the report content.
 
 ---
 
