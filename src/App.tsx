@@ -5,6 +5,7 @@ import ReportControls from "./components/ReportControls";
 import ReportPreview from "./components/ReportPreview";
 import CrewManifestPanel from "./components/CrewManifestPanel";
 import ShareDialog from "./components/ShareDialog";
+import SoundControls from "./components/SoundControls";
 import { generateReport, reportToTxt, generateCrewManifest } from "./utils/reportGen";
 import { jsPDF } from "jspdf";
 import { saveAs } from "file-saver";
@@ -12,6 +13,7 @@ import { Report, GeneratorConfig } from "./types";
 import { buildDocx } from "./utils/docxExport";
 import { randint } from "./utils/helpers";
 import { parseSharedReportUrl, decodeSharedReportId } from "./utils/urlParser";
+import { initSoundSettings, buttonClickSound, successSound, alertSound, notificationSound, playSound } from "./utils/sounds";
 import "./utils/print.css";
 
 export default function App() {
@@ -26,6 +28,14 @@ export default function App() {
   const [sharedLinkFormat, setSharedLinkFormat] = useState<"pdf" | "docx" | "txt" | undefined>(undefined);
   // Chart editing state
   const [chartEditingEnabled, setChartEditingEnabled] = useState(false);
+  // Toast notification state
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  
+  // Initialize sound system
+  useEffect(() => {
+    initSoundSettings();
+  }, []);
 
   // Check if we're opening a shared report link
   useEffect(() => {
@@ -94,6 +104,9 @@ export default function App() {
   const getRandomCrewSize = () => randint(3, 10, Math.random);
 
   const handleGenerate = (cfg: GeneratorConfig) => {
+    // Play processing sound
+    playSound('processing');
+    
     // Always clone the config to avoid mutating the original
     const configToUse = { ...cfg };
     
@@ -120,6 +133,9 @@ export default function App() {
     });
     
     console.log("Generated report with seed:", r.originalSeed);
+    
+    // Play success sound when report is generated
+    successSound();
     
     // Force a new report object to trigger updates
     setReport({...r});
@@ -163,6 +179,9 @@ export default function App() {
   const regenerateReport = () => {
     if (!config) return;
     
+    // Play sound effect
+    buttonClickSound();
+    
     // Create a new seed
     const newSeed = Date.now().toString(36);
     console.log("Regenerating report with new seed:", newSeed);
@@ -184,20 +203,52 @@ export default function App() {
     console.log("Report updated with modified charts");
   };
   
+  // State for the transient toast notification
+  const [showEditToast, setShowEditToast] = useState(false);
+  
   // Toggle chart editing mode
   const toggleChartEditing = () => {
-    setChartEditingEnabled(prev => !prev);
+    const newState = !chartEditingEnabled;
+    setChartEditingEnabled(newState);
+    
+    if (newState) {
+      // Play toggle on sound
+      playSound('toggleOn');
+      
+      // Show toast notification when entering edit mode
+      setToastMessage('Chart edit mode enabled. You can now edit any chart in the report.');
+      setShowToast(true);
+      
+      // Auto-hide the toast after 3 seconds
+      setTimeout(() => setShowToast(false), 3000);
+      
+      // Scroll to show the edit instructions
+      setTimeout(() => {
+        document.getElementById('edit-instructions')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    } else {
+      // Play toggle off sound
+      playSound('toggleOff');
+      
+      // Show toast when exiting edit mode
+      setToastMessage('Chart edit mode disabled. Changes have been saved.');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    }
   };
 
   const exportTxt = () => {
     if (!report) return;
+    buttonClickSound();
     const txt = reportToTxt(report);
     const blob = new Blob([txt], { type: "text/plain" });
     saveAs(blob, "engineering_report.txt");
+    successSound();
   };
 
   const exportPdf = async () => {
     if (!report) return;
+    buttonClickSound();
     const doc = new jsPDF({ unit: "pt", format: "letter" });
     let yPos = 48;
     const actions: Array<() => Promise<void>> = [];
@@ -344,17 +395,22 @@ export default function App() {
       await act();
     }
     doc.save("engineering_report.pdf");
+    successSound();
   };
 
   const exportDocx = async () => {
     if (!report) return;
+    buttonClickSound();
     const doc = buildDocx(report);
     const blob = await doc;
     saveAs(blob, "engineering_report.docx");
+    successSound();
   };
 
   const handlePrint = () => {
     if (!report) return;
+    
+    buttonClickSound();
     
     // We need to wait for all SVG charts to render properly
     setTimeout(() => {
@@ -363,13 +419,17 @@ export default function App() {
   };
   
   const handleShare = () => {
+    buttonClickSound();
     setIsShareDialogOpen(true);
   };
 
   return (
     <div className="min-h-screen bg-[#0b0d16] text-slate-100 p-6">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-2xl font-extrabold mb-6">Starfleet Engineering Report Generator</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-extrabold">Starfleet Engineering Report Generator</h1>
+          <SoundControls />
+        </div>
         
         {isSharedLink && (
           <div className="bg-blue-700 text-white p-4 rounded-lg mb-6">
@@ -399,14 +459,14 @@ export default function App() {
             onRegenerate={regenerateCrewManifest}
           />
         )}
-        <div className="flex flex-wrap gap-3 mb-6">
-          <button onClick={exportTxt} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700">Download TXT</button>
-          <button onClick={exportPdf} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700">Download PDF</button>
-          <button onClick={exportDocx} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700">Download DOCX</button>
-          <button onClick={handlePrint} className="px-3 py-2 rounded-xl bg-amber-600 text-black font-bold border border-amber-500">Print Report</button>
+        <div id="button-bar" className="flex flex-wrap gap-3 mb-6 sticky top-4 z-10 bg-[#0b0d16] p-3 rounded-xl border border-slate-700 shadow-lg transition-all duration-300">
+          <button onClick={exportTxt} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all duration-200">Download TXT</button>
+          <button onClick={exportPdf} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all duration-200">Download PDF</button>
+          <button onClick={exportDocx} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all duration-200">Download DOCX</button>
+          <button onClick={handlePrint} className="px-3 py-2 rounded-xl bg-amber-600 text-black font-bold border border-amber-500 hover:bg-amber-500 transition-all duration-200">Print Report</button>
           <button 
             onClick={handleShare} 
-            className="px-3 py-2 rounded-xl bg-blue-600 text-white font-bold border border-blue-500"
+            className="px-3 py-2 rounded-xl bg-blue-600 text-white font-bold border border-blue-500 hover:bg-blue-500 transition-all duration-200"
             disabled={!report}
           >
             Share Report
@@ -415,10 +475,10 @@ export default function App() {
           {report && (
             <button 
               onClick={toggleChartEditing} 
-              className={`px-3 py-2 rounded-xl font-bold border ${
+              className={`px-3 py-2 rounded-xl font-bold border transition-all duration-200 ${
                 chartEditingEnabled 
-                  ? 'bg-purple-600 border-purple-500 text-white' 
-                  : 'bg-slate-800 border-slate-700 text-white'
+                  ? 'bg-purple-600 border-purple-500 text-white hover:bg-purple-700' 
+                  : 'bg-slate-800 border-slate-700 text-white hover:bg-purple-900 hover:border-purple-700'
               }`}
             >
               {chartEditingEnabled ? 'Exit Chart Editing' : 'Edit Charts'}
@@ -428,24 +488,39 @@ export default function App() {
         
         {report ? (
           <>
-            <ReportPreview 
-              report={report} 
-              onReportUpdate={handleReportUpdate}
-              editEnabled={chartEditingEnabled} 
-            />
-            
             {chartEditingEnabled && (
-              <div className="mt-4 p-3 bg-purple-900 text-white rounded-lg">
-                <div className="flex items-center gap-2 font-bold">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <div id="edit-instructions" className="mb-6 p-4 bg-purple-900 text-white rounded-lg animate-fadeIn border-2 border-purple-500 shadow-lg">
+                <div className="flex items-center gap-2 font-bold mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
                     <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
                     <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
                   </svg>
                   Chart Edit Mode Enabled
                 </div>
-                <p className="text-sm mt-1">Hover over any chart and click the edit icon to modify it. Your changes will be saved automatically.</p>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div className="flex-1">
+                    <p className="text-sm">Hover over any chart and click the edit icon <span className="inline-block bg-amber-500 text-black p-1 rounded ml-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                      </svg>
+                    </span> that appears to modify it. Your changes will be saved automatically.</p>
+                    <p className="text-sm mt-2">You can change chart type, data values, and other properties.</p>
+                  </div>
+                  <button 
+                    onClick={toggleChartEditing}
+                    className="px-4 py-2 bg-white text-purple-900 rounded-lg font-bold hover:bg-gray-200 transition-colors"
+                  >
+                    Exit Edit Mode
+                  </button>
+                </div>
               </div>
             )}
+            
+            <ReportPreview 
+              report={report} 
+              onReportUpdate={handleReportUpdate}
+              editEnabled={chartEditingEnabled} 
+            />
           </>
         ) : (
           <div>No report yet.</div>
@@ -457,6 +532,17 @@ export default function App() {
             isOpen={isShareDialogOpen} 
             onClose={() => setIsShareDialogOpen(false)} 
           />
+        )}
+        
+        {/* Toast Notification */}
+        {showToast && (
+          <div className="fixed bottom-4 right-4 bg-purple-900 text-white px-6 py-3 rounded-lg shadow-lg animate-fadeIn z-50 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+              <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+            </svg>
+            {toastMessage}
+          </div>
         )}
       </div>
     </div>

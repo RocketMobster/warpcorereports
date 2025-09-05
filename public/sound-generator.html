@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LCARS Sound Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #0b0d16;
+            color: #e0e0e0;
+        }
+        h1 {
+            color: #ff9c00;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .sound-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .sound-card {
+            background-color: #1a1f35;
+            border-radius: 10px;
+            padding: 15px;
+            border-left: 5px solid #9c88ff;
+        }
+        button {
+            background-color: #9c88ff;
+            color: black;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #b4a7ff;
+        }
+        .download-all-btn {
+            background-color: #ff9c00;
+            color: black;
+            font-size: 1.1em;
+            padding: 12px 24px;
+            display: block;
+            margin: 30px auto;
+        }
+        .download-all-btn:hover {
+            background-color: #ffad33;
+        }
+        .instruction {
+            background-color: #2d3748;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 5px solid #ff9c00;
+        }
+        .controls {
+            display: flex;
+            margin-top: 10px;
+        }
+        code {
+            background-color: #1a1a2e;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .status {
+            text-align: center;
+            font-style: italic;
+            margin-top: 20px;
+            color: #9c88ff;
+        }
+        a.back-link {
+            display: block;
+            margin-top: 30px;
+            color: #ff9c00;
+            text-align: center;
+            text-decoration: none;
+        }
+        a.back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>LCARS Sound Effect Generator</h1>
+    
+    <div class="instruction">
+        <h3>Instructions</h3>
+        <p>This tool generates authentic LCARS sound effects for your Starfleet Engineering Report Generator. 
+        Click "Play" to preview each sound, then use the "Generate All Sound Files" button to download all sounds at once.</p>
+        <p>After downloading, move the MP3 files to your project's <code>/public/sounds/</code> directory.</p>
+        <p>This generator creates the following sound files that match your sound.ts configuration:
+            <ul>
+                <li><code>lcars_beep1.mp3</code> - Button click</li>
+                <li><code>lcars_hover.mp3</code> - Button hover</li>
+                <li><code>lcars_alert.mp3</code> - Alert notification</li>
+                <li><code>lcars_success.mp3</code> - Success indicator</li>
+                <li><code>lcars_negative.mp3</code> - Error/negative feedback</li>
+                <li><code>lcars_processing.mp3</code> - Data processing</li>
+                <li><code>lcars_edit.mp3</code> - Chart editing</li>
+                <li><code>lcars_notification.mp3</code> - General notification</li>
+                <li><code>lcars_share.mp3</code> - Share report</li>
+                <li><code>lcars_toggle_on.mp3</code> - Toggle on</li>
+                <li><code>lcars_toggle_off.mp3</code> - Toggle off</li>
+            </ul>
+        </p>
+    </div>
+    
+    <button id="generate-button" class="download-all-btn">Generate All Sound Files</button>
+    
+    <p class="status">Sound preview requires clicking in the page first to activate Web Audio</p>
+    
+    <div class="sound-grid">
+        <div class="sound-card">
+            <h3>Button Click</h3>
+            <p>Standard LCARS button click sound</p>
+            <div class="controls">
+                <button data-sound="buttonClick">Play</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Button Hover</h3>
+            <p>Subtle sound for hovering over controls</p>
+            <div class="controls">
+                <button data-sound="buttonHover">Play</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Alert</h3>
+            <p>Alert notification sound</p>
+            <div class="controls">
+                <button data-sound="alert">Play</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Success</h3>
+            <p>Operation successful sound</p>
+            <div class="controls">
+                <button data-sound="success">Play</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Negative</h3>
+            <p>Error or negative feedback sound</p>
+            <div class="controls">
+                <button data-sound="negative">Play</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Processing</h3>
+            <p>Data processing or working sound</p>
+            <div class="controls">
+                <button data-sound="processing">Play</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Chart Edit</h3>
+            <p>Sound for entering chart edit mode</p>
+            <div class="controls">
+                <button data-sound="chartEdit">Play</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Notification</h3>
+            <p>General notification sound</p>
+            <div class="controls">
+                <button data-sound="notification">Play</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Share Report</h3>
+            <p>Sound for sharing a report</p>
+            <div class="controls">
+                <button data-sound="shareReport">Play</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Toggle On</h3>
+            <p>Feature activation sound</p>
+            <div class="controls">
+                <button data-sound="toggleOn">Play</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Toggle Off</h3>
+            <p>Feature deactivation sound</p>
+            <div class="controls">
+                <button data-sound="toggleOff">Play</button>
+            </div>
+        </div>
+    </div>
+    
+    <a href="/" class="back-link">← Back to Report Generator</a>
+
+    <script>
+        // AudioContext for synthesizing sounds
+        let audioContext;
+        
+        // Initialize AudioContext on user interaction
+        document.addEventListener('click', initAudio, { once: true });
+        
+        function initAudio() {
+            if (audioContext) return;
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            document.querySelector('.status').textContent = "Audio initialized! You can now play and generate sounds.";
+        }
+        
+        // Generate beep sound
+        function generateBeep(freq, duration, type = 'sine', delay = 0) {
+            if (!audioContext) return;
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.type = type;
+            oscillator.frequency.value = freq;
+            
+            gainNode.gain.value = 0.2;
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            const startTime = audioContext.currentTime + delay;
+            oscillator.start(startTime);
+            oscillator.stop(startTime + duration / 1000);
+        }
+        
+        // Button click sound
+        function playButtonClick() {
+            generateBeep(1800, 20);
+            generateBeep(2400, 20, 'sine', 0.03);
+        }
+        
+        // Button hover sound
+        function playButtonHover() {
+            generateBeep(1600, 10);
+        }
+        
+        // Alert sound
+        function playAlert() {
+            generateBeep(1600, 100, 'square');
+            generateBeep(1200, 100, 'square', 0.15);
+            generateBeep(1600, 100, 'square', 0.3);
+        }
+        
+        // Success sound
+        function playSuccess() {
+            generateBeep(1300, 40);
+            generateBeep(1800, 40, 'sine', 0.05);
+            generateBeep(2300, 40, 'sine', 0.1);
+        }
+        
+        // Negative/Error sound
+        function playNegative() {
+            generateBeep(800, 100, 'sawtooth');
+            generateBeep(600, 100, 'sawtooth', 0.12);
+        }
+        
+        // Processing sound
+        function playProcessing() {
+            for (let i = 0; i < 3; i++) {
+                generateBeep(1400 + i * 200, 40, 'sine', i * 0.08);
+            }
+        }
+        
+        // Chart edit sound
+        function playChartEdit() {
+            generateBeep(1600, 20, 'triangle');
+            generateBeep(1900, 20, 'triangle', 0.03);
+            generateBeep(2200, 20, 'triangle', 0.06);
+        }
+        
+        // Notification sound
+        function playNotification() {
+            generateBeep(2200, 30);
+            generateBeep(1800, 30, 'sine', 0.04);
+            generateBeep(2200, 30, 'sine', 0.08);
+        }
+        
+        // Share report sound
+        function playShareReport() {
+            generateBeep(1200, 40);
+            generateBeep(1600, 40, 'sine', 0.05);
+        }
+        
+        // Toggle on sound
+        function playToggleOn() {
+            generateBeep(1400, 30);
+            generateBeep(1800, 30, 'sine', 0.04);
+        }
+        
+        // Toggle off sound
+        function playToggleOff() {
+            generateBeep(1800, 30);
+            generateBeep(1400, 30, 'sine', 0.04);
+        }
+        
+        // Play sound based on data attribute
+        document.querySelectorAll('[data-sound]').forEach(button => {
+            button.addEventListener('click', () => {
+                const soundType = button.getAttribute('data-sound');
+                
+                switch(soundType) {
+                    case 'buttonClick': playButtonClick(); break;
+                    case 'buttonHover': playButtonHover(); break;
+                    case 'alert': playAlert(); break;
+                    case 'success': playSuccess(); break;
+                    case 'negative': playNegative(); break;
+                    case 'processing': playProcessing(); break;
+                    case 'chartEdit': playChartEdit(); break;
+                    case 'notification': playNotification(); break;
+                    case 'shareReport': playShareReport(); break;
+                    case 'toggleOn': playToggleOn(); break;
+                    case 'toggleOff': playToggleOff(); break;
+                }
+            });
+        });
+        
+        /**
+         * Generate WAV audio from sound samples
+         */
+        function generateWAV(samples, sampleRate = 44100) {
+            const buffer = new ArrayBuffer(44 + samples.length * 2);
+            const view = new DataView(buffer);
+            
+            // RIFF chunk descriptor
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + samples.length * 2, true);
+            writeString(view, 8, 'WAVE');
+            
+            // fmt sub-chunk
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true); // fmt chunk size
+            view.setUint16(20, 1, true); // audio format (PCM)
+            view.setUint16(22, 1, true); // num channels (mono)
+            view.setUint32(24, sampleRate, true); // sample rate
+            view.setUint32(28, sampleRate * 2, true); // byte rate
+            view.setUint16(32, 2, true); // block align
+            view.setUint16(34, 16, true); // bits per sample
+            
+            // data sub-chunk
+            writeString(view, 36, 'data');
+            view.setUint32(40, samples.length * 2, true);
+            
+            // Write the PCM samples
+            const volume = 1;
+            let index = 44;
+            for (let i = 0; i < samples.length; i++) {
+                view.setInt16(index, samples[i] * 0x7FFF * volume, true);
+                index += 2;
+            }
+            
+            return new Blob([buffer], { type: 'audio/wav' });
+        }
+        
+        /**
+         * Helper function to write a string to a DataView
+         */
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        }
+        
+        /**
+         * Create a sound sample with specified parameters
+         */
+        function createSoundSample(frequency, duration, type = 'sine', amplitude = 0.5, sampleRate = 44100) {
+            const samples = sampleRate * (duration / 1000);
+            const buffer = new Float32Array(samples);
+            
+            for (let i = 0; i < samples; i++) {
+                const t = i / sampleRate;
+                
+                // Generate the waveform based on type
+                let value;
+                switch (type) {
+                    case 'sine':
+                        value = Math.sin(2 * Math.PI * frequency * t);
+                        break;
+                    case 'square':
+                        value = Math.sign(Math.sin(2 * Math.PI * frequency * t));
+                        break;
+                    case 'sawtooth':
+                        value = 2 * ((frequency * t) % 1) - 1;
+                        break;
+                    case 'triangle':
+                        value = Math.abs(4 * ((frequency * t) % 1) - 2) - 1;
+                        break;
+                }
+                
+                buffer[i] = value * amplitude;
+            }
+            
+            return buffer;
+        }
+        
+        /**
+         * Mix multiple sound samples together
+         */
+        function mixSamples(sounds, totalDuration, sampleRate = 44100) {
+            const totalSamples = Math.ceil(sampleRate * (totalDuration / 1000));
+            const mixedBuffer = new Float32Array(totalSamples);
+            
+            // Mix all sound components
+            sounds.forEach(sound => {
+                const { frequency, duration, delay = 0, type = 'sine', amplitude = 0.5 } = sound;
+                const sample = createSoundSample(frequency, duration, type, amplitude, sampleRate);
+                const offsetSamples = Math.floor(sampleRate * (delay / 1000));
+                
+                for (let i = 0; i < sample.length; i++) {
+                    if (i + offsetSamples < totalSamples) {
+                        mixedBuffer[i + offsetSamples] += sample[i];
+                    }
+                }
+            });
+            
+            // Normalize to prevent clipping
+            let max = 0;
+            for (let i = 0; i < totalSamples; i++) {
+                max = Math.max(max, Math.abs(mixedBuffer[i]));
+            }
+            
+            if (max > 1) {
+                for (let i = 0; i < totalSamples; i++) {
+                    mixedBuffer[i] /= max;
+                }
+            }
+            
+            return mixedBuffer;
+        }
+        
+        /**
+         * Create a download link for an audio blob
+         */
+        function downloadAudio(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+        
+        // Generate and download specific sound
+        function generateSound(soundType) {
+            let sample;
+            let filename;
+            
+            switch (soundType) {
+                case 'buttonClick':
+                    sample = mixSamples([
+                        { frequency: 1800, duration: 20, delay: 0, type: 'sine' },
+                        { frequency: 2400, duration: 20, delay: 30, type: 'sine' }
+                    ], 100);
+                    filename = 'lcars_beep1.mp3';
+                    break;
+                    
+                case 'buttonHover':
+                    sample = mixSamples([
+                        { frequency: 1600, duration: 10, delay: 0, type: 'sine', amplitude: 0.3 }
+                    ], 50);
+                    filename = 'lcars_hover.mp3';
+                    break;
+                    
+                case 'alert':
+                    sample = mixSamples([
+                        { frequency: 1600, duration: 100, delay: 0, type: 'square', amplitude: 0.4 },
+                        { frequency: 1200, duration: 100, delay: 150, type: 'square', amplitude: 0.4 },
+                        { frequency: 1600, duration: 100, delay: 300, type: 'square', amplitude: 0.4 }
+                    ], 500);
+                    filename = 'lcars_alert.mp3';
+                    break;
+                    
+                case 'success':
+                    sample = mixSamples([
+                        { frequency: 1300, duration: 40, delay: 0, type: 'sine' },
+                        { frequency: 1800, duration: 40, delay: 50, type: 'sine' },
+                        { frequency: 2300, duration: 40, delay: 100, type: 'sine' }
+                    ], 200);
+                    filename = 'lcars_success.mp3';
+                    break;
+                    
+                case 'negative':
+                    sample = mixSamples([
+                        { frequency: 800, duration: 100, delay: 0, type: 'sawtooth', amplitude: 0.4 },
+                        { frequency: 600, duration: 100, delay: 120, type: 'sawtooth', amplitude: 0.4 }
+                    ], 300);
+                    filename = 'lcars_negative.mp3';
+                    break;
+                    
+                case 'processing':
+                    sample = mixSamples([
+                        { frequency: 1400, duration: 40, delay: 0, type: 'sine' },
+                        { frequency: 1600, duration: 40, delay: 80, type: 'sine' },
+                        { frequency: 1800, duration: 40, delay: 160, type: 'sine' }
+                    ], 300);
+                    filename = 'lcars_processing.mp3';
+                    break;
+                    
+                case 'chartEdit':
+                    sample = mixSamples([
+                        { frequency: 1600, duration: 20, delay: 0, type: 'triangle', amplitude: 0.4 },
+                        { frequency: 1900, duration: 20, delay: 30, type: 'triangle', amplitude: 0.4 },
+                        { frequency: 2200, duration: 20, delay: 60, type: 'triangle', amplitude: 0.4 }
+                    ], 150);
+                    filename = 'lcars_edit.mp3';
+                    break;
+                    
+                case 'notification':
+                    sample = mixSamples([
+                        { frequency: 2200, duration: 30, delay: 0, type: 'sine' },
+                        { frequency: 1800, duration: 30, delay: 40, type: 'sine' },
+                        { frequency: 2200, duration: 30, delay: 80, type: 'sine' }
+                    ], 150);
+                    filename = 'lcars_notification.mp3';
+                    break;
+                    
+                case 'shareReport':
+                    sample = mixSamples([
+                        { frequency: 1200, duration: 40, delay: 0, type: 'sine' },
+                        { frequency: 1600, duration: 40, delay: 50, type: 'sine' }
+                    ], 150);
+                    filename = 'lcars_share.mp3';
+                    break;
+                    
+                case 'toggleOn':
+                    sample = mixSamples([
+                        { frequency: 1400, duration: 30, delay: 0, type: 'sine' },
+                        { frequency: 1800, duration: 30, delay: 40, type: 'sine' }
+                    ], 100);
+                    filename = 'lcars_toggle_on.mp3';
+                    break;
+                    
+                case 'toggleOff':
+                    sample = mixSamples([
+                        { frequency: 1800, duration: 30, delay: 0, type: 'sine' },
+                        { frequency: 1400, duration: 30, delay: 40, type: 'sine' }
+                    ], 100);
+                    filename = 'lcars_toggle_off.mp3';
+                    break;
+            }
+            
+            if (sample && filename) {
+                const wav = generateWAV(sample);
+                downloadAudio(wav, filename);
+            }
+        }
+        
+        // Generate all sounds with a delay between each
+        document.getElementById('generate-button').addEventListener('click', () => {
+            if (!audioContext) {
+                initAudio();
+            }
+            
+            const sounds = [
+                'buttonClick', 'buttonHover', 'alert', 'success', 'negative',
+                'processing', 'chartEdit', 'notification', 'shareReport',
+                'toggleOn', 'toggleOff'
+            ];
+            
+            const statusElem = document.querySelector('.status');
+            statusElem.textContent = "Generating sound files... (1/" + sounds.length + ")";
+            
+            sounds.forEach((sound, index) => {
+                setTimeout(() => {
+                    generateSound(sound);
+                    statusElem.textContent = "Generating sound files... (" + (index + 1) + "/" + sounds.length + ")";
+                    
+                    if (index === sounds.length - 1) {
+                        setTimeout(() => {
+                            statusElem.textContent = "All sound files generated! Move them to your /public/sounds/ directory.";
+                        }, 500);
+                    }
+                }, index * 1000);
+            });
+        });
+    </script>
+</body>
+</html>

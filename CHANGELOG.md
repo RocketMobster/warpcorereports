@@ -1,6 +1,28 @@
 # Starfleet Engineering Report Generator - Changelog
 
-## Version 1.1.0 - August 24, 2025
+## Version 0.2.0 - September 5, 2025
+
+### LCARS Sound Effects System
+- **Added sound effects engine**: Implemented a comprehensive sound effects system with Web Audio API
+- **Created sound controls**: Added UI controls for toggling sounds and adjusting volume
+- **Added sound persistence**: Sound preferences are now saved between sessions
+- **Added sound generator tool**: Created an interactive tool for generating authentic LCARS sounds
+- **Added fallback sounds**: Implemented synthetic sound generation when audio files aren't available
+- **Added context-specific sounds**: Different UI actions now have appropriate sound effects
+
+### UI/UX Improvements
+- **Added floating controls**: Implemented a floating button bar for chart editing mode
+- **Enhanced chart editing**: Added notifications and better user feedback during chart editing
+- **Improved visual feedback**: Added better visual cues for interactive elements
+- **Added sound indicators**: Visual indicators for sound status in the UI
+
+### Technical Improvements
+- **Sound utility module**: Created a centralized sound management system
+- **Enhanced React components**: Improved component structure for better maintainability
+- **Added audio file handling**: Implemented proper audio file loading with error handling
+- **Improved documentation**: Updated README with comprehensive sound system documentation
+
+## Version 0.1.0 - August 24, 2025
 
 ### Email Sharing Improvements
 - **Fixed email body content**: Added comprehensive email body content with report summary when sharing via email
@@ -45,3 +67,5 @@
 - Add support for downloading shared reports directly from URL without regeneration
 - Implement authentication for accessing shared reports
 - Add support for embedding reports in other applications
+- Expand LCARS sound library with more interaction sounds
+- Create customizable sound themes for different starship classes

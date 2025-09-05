@@ -12,6 +12,8 @@ A Star Trek-themed engineering report generator with LCARS UI styling, designed 
 - **Sharing Capabilities**: Share reports via email or shareable links
 - **Customization Options**: Control report length, detail level, and humor level
 - **Seed-Based Generation**: Use seeds for reproducible reports
+- **LCARS Sound Effects**: Authentic Star Trek computer sounds for UI interactions
+- **Chart Editing**: Modify charts and visualizations with interactive editing tools
 
 ## Quick Start
 ```bash
@@ -49,6 +51,18 @@ npm run preview
 - Crew members will be referenced in the report's content
 - Regenerate random crew with the "Regenerate" button
 
+#### Chart Editing
+- Click "Edit Charts" to enter chart editing mode
+- Hover over any chart and click the edit icon to modify it
+- Change chart type, data values, titles, and other properties
+- Changes are saved automatically when you exit edit mode
+
+#### LCARS Sound Effects
+- Toggle sounds on/off with the sound control in the header
+- Adjust volume using the slider control
+- Authentic LCARS UI sounds for button clicks, toggles, and notifications
+- Sound preferences are saved between sessions
+
 #### Chart Control
 - **Figure Bias**: Choose from Auto, Warp, EPS, SIF, Deflector, Transporter, or Inertial to bias chart types
 - Affects what kinds of systems are visualized in your reports
@@ -74,6 +88,30 @@ npm run preview
 4. Click "Share Report" to generate and copy a link
 5. Send the link to anyone you want to share with
 
+## LCARS Sound Effects
+
+The application includes authentic LCARS sound effects for a more immersive experience. To set up the sound files:
+
+1. Start your development server:
+```bash
+npm run dev
+```
+
+2. Navigate to the sound generator tool in your browser:
+```
+http://localhost:5173/sound-generator.html
+```
+
+3. Use the interactive interface to preview the sounds and generate all sound files at once.
+
+4. Download the generated MP3 files to your computer.
+
+5. Move all the downloaded sound files to the `/public/sounds/` directory in your project.
+
+6. Refresh your application - you should now hear authentic LCARS sounds when interacting with the UI!
+
+You can customize the sound experience using the sound control panel in the application header.
+
 ## Browser Compatibility
 
 - Chrome/Edge (Recommended)
@@ -89,6 +127,29 @@ All processing is done locally in your browser. No server backend is used for re
 
 - **Report Share Feature**: Fixed the error when generating DOCX files during report sharing. The application now properly generates DOCX files with charts, and falls back to a simplified version if chart rendering fails.
 - **Report Regeneration**: Fixed an issue where regenerating reports or changing seeds didn't update the report content.
+
+## Roadmap
+
+Upcoming features and improvements planned for future versions:
+
+### Short-term (v0.3.0)
+- Add support for more starship classes with class-specific report templates
+- Implement tabbed interface for viewing multiple reports simultaneously
+- Add export to HTML format with interactive elements
+- Enhance chart editing with more visualization options
+
+### Medium-term (v0.4.0-v0.5.0)
+- Create save/load functionality for reports
+- Add custom section support for user-defined content
+- Implement report templates system
+- Add animation effects for LCARS interface elements
+
+### Long-term (v1.0.0+)
+- Server-side storage for shared reports to avoid URL length limitations
+- Authentication system for accessing shared reports
+- Support for embedding reports in other applications
+- Mobile-responsive design for tablet and phone use
+- Customizable sound themes for different starship classes
 
 ---
 

@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LCARS Sound Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #0b0d16;
+            color: #e0e0e0;
+        }
+        h1 {
+            color: #ff9c00;
+            text-align: center;
+        }
+        .sound-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .sound-card {
+            background-color: #1a1f35;
+            border-radius: 10px;
+            padding: 15px;
+            border-left: 5px solid #9c88ff;
+        }
+        button {
+            background-color: #9c88ff;
+            color: black;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #b4a7ff;
+        }
+        .download-btn {
+            background-color: #ff9c00;
+        }
+        .download-btn:hover {
+            background-color: #ffad33;
+        }
+        .instruction {
+            background-color: #2d3748;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 5px solid #ff9c00;
+        }
+        .controls {
+            display: flex;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>LCARS Sound Effect Generator</h1>
+    
+    <div class="instruction">
+        <h3>Instructions</h3>
+        <p>This tool lets you generate authentic LCARS sound effects for your Starfleet Engineering Report Generator. 
+        Click the "Play" button to preview each sound, then "Download" to save it to your computer.</p>
+        <p>After downloading, move the MP3 files to your project's <code>/public/sounds/</code> directory.</p>
+    </div>
+    
+    <div class="sound-grid">
+        <div class="sound-card">
+            <h3>Button Click</h3>
+            <p>Standard LCARS button click sound</p>
+            <div class="controls">
+                <button onclick="playButtonClick()">Play</button>
+                <button class="download-btn" onclick="downloadSound('buttonClick', 'lcars_beep1.mp3')">Download</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Button Hover</h3>
+            <p>Subtle sound for hovering over controls</p>
+            <div class="controls">
+                <button onclick="playButtonHover()">Play</button>
+                <button class="download-btn" onclick="downloadSound('buttonHover', 'lcars_hover.mp3')">Download</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Alert</h3>
+            <p>Alert notification sound</p>
+            <div class="controls">
+                <button onclick="playAlert()">Play</button>
+                <button class="download-btn" onclick="downloadSound('alert', 'lcars_alert.mp3')">Download</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Success</h3>
+            <p>Operation successful sound</p>
+            <div class="controls">
+                <button onclick="playSuccess()">Play</button>
+                <button class="download-btn" onclick="downloadSound('success', 'lcars_success.mp3')">Download</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Negative</h3>
+            <p>Error or negative feedback sound</p>
+            <div class="controls">
+                <button onclick="playNegative()">Play</button>
+                <button class="download-btn" onclick="downloadSound('negative', 'lcars_negative.mp3')">Download</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Processing</h3>
+            <p>Data processing or working sound</p>
+            <div class="controls">
+                <button onclick="playProcessing()">Play</button>
+                <button class="download-btn" onclick="downloadSound('processing', 'lcars_processing.mp3')">Download</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Chart Edit</h3>
+            <p>Sound for entering chart edit mode</p>
+            <div class="controls">
+                <button onclick="playChartEdit()">Play</button>
+                <button class="download-btn" onclick="downloadSound('chartEdit', 'lcars_edit.mp3')">Download</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Notification</h3>
+            <p>General notification sound</p>
+            <div class="controls">
+                <button onclick="playNotification()">Play</button>
+                <button class="download-btn" onclick="downloadSound('notification', 'lcars_notification.mp3')">Download</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Share Report</h3>
+            <p>Sound for sharing a report</p>
+            <div class="controls">
+                <button onclick="playShareReport()">Play</button>
+                <button class="download-btn" onclick="downloadSound('shareReport', 'lcars_share.mp3')">Download</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Toggle On</h3>
+            <p>Feature activation sound</p>
+            <div class="controls">
+                <button onclick="playToggleOn()">Play</button>
+                <button class="download-btn" onclick="downloadSound('toggleOn', 'lcars_toggle_on.mp3')">Download</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Toggle Off</h3>
+            <p>Feature deactivation sound</p>
+            <div class="controls">
+                <button onclick="playToggleOff()">Play</button>
+                <button class="download-btn" onclick="downloadSound('toggleOff', 'lcars_toggle_off.mp3')">Download</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Initialize AudioContext
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const masterGain = audioContext.createGain();
+        masterGain.gain.value = 0.2; // Master volume
+        masterGain.connect(audioContext.destination);
+        
+        // Recording utilities
+        let mediaRecorder;
+        let audioChunks = [];
+        let recordingDestination;
+        let currentRecordingName = "";
+        
+        // Generate beep sound
+        function generateBeep(freq, duration, type = 'sine', delay = 0) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.type = type;
+            oscillator.frequency.value = freq;
+            
+            gainNode.gain.value = 0.2;
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(masterGain);
+            
+            const startTime = audioContext.currentTime + delay;
+            oscillator.start(startTime);
+            oscillator.stop(startTime + duration / 1000);
+            
+            return { oscillator, gainNode, startTime, duration };
+        }
+        
+        // Button click sound
+        function playButtonClick() {
+            generateBeep(1800, 20);
+            generateBeep(2400, 20, 'sine', 0.03);
+        }
+        
+        // Button hover sound
+        function playButtonHover() {
+            generateBeep(1600, 10);
+        }
+        
+        // Alert sound
+        function playAlert() {
+            generateBeep(1600, 100, 'square');
+            generateBeep(1200, 100, 'square', 0.15);
+            generateBeep(1600, 100, 'square', 0.3);
+        }
+        
+        // Success sound
+        function playSuccess() {
+            generateBeep(1300, 40);
+            generateBeep(1800, 40, 'sine', 0.05);
+            generateBeep(2300, 40, 'sine', 0.1);
+        }
+        
+        // Negative/Error sound
+        function playNegative() {
+            generateBeep(800, 100, 'sawtooth');
+            generateBeep(600, 100, 'sawtooth', 0.12);
+        }
+        
+        // Processing sound
+        function playProcessing() {
+            for (let i = 0; i < 3; i++) {
+                generateBeep(1400 + i * 200, 40, 'sine', i * 0.08);
+            }
+        }
+        
+        // Chart edit sound
+        function playChartEdit() {
+            generateBeep(1600, 20, 'triangle');
+            generateBeep(1900, 20, 'triangle', 0.03);
+            generateBeep(2200, 20, 'triangle', 0.06);
+        }
+        
+        // Notification sound
+        function playNotification() {
+            generateBeep(2200, 30);
+            generateBeep(1800, 30, 'sine', 0.04);
+            generateBeep(2200, 30, 'sine', 0.08);
+        }
+        
+        // Share report sound
+        function playShareReport() {
+            generateBeep(1200, 40);
+            generateBeep(1600, 40, 'sine', 0.05);
+        }
+        
+        // Toggle on sound
+        function playToggleOn() {
+            generateBeep(1400, 30);
+            generateBeep(1800, 30, 'sine', 0.04);
+        }
+        
+        // Toggle off sound
+        function playToggleOff() {
+            generateBeep(1800, 30);
+            generateBeep(1400, 30, 'sine', 0.04);
+        }
+        
+        // Recording and downloading sounds
+        async function downloadSound(soundType, filename) {
+            // Create a temporary audio element for recording
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const dest = audioContext.createMediaStreamDestination();
+            masterGain.disconnect();
+            masterGain.connect(dest);
+            
+            // Set up media recorder
+            mediaRecorder = new MediaRecorder(dest.stream);
+            audioChunks = [];
+            currentRecordingName = filename;
+            
+            mediaRecorder.ondataavailable = (event) => {
+                audioChunks.push(event.data);
+            };
+            
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+                const audioUrl = URL.createObjectURL(audioBlob);
+                
+                // Create download link
+                const link = document.createElement('a');
+                link.href = audioUrl;
+                link.download = currentRecordingName;
+                link.click();
+                
+                // Clean up
+                URL.revokeObjectURL(audioUrl);
+                masterGain.disconnect(dest);
+                masterGain.connect(audioContext.destination);
+                stream.getTracks().forEach(track => track.stop());
+            };
+            
+            // Start recording
+            mediaRecorder.start();
+            
+            // Play the sound
+            switch(soundType) {
+                case 'buttonClick': playButtonClick(); break;
+                case 'buttonHover': playButtonHover(); break;
+                case 'alert': playAlert(); break;
+                case 'success': playSuccess(); break;
+                case 'negative': playNegative(); break;
+                case 'processing': playProcessing(); break;
+                case 'chartEdit': playChartEdit(); break;
+                case 'notification': playNotification(); break;
+                case 'shareReport': playShareReport(); break;
+                case 'toggleOn': playToggleOn(); break;
+                case 'toggleOff': playToggleOff(); break;
+            }
+            
+            // Stop recording after sound finishes playing
+            setTimeout(() => {
+                if (mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                }
+            }, 500); // Allow enough time for all sounds to play
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LCARS Sound Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #0b0d16;
+            color: #e0e0e0;
+        }
+        h1 {
+            color: #ff9c00;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .sound-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .sound-card {
+            background-color: #1a1f35;
+            border-radius: 10px;
+            padding: 15px;
+            border-left: 5px solid #9c88ff;
+        }
+        button {
+            background-color: #9c88ff;
+            color: black;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #b4a7ff;
+        }
+        .download-all-btn {
+            background-color: #ff9c00;
+            color: black;
+            font-size: 1.1em;
+            padding: 12px 24px;
+            display: block;
+            margin: 30px auto;
+        }
+        .download-all-btn:hover {
+            background-color: #ffad33;
+        }
+        .instruction {
+            background-color: #2d3748;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 5px solid #ff9c00;
+        }
+        .controls {
+            display: flex;
+            margin-top: 10px;
+        }
+        code {
+            background-color: #1a1a2e;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .status {
+            text-align: center;
+            font-style: italic;
+            margin-top: 20px;
+            color: #9c88ff;
+        }
+    </style>
+</head>
+<body>
+    <h1>LCARS Sound Effect Generator</h1>
+    
+    <div class="instruction">
+        <h3>Instructions</h3>
+        <p>This tool generates authentic LCARS sound effects for your Starfleet Engineering Report Generator. 
+        Click "Play" to preview each sound, then use the "Generate All Sound Files" button to download all sounds at once.</p>
+        <p>After downloading, move the MP3 files to your project's <code>/public/sounds/</code> directory.</p>
+        <p>This generator creates the following sound files that match your sound.ts configuration:
+            <ul>
+                <li><code>lcars_beep1.mp3</code> - Button click</li>
+                <li><code>lcars_hover.mp3</code> - Button hover</li>
+                <li><code>lcars_alert.mp3</code> - Alert notification</li>
+                <li><code>lcars_success.mp3</code> - Success indicator</li>
+                <li><code>lcars_negative.mp3</code> - Error/negative feedback</li>
+                <li><code>lcars_processing.mp3</code> - Data processing</li>
+                <li><code>lcars_edit.mp3</code> - Chart editing</li>
+                <li><code>lcars_notification.mp3</code> - General notification</li>
+                <li><code>lcars_share.mp3</code> - Share report</li>
+                <li><code>lcars_toggle_on.mp3</code> - Toggle on</li>
+                <li><code>lcars_toggle_off.mp3</code> - Toggle off</li>
+            </ul>
+        </p>
+    </div>
+    
+    <button id="generate-button" class="download-all-btn">Generate All Sound Files</button>
+    
+    <p class="status">Sound preview requires clicking in the page first to activate Web Audio</p>
+    
+    <div class="sound-grid">
+        <div class="sound-card">
+            <h3>Button Click</h3>
+            <p>Standard LCARS button click sound</p>
+            <div class="controls">
+                <button data-sound="buttonClick">Play</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Button Hover</h3>
+            <p>Subtle sound for hovering over controls</p>
+            <div class="controls">
+                <button data-sound="buttonHover">Play</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Alert</h3>
+            <p>Alert notification sound</p>
+            <div class="controls">
+                <button data-sound="alert">Play</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Success</h3>
+            <p>Operation successful sound</p>
+            <div class="controls">
+                <button data-sound="success">Play</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Negative</h3>
+            <p>Error or negative feedback sound</p>
+            <div class="controls">
+                <button data-sound="negative">Play</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Processing</h3>
+            <p>Data processing or working sound</p>
+            <div class="controls">
+                <button data-sound="processing">Play</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Chart Edit</h3>
+            <p>Sound for entering chart edit mode</p>
+            <div class="controls">
+                <button data-sound="chartEdit">Play</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Notification</h3>
+            <p>General notification sound</p>
+            <div class="controls">
+                <button data-sound="notification">Play</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Share Report</h3>
+            <p>Sound for sharing a report</p>
+            <div class="controls">
+                <button data-sound="shareReport">Play</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Toggle On</h3>
+            <p>Feature activation sound</p>
+            <div class="controls">
+                <button data-sound="toggleOn">Play</button>
+            </div>
+        </div>
+        
+        <div class="sound-card">
+            <h3>Toggle Off</h3>
+            <p>Feature deactivation sound</p>
+            <div class="controls">
+                <button data-sound="toggleOff">Play</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="sound-generator.js"></script>
+</body>
+</html>

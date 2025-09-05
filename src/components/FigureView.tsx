@@ -3,6 +3,7 @@ import LCARSChart from "./LCARSChart";
 import ChartEditor from "./ChartEditor";
 import { Figure } from "../types";
 import { LCARS } from "../utils/lcars";
+import { playSound } from "../utils/sounds";
 
 interface FigureViewProps {
   fig: Figure;
@@ -31,7 +32,11 @@ export default function FigureView({ fig, onFigureUpdate, editEnabled = false }:
   };
 
   return (
-    <div className="figure-container rounded-2xl p-4 border border-slate-700 bg-[#101425] relative group">
+    <div className={`figure-container rounded-2xl p-4 border bg-[#101425] relative group ${
+      editEnabled 
+        ? 'border-purple-500 shadow-md transition-all duration-300 animate-pulse-border' 
+        : 'border-slate-700'
+    }`}>
       <div className="text-sm text-slate-300 mb-2 font-semibold">
         {currentFigure.displayId || currentFigure.id}. {currentFigure.title}
       </div>
@@ -46,8 +51,11 @@ export default function FigureView({ fig, onFigureUpdate, editEnabled = false }:
       
       {editEnabled && (
         <button 
-          className="absolute top-2 right-2 bg-amber-500 text-black p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-          onClick={() => setIsEditorOpen(true)}
+          className="absolute top-2 right-2 bg-amber-500 text-black p-1.5 rounded-lg shadow-md opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300"
+          onClick={() => {
+            playSound('chartEdit');
+            setIsEditorOpen(true);
+          }}
           title="Edit Chart"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -59,8 +67,14 @@ export default function FigureView({ fig, onFigureUpdate, editEnabled = false }:
       {isEditorOpen && (
         <ChartEditor 
           figure={currentFigure} 
-          onUpdate={handleFigureUpdate} 
-          onClose={() => setIsEditorOpen(false)} 
+          onUpdate={(updatedFigure) => {
+            handleFigureUpdate(updatedFigure);
+            playSound('success');
+          }} 
+          onClose={() => {
+            setIsEditorOpen(false);
+            playSound('buttonClick');
+          }} 
         />
       )}
     </div>
