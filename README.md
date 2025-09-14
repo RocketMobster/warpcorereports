@@ -2,6 +2,13 @@
 
 A Star Trek-themed engineering report generator with LCARS UI styling, designed to create authentic-looking Starfleet engineering reports with dynamic content, interactive charts, and sharing capabilities.
 
+## TODO — Bug Alert (Next Up)
+
+- Issue: Signing Engineer's name is not injected into the References section when "Add Signatory Reference" is checked.
+- Expected: When checked, the References section should include an entry citing the signing engineer (e.g., "[n] Lieutenant Commander Craig Bickford, Engineering"), and an inline citation where applicable.
+- Status: Reproducible; prioritize this fix before any other tasks.
+- Notes: The toggle is `signatoryReference`; verify `generateReport` uses `signatoryName` and `signatoryRank` to append a reference entry and that numbering remains consistent with other references.
+
 ## Features
 
 - **LCARS-Style Interface**: Authentic Star Trek UI design with iconic colors and layout
