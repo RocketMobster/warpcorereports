@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 // @ts-ignore
 import { Canvg } from "canvg";
 import ReportControls from "./components/ReportControls";
+import StardateCalculator from "./components/StardateCalculator";
 import ReportPreview from "./components/ReportPreview";
 import CrewManifestPanel from "./components/CrewManifestPanel";
 import ShareDialog from "./components/ShareDialog";
@@ -452,6 +453,7 @@ export default function App() {
           manifestPanelOpen={manifestPanelOpen}
           onRegenerate={regenerateReport}
         />
+        <StardateCalculator />
         {manifestPanelOpen && (
           <CrewManifestPanel 
             count={currentCrewCount} 
