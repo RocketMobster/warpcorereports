@@ -1,5 +1,12 @@
 # Starfleet Engineering Report Generator - Changelog
 
+## Version 0.2.3 - September 14, 2025
+
+### Fixes
+- Signing Engineer reference is now always included in References when "Add Signatory Reference" is enabled. The entry is prepended deterministically and reference IDs are renumbered accordingly.
+- Removed bracket prefixes from reference text to avoid double numbering with the ordered list in the UI and DOCX export.
+- Cleaned up legacy reference generation code to prevent confusion.
+
 ## Version 0.2.2 - September 14, 2025
 
 ### UI
