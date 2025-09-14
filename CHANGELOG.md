@@ -1,5 +1,18 @@
 # Starfleet Engineering Report Generator - Changelog
 
+## Version 0.2.2 - September 14, 2025
+
+### UI
+- **Footer**: Added LCARS-styled footer showing RocketMobster Software, current app version, and link to the GitHub repository.
+- **Auto version display**: Footer version is injected at build time from `package.json` using a Vite define.
+
+### Repository Cleanup
+- Removed accidentally committed files:
+	- `Starfleet_Engineering_Report_Mega_PRD_FULL.md`
+	- `Screenshot 2025-08-21 103644.png`
+	- `Starfleet_Engineering_Report_Bundle_bias_and_manifest.zip`
+- Updated `.gitignore` to prevent similar artifacts from being committed in the future.
+
 ## Version 0.2.1 - September 14, 2025
 
 ### Stardate Calculator Enhancements

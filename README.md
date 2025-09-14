@@ -14,6 +14,7 @@ A Star Trek-themed engineering report generator with LCARS UI styling, designed 
 - **Seed-Based Generation**: Use seeds for reproducible reports
 - **LCARS Sound Effects**: Authentic Star Trek computer sounds for UI interactions
 - **Chart Editing**: Modify charts and visualizations with interactive editing tools
+- **Footer**: LCARS-styled footer shows developer info, current app version, and a link to the GitHub repo. Version updates automatically on build.
 
 ## Quick Start
 ```bash
@@ -112,6 +113,10 @@ http://localhost:5173/sound-generator.html
 
 You can customize the sound experience using the sound control panel in the application header.
 
+## Repository Hygiene
+
+The repository ignores accidental large artifacts and documents (e.g., screenshots, ZIP bundles, and large draft docs). If you need to share such assets, please attach them to releases rather than committing them to the repo.
+
 ## Randomize Controls
 
 For quick exploration and fine-tuned randomness:
@@ -146,6 +151,8 @@ All processing is done locally in your browser. No server backend is used for re
 
 - **Report Share Feature**: Fixed the error when generating DOCX files during report sharing. The application now properly generates DOCX files with charts, and falls back to a simplified version if chart rendering fails.
 - **Report Regeneration**: Fixed an issue where regenerating reports or changing seeds didn't update the report content.
+- **Footer**: Added LCARS-styled footer with developer info and auto-updating version.
+- **Repo Cleanup**: Removed accidentally committed files (large PRD draft, screenshot, and ZIP bundle) and updated .gitignore to prevent future occurrences.
 
 ## Roadmap
 
