@@ -86,7 +86,7 @@ export default function StardateCalculator({ onStardateChange, currentStardate }
           <div className="text-lg font-semibold">Stardate Calculator</div>
           <button
             type="button"
-            className="lcars-btn p-2 text-amber-300"
+            className="lcars-btn p-2 text-amber-300 transition transform hover:-translate-y-0.5 active:translate-y-0"
             title="Show formulas used for stardates"
             aria-label="Show stardate formula information"
             onClick={() => setShowInfo(v => !v)}
@@ -97,10 +97,11 @@ export default function StardateCalculator({ onStardateChange, currentStardate }
           </button>
         </div>
         {showInfo && (
-          <div className="text-sm text-slate-300 bg-slate-800/60 border border-slate-600 rounded-lg p-3 space-y-3 relative">
+          <div className="text-sm text-slate-300 bg-slate-800/60 border border-slate-600 rounded-lg p-3 pt-4 space-y-3 relative overflow-hidden">
+            <div className="absolute left-0 top-0 h-2 w-full bg-amber-500" />
             <button
               type="button"
-              className="absolute top-2 right-2 text-amber-300 hover:text-amber-200"
+              className="absolute top-2 right-2 text-amber-300 hover:text-amber-200 transition-colors"
               aria-label="Close formula information"
               title="Close"
               onClick={() => setShowInfo(false)}
@@ -114,7 +115,7 @@ export default function StardateCalculator({ onStardateChange, currentStardate }
             <div>
               <button
                 type="button"
-                className="lcars-btn text-amber-300"
+                className="lcars-btn text-amber-300 transition transform hover:-translate-y-0.5 active:translate-y-0"
                 title="Copy formulas to clipboard"
                 onClick={async () => {
                   const text = [
