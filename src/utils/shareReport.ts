@@ -204,7 +204,13 @@ export const shareReport = async (report: Report, options: ShareOptions): Promis
 // Helper functions to generate different formats for sharing
 const generatePdfForShare = async (report: Report): Promise<void> => {
   const doc = new jsPDF({ unit: "pt", format: "letter" });
-  let yPos = 48;
+  const pageHeight = (doc as any).internal?.pageSize?.getHeight
+    ? (doc as any).internal.pageSize.getHeight()
+    : ((doc as any).internal?.pageSize?.height || 792);
+  const topMargin = 48;
+  const bottomMargin = 48;
+  const contentBottom = pageHeight - bottomMargin;
+  let yPos = topMargin;
   const actions: Array<() => Promise<void>> = [];
 
   actions.push(async () => {
@@ -335,9 +341,12 @@ const generatePdfForShare = async (report: Report): Promise<void> => {
     actions.push(async () => {
       yPos += 30;
       doc.setFontSize(14);
+      if (yPos > contentBottom) { doc.addPage(); yPos = topMargin; }
       doc.text("Crew Manifest (Mentioned)", 48, yPos);
+      yPos += 4;
       doc.setFontSize(10);
       report.crewManifest?.forEach(cm => {
+        if (yPos + 15 > contentBottom) { doc.addPage(); yPos = topMargin; }
         yPos += 15;
         doc.text(`- ${cm.rank} ${cm.name}, ${cm.role}`, 48, yPos);
       });
@@ -349,12 +358,14 @@ const generatePdfForShare = async (report: Report): Promise<void> => {
     doc.setFontSize(14);
     if (yPos > 700) { doc.addPage(); yPos = 48; }
     doc.text("References", 48, yPos);
+    // Add spacing after heading to avoid overlapping first reference
+    yPos += 16;
     doc.setFontSize(10);
     report.references.forEach((r, idx) => {
       let cleanText = r.text.replace(/^\[\d+\]\s*/, "");
       const refText = `[${idx + 1}] ${cleanText}`;
       const refLines = doc.splitTextToSize(refText, 420);
-      if (yPos + refLines.length * 12 > 700) { doc.addPage(); yPos = 48; }
+      if (yPos + refLines.length * 12 > contentBottom) { doc.addPage(); yPos = topMargin; }
       doc.text(refLines, 48, yPos);
       yPos += refLines.length * 12;
     });
