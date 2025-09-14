@@ -1,5 +1,13 @@
 # Starfleet Engineering Report Generator - Changelog
 
+## Version 0.2.1 - September 14, 2025
+
+### Stardate Calculator Enhancements
+- **Info panel with formulas**: Added an info icon to the Stardate Calculator that reveals the exact formulas used for conversions (pre‑TNG and TNG-era).
+- **KaTeX-rendered equations**: Formulas are rendered via KaTeX for crisp, readable math.
+- **Copy formulas**: One-click button to copy readable formulas to the clipboard.
+- **Improved spacing**: Increased vertical spacing for formula blocks to avoid tiny vertical scroll arrows.
+
 ## Version 0.2.0 - September 5, 2025
 
 ### LCARS Sound Effects System

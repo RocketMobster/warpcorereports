@@ -129,6 +129,7 @@ Tip: Lock the seed to keep results reproducible even when randomizing other cont
 - Convert Calendar Date ↔ Stardate using common TOS/TNG-era approximations.
 - Enable "Use Stardate in Report" to apply the calculator’s stardate to generated reports.
 - When enabled, the current override value is shown inline next to the toggle.
+ - Click the info icon to view the exact formulas used. Formulas are rendered with KaTeX for clarity, and you can copy them with the "Copy formulas" button.
 
 ## Browser Compatibility
 

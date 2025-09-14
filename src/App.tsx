@@ -42,6 +42,29 @@ export default function App() {
     initSoundSettings();
   }, []);
 
+  // Load persisted stardate override settings
+  useEffect(() => {
+    try {
+      const savedUse = localStorage.getItem('wcr_use_stardate_override');
+      const savedSd = localStorage.getItem('wcr_stardate_override');
+      const savedShow = localStorage.getItem('wcr_show_stardate_calc');
+      if (savedUse !== null) setUseStardateOverride(savedUse === 'true');
+      if (savedSd) setStardateOverride(savedSd);
+      if (savedShow !== null) setShowStardateCalc(savedShow === 'true');
+    } catch {}
+  }, []);
+
+  // Persist stardate override changes
+  useEffect(() => {
+    try { localStorage.setItem('wcr_use_stardate_override', String(useStardateOverride)); } catch {}
+  }, [useStardateOverride]);
+  useEffect(() => {
+    try { localStorage.setItem('wcr_stardate_override', stardateOverride || ""); } catch {}
+  }, [stardateOverride]);
+  useEffect(() => {
+    try { localStorage.setItem('wcr_show_stardate_calc', String(showStardateCalc)); } catch {}
+  }, [showStardateCalc]);
+
   // Check if we're opening a shared report link
   useEffect(() => {
     const { reportId, format } = parseSharedReportUrl();
