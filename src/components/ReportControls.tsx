@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { GeneratorConfig, Rank, STARFLEET_VESSELS } from "../types";
+import React, { useEffect, useMemo, useState } from "react";
+import { GeneratorConfig, Rank, STARFLEET_VESSELS, FigureBias } from "../types";
 import { pick, hashCode, xorshift32, POOLS, pickCrewName } from "../utils/helpers";
 
 const ranks: Rank[] = [
@@ -13,18 +13,34 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
   onRegenerate?: () => void,
   manifestPanelOpen?: boolean
 }) {
-  const [problemsCount, setProblemsCount] = useState<1|2|3|4|5>(3);
-  const [problemDetailLevel, setProblemDetailLevel] = useState<number>(2);
-  const [graphsEnabled, setGraphsEnabled] = useState(true);
-  const [graphsCount, setGraphsCount] = useState(3);
-  const [signatoryName, setSignatoryName] = useState("Craig Bickford");
-  const [signatoryRank, setSignatoryRank] = useState<Rank>("Lieutenant Commander");
-  const [vessel, setVessel] = useState<string>(STARFLEET_VESSELS[0].name);
-  const [seed, setSeed] = useState<string>("");
+  const DEFAULTS = useMemo(() => ({
+    problemsCount: 3 as 1|2|3|4|5,
+    problemDetailLevel: 2,
+    graphsEnabled: true,
+    graphsCount: 3,
+    signatoryName: "Craig Bickford",
+    signatoryRank: "Lieutenant Commander" as Rank,
+    vessel: STARFLEET_VESSELS[0].name,
+    seed: "",
+    humor: 5,
+    signatoryReference: false,
+    figureBias: "auto" as FigureBias,
+  }), []);
+
+  const [problemsCount, setProblemsCount] = useState<1|2|3|4|5>(DEFAULTS.problemsCount);
+  const [problemDetailLevel, setProblemDetailLevel] = useState<number>(DEFAULTS.problemDetailLevel);
+  const [graphsEnabled, setGraphsEnabled] = useState(DEFAULTS.graphsEnabled);
+  const [graphsCount, setGraphsCount] = useState(DEFAULTS.graphsCount);
+  const [signatoryName, setSignatoryName] = useState(DEFAULTS.signatoryName);
+  const [signatoryRank, setSignatoryRank] = useState<Rank>(DEFAULTS.signatoryRank);
+  const [vessel, setVessel] = useState<string>(DEFAULTS.vessel);
+  const [seed, setSeed] = useState<string>(DEFAULTS.seed);
   const [seedLocked, setSeedLocked] = useState<boolean>(false);
   const [lastRandomSeed, setLastRandomSeed] = useState<string>("");
-  const [humor, setHumor] = useState<number>(5);
-  const [signatoryReference, setSignatoryReference] = useState<boolean>(false);
+  const [humor, setHumor] = useState<number>(DEFAULTS.humor);
+  const [signatoryReference, setSignatoryReference] = useState<boolean>(DEFAULTS.signatoryReference);
+  const [figureBias, setFigureBias] = useState<FigureBias>(DEFAULTS.figureBias);
+  const [preset, setPreset] = useState<string>("custom");
 
   const handleRandomName = () => {
   const rnd = xorshift32(Math.floor(Math.random() * 1e9));
@@ -80,6 +96,94 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
     }
   };
 
+  // Reset to defaults
+  const resetToDefaults = () => {
+    setProblemsCount(DEFAULTS.problemsCount);
+    setProblemDetailLevel(DEFAULTS.problemDetailLevel);
+    setGraphsEnabled(DEFAULTS.graphsEnabled);
+    setGraphsCount(DEFAULTS.graphsCount);
+    setSignatoryName(DEFAULTS.signatoryName);
+    setSignatoryRank(DEFAULTS.signatoryRank);
+    setVessel(DEFAULTS.vessel);
+    setSeed(DEFAULTS.seed);
+    setSeedLocked(false);
+    setLastRandomSeed("");
+    setHumor(DEFAULTS.humor);
+    setSignatoryReference(DEFAULTS.signatoryReference);
+    setFigureBias(DEFAULTS.figureBias);
+    setPreset("custom");
+  };
+
+  // Presets
+  const applyPreset = (name: string) => {
+    setPreset(name);
+    if (name === "diagnostic") {
+      setProblemsCount(2 as any); setProblemDetailLevel(2); setGraphsEnabled(true); setGraphsCount(2); setFigureBias("eps"); setHumor(2);
+    } else if (name === "incident") {
+      setProblemsCount(4 as any); setProblemDetailLevel(4); setGraphsEnabled(true); setGraphsCount(5); setFigureBias("deflector"); setHumor(1);
+    } else if (name === "maintenance") {
+      setProblemsCount(3 as any); setProblemDetailLevel(3); setGraphsEnabled(true); setGraphsCount(3); setFigureBias("sif"); setHumor(4);
+    } else if (name === "performance") {
+      setProblemsCount(3 as any); setProblemDetailLevel(2); setGraphsEnabled(true); setGraphsCount(6); setFigureBias("warp"); setHumor(3);
+    } else {
+      setPreset("custom");
+    }
+  };
+
+  // Shareable config link (encodes only UI settings)
+  const copySettingsLink = async () => {
+    const cfg = {
+      pc: problemsCount,
+      pd: problemDetailLevel,
+      ge: graphsEnabled ? 1 : 0,
+      gc: graphsEnabled ? graphsCount : 0,
+      sn: signatoryName,
+      sr: signatoryRank,
+      vs: vessel,
+      sd: seed,
+      hu: humor,
+      rf: signatoryReference ? 1 : 0,
+      fb: figureBias,
+    };
+    const packed = btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
+    const url = new URL(window.location.href);
+    url.searchParams.set("cfg", packed);
+    // Remove shared-report hash if present; this link is just settings
+    url.hash = "";
+    try {
+      await navigator.clipboard.writeText(url.toString());
+      alert("Settings link copied to clipboard.");
+    } catch (e) {
+      console.error("Clipboard failed:", e);
+      alert("Unable to copy. Please copy from the address bar after navigation.");
+    }
+  };
+
+  // Load settings from ?cfg= on first mount
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const packed = params.get("cfg");
+      if (!packed) return;
+      const json = decodeURIComponent(escape(atob(packed)));
+      const cfg = JSON.parse(json);
+      if (cfg.pc) setProblemsCount(Math.max(1, Math.min(5, cfg.pc)) as any);
+      if (cfg.pd != null) setProblemDetailLevel(Math.max(1, Math.min(6, cfg.pd)));
+      if (cfg.ge != null) setGraphsEnabled(!!cfg.ge);
+      if (cfg.gc != null) setGraphsCount(Math.max(1, Math.min(10, cfg.gc)));
+      if (cfg.sn) setSignatoryName(String(cfg.sn).slice(0, 80));
+      if (cfg.sr) setSignatoryRank(cfg.sr as Rank);
+      if (cfg.vs) setVessel(String(cfg.vs));
+      if (cfg.sd != null) setSeed(String(cfg.sd));
+      if (cfg.hu != null) setHumor(Math.max(0, Math.min(10, cfg.hu)));
+      if (cfg.rf != null) setSignatoryReference(!!cfg.rf);
+      if (cfg.fb) setFigureBias(cfg.fb as FigureBias);
+      setPreset("custom");
+    } catch (e) {
+      console.warn("Failed to parse cfg from URL", e);
+    }
+  }, []);
+
   const generate = () => {
     const cfg: GeneratorConfig = {
       problemsCount,
@@ -92,6 +196,7 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
       humorLevel: humor,
       signatoryReference,
       problemDetailLevel,
+      figureBias,
       stardate: ""
     };
     onGenerate(cfg);
@@ -187,10 +292,7 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
           </div>
 
           <label className="lcars-label">Figure Bias</label>
-            <select onChange={e=>onGenerate({
-              problemsCount, graphsEnabled, graphsCount: graphsEnabled ? graphsCount : undefined, signatoryName, signatoryRank,
-              vessel: pick(POOLS.vessels, xorshift32(hashCode(seed || signatoryName))), stardate: (50000 + Math.random()*9999).toFixed(1), seed: seed || undefined, humorLevel: humor, figureBias: e.target.value as any
-            })} className="lcars-input">
+            <select value={figureBias} onChange={e=>setFigureBias(e.target.value as FigureBias)} className="lcars-input">
               <option value="auto">Auto</option>
               <option value="warp">Warp</option>
               <option value="eps">EPS</option>
@@ -207,9 +309,21 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
         </div>
       </div>
 
-      <div className="col-span-3 flex gap-2">
+      <div className="col-span-3 flex flex-wrap gap-2">
         <button onClick={generate} className="lcars-cta flex-1">Produce Report</button>
         <button onClick={handleRandomizeAll} className="lcars-btn" title="Randomize all controls" aria-label="Randomize all controls">Randomize All 🎲</button>
+        <button onClick={resetToDefaults} className="lcars-btn" title="Reset controls to defaults" aria-label="Reset controls to defaults">Reset</button>
+        <div className="flex items-center gap-2">
+          <label className="lcars-label">Preset</label>
+          <select value={preset} onChange={(e)=>applyPreset(e.target.value)} className="lcars-input">
+            <option value="custom">Custom</option>
+            <option value="diagnostic">Diagnostic</option>
+            <option value="incident">Incident</option>
+            <option value="maintenance">Maintenance</option>
+            <option value="performance">Performance</option>
+          </select>
+        </div>
+        <button onClick={copySettingsLink} className="lcars-btn" title="Copy a shareable link for current settings" aria-label="Copy shareable settings link">Copy Settings Link</button>
         <button
           onClick={previewCrew}
           className={"lcars-btn " + (manifestPanelOpen ? "lcars-btn-highlighted" : "")}
