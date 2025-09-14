@@ -86,8 +86,8 @@ export default function StardateCalculator({ onStardateChange, currentStardate }
           <div className="text-lg font-semibold">Stardate Calculator</div>
           <button
             type="button"
-            className="p-2 rounded-md bg-slate-700 text-amber-300 hover:bg-slate-600"
-            title="How are stardates calculated?"
+            className="lcars-btn p-2 text-amber-300"
+            title="Show formulas used for stardates"
             aria-label="Show stardate formula information"
             onClick={() => setShowInfo(v => !v)}
           >
@@ -114,7 +114,8 @@ export default function StardateCalculator({ onStardateChange, currentStardate }
             <div>
               <button
                 type="button"
-                className="px-2 py-1 rounded-md bg-slate-700 text-amber-300 hover:bg-slate-600"
+                className="lcars-btn text-amber-300"
+                title="Copy formulas to clipboard"
                 onClick={async () => {
                   const text = [
                     'TNG-era: Stardate ≈ 41000 + (Year − 2364) × 1000 + (DayOfYear / 365) × 1000',
