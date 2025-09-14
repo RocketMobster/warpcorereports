@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { GeneratorConfig, Rank, STARFLEET_VESSELS, FigureBias } from "../types";
+import { GeneratorConfig, Rank, STARFLEET_VESSELS, FigureBias, MissionTemplate, FamousAuthorFrequency } from "../types";
 import { pick, hashCode, xorshift32, POOLS, pickCrewName } from "../utils/helpers";
 
 const ranks: Rank[] = [
@@ -7,11 +7,12 @@ const ranks: Rank[] = [
   "Ensign","Lieutenant Junior Grade","Lieutenant","Lieutenant Commander","Commander"
 ];
 
-export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate, manifestPanelOpen }: {
+export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate, manifestPanelOpen, onOpenHelp }: {
   onGenerate: (cfg: GeneratorConfig) => void,
   onPreviewCrew: (count?:number, seed?:string)=>void,
   onRegenerate?: () => void,
-  manifestPanelOpen?: boolean
+  manifestPanelOpen?: boolean,
+  onOpenHelp?: (section?: "templates" | "figure-bias" | "presets" | "produce-reroll" | "references") => void
 }) {
   const DEFAULTS = useMemo(() => ({
     problemsCount: 3 as 1|2|3|4|5,
@@ -40,6 +41,11 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
   const [humor, setHumor] = useState<number>(DEFAULTS.humor);
   const [signatoryReference, setSignatoryReference] = useState<boolean>(DEFAULTS.signatoryReference);
   const [figureBias, setFigureBias] = useState<FigureBias>(DEFAULTS.figureBias);
+  const [missionTemplate, setMissionTemplate] = useState<MissionTemplate>("none");
+  const [allowCanonNames, setAllowCanonNames] = useState<boolean>(true);
+  const [filterCanonByEra, setFilterCanonByEra] = useState<boolean>(true);
+  const [famousAuthorFrequency, setFamousAuthorFrequency] = useState<FamousAuthorFrequency>("occasional");
+  const [famousRecentMemory, setFamousRecentMemory] = useState<number>(6);
   const [preset, setPreset] = useState<string>("custom");
   const [wasReset, setWasReset] = useState<boolean>(false);
   const [showToast, setShowToast] = useState<boolean>(false);
@@ -171,6 +177,11 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
       hu: humor,
       rf: signatoryReference ? 1 : 0,
       fb: figureBias,
+  mt: missionTemplate,
+  cn: allowCanonNames ? 1 : 0,
+  ce: filterCanonByEra ? 1 : 0,
+  ff: famousAuthorFrequency,
+  fm: Math.max(0, Math.min(20, Math.floor(famousRecentMemory))),
     };
     const packed = btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
     const url = new URL(window.location.href);
@@ -209,6 +220,11 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
       if (cfg.hu != null) setHumor(Math.max(0, Math.min(10, cfg.hu)));
       if (cfg.rf != null) setSignatoryReference(!!cfg.rf);
       if (cfg.fb) setFigureBias(cfg.fb as FigureBias);
+  if (cfg.mt) setMissionTemplate(cfg.mt as MissionTemplate);
+  if (cfg.cn != null) setAllowCanonNames(!!cfg.cn);
+  if (cfg.ce != null) setFilterCanonByEra(!!cfg.ce);
+  if (cfg.ff) setFamousAuthorFrequency(cfg.ff as FamousAuthorFrequency);
+  if (cfg.fm != null) setFamousRecentMemory(Math.max(0, Math.min(20, Math.floor(cfg.fm))));
       setPreset("custom");
       try { localStorage.setItem('wcr_preset', 'custom'); } catch {}
     } catch (e) {
@@ -267,6 +283,11 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
       signatoryReference,
       problemDetailLevel,
       figureBias,
+      missionTemplate,
+      allowCanonNames,
+      filterCanonByEra,
+      famousAuthorFrequency,
+      famousRecentMemory,
       stardate: ""
     };
     onGenerate(cfg);
@@ -342,10 +363,86 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
               id="signatoryReference"
               checked={signatoryReference}
               onChange={e => setSignatoryReference(e.target.checked)}
+              title="Include the signing engineer in References"
+              aria-label="Add name to References"
             />
             <label htmlFor="signatoryReference" className="lcars-label">
-              Add Signatory Reference
+              Add Name to References
             </label>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="allowCanonNames"
+              checked={allowCanonNames}
+              onChange={e => setAllowCanonNames(e.target.checked)}
+              title="Allow occasional famous canon names in References"
+              aria-label="Allow canon names in References"
+            />
+            <label htmlFor="allowCanonNames" className="lcars-label">
+              Allow Canon Names in References
+            </label>
+            {onOpenHelp && (
+              <button
+                type="button"
+                className="lcars-btn"
+                onClick={() => onOpenHelp("references")}
+                title="Open Help about References & Canon Names"
+                aria-label="Open Help about References & Canon Names"
+              >
+                ℹ️
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="filterCanonByEra"
+              checked={filterCanonByEra}
+              onChange={e => setFilterCanonByEra(e.target.checked)}
+              disabled={!allowCanonNames}
+              title="Filter canon names by the vessel's active era"
+              aria-label="Filter canon names by era"
+            />
+            <label htmlFor="filterCanonByEra" className="lcars-label">
+              Filter Canon Names by Era
+            </label>
+          </div>
+          <div>
+            <div className="flex items-center justify-between">
+              <label className="lcars-label">Famous Author Frequency</label>
+              <span className="lcars-small">(References)</span>
+            </div>
+            <select
+              value={famousAuthorFrequency}
+              onChange={e=>setFamousAuthorFrequency(e.target.value as FamousAuthorFrequency)}
+              className="lcars-input"
+              disabled={!allowCanonNames}
+              aria-label="Famous author frequency"
+              title="How often famous canon names may appear in References"
+            >
+              <option value="off">Off</option>
+              <option value="rare">Rare</option>
+              <option value="occasional">Occasional</option>
+              <option value="frequent">Frequent</option>
+            </select>
+          </div>
+          <div>
+            <div className="flex items-center justify-between">
+              <label className="lcars-label">Famous Rotation Memory</label>
+              <span className="lcars-small">(0–20, default 6)</span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={20}
+              value={famousRecentMemory}
+              onChange={e=>setFamousRecentMemory(parseInt(e.target.value))}
+              disabled={!allowCanonNames}
+              aria-label="Famous rotation memory"
+              title="How many recently-used famous authors are avoided"
+            />
+            <div className="lcars-small">{famousRecentMemory}</div>
           </div>
           <label className="lcars-label">Rank</label>
           <div className="flex gap-2 items-center">
@@ -362,7 +459,20 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
             <button onClick={toggleSeedLock} className={"lcars-btn " + (seedLocked ? "lcars-btn-locked" : "")} title="Lock or unlock seed" aria-label="Lock or unlock seed">{seedLocked ? "🔒" : "🔓"}</button>
           </div>
 
-          <label className="lcars-label">Figure Bias</label>
+          <div className="flex items-center justify-between">
+            <label className="lcars-label">Figure Bias</label>
+            {onOpenHelp && (
+              <button
+                type="button"
+                className="lcars-btn"
+                onClick={() => onOpenHelp("figure-bias")}
+                title="Open Help about figure bias"
+                aria-label="Open Help about figure bias"
+              >
+                ℹ️
+              </button>
+            )}
+          </div>
             <select value={figureBias} onChange={e=>setFigureBias(e.target.value as FigureBias)} className="lcars-input">
               <option value="auto">Auto</option>
               <option value="warp">Warp</option>
@@ -373,6 +483,25 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
               <option value="inertial">Inertial</option>
             </select>
             <div className="flex items-center justify-between mt-2">
+              <label className="lcars-label">Mission Template</label>
+              {onOpenHelp && (
+                <button
+                  type="button"
+                  className="lcars-btn"
+                  onClick={() => onOpenHelp("templates")}
+                  title="Open Help about templates and presets"
+                  aria-label="Open Help about templates and presets"
+                >
+                  ℹ️
+                </button>
+              )}
+            </div>
+            <select value={missionTemplate} onChange={e=>setMissionTemplate(e.target.value as MissionTemplate)} className="lcars-input">
+              <option value="none">None</option>
+              <option value="incident">Incident</option>
+              <option value="survey">Survey</option>
+            </select>
+            <div className="flex items-center justify-between mt-2">
               <label className="lcars-label">Humor Level</label>
               <button onClick={handleRandomHumor} className="lcars-btn" title="Randomize humor level" aria-label="Randomize humor level">🎲</button>
             </div>
@@ -381,11 +510,29 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
       </div>
 
       <div className="col-span-3 flex flex-wrap gap-2">
-        <button onClick={generate} className="lcars-cta flex-1">Produce Report</button>
+        <button
+          onClick={generate}
+          className="lcars-cta flex-1"
+          title="Produce a new report using the settings above"
+          aria-label="Produce a new report using the settings above"
+        >
+          Produce Report
+        </button>
         <button onClick={handleRandomizeAll} className="lcars-btn" title="Randomize all controls" aria-label="Randomize all controls">Randomize All 🎲</button>
         <button onClick={resetToDefaults} className="lcars-btn" title="Reset controls to defaults" aria-label="Reset controls to defaults">Reset</button>
         <div className="flex items-center gap-2">
           <label className="lcars-label">Preset</label>
+          {onOpenHelp && (
+            <button
+              type="button"
+              className="lcars-btn"
+              onClick={() => onOpenHelp("presets")}
+              title="Open Help about presets"
+              aria-label="Open Help about presets"
+            >
+              ℹ️
+            </button>
+          )}
           <select value={preset} onChange={(e)=>applyPreset(e.target.value)} className="lcars-input">
             <option value="custom">Custom</option>
             <option value="diagnostic">Diagnostic</option>
@@ -410,20 +557,36 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
         </button>
       </div>
 
-      {/* Add info note for report regeneration */}
-      <div style={{ margin: '16px 0', color: '#FFB300', background: '#222', borderRadius: 12, padding: 12, fontSize: 16 }}>
-        <div>
-          <strong>Tip:</strong> You can regenerate the report by generating a new random seed.
-        </div>
-        {onRegenerate && (
+      {/* Reroll current report (uses same settings as the displayed report) */}
+      {onRegenerate && (
+        <div style={{ margin: '16px 0', color: '#FFB300', background: '#222', borderRadius: 12, padding: 12, fontSize: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <div>
+              <strong>Tip:</strong> Reroll the current report’s randomized content using the same settings.
+            </div>
+            {onOpenHelp && (
+              <button
+                type="button"
+                className="lcars-btn"
+                onClick={() => onOpenHelp("produce-reroll")}
+                title="Open Help about Produce vs Reroll"
+                aria-label="Open Help about Produce vs Reroll"
+                style={{ marginLeft: 8 }}
+              >
+                ℹ️
+              </button>
+            )}
+          </div>
           <button
             style={{ marginTop: 12, padding: '8px 18px', background: '#FFB300', color: '#222', border: 'none', borderRadius: 8, fontWeight: 'bold', fontSize: 16, cursor: 'pointer' }}
             onClick={onRegenerate}
+            title="Reroll content with the current report’s settings. Control changes above aren’t applied until you click Produce Report."
+            aria-label="Reroll content with the current report’s settings. Control changes above aren’t applied until you click Produce Report."
           >
-            Regenerate Report
+            Reroll Current Report
           </button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
     {showToast && (
       <div className="fixed bottom-4 right-4 bg-slate-900 text-amber-300 px-4 py-2 rounded-lg border border-amber-500 shadow-lg z-50">

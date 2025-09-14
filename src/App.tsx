@@ -7,6 +7,7 @@ import ReportPreview from "./components/ReportPreview";
 import CrewManifestPanel from "./components/CrewManifestPanel";
 import ShareDialog from "./components/ShareDialog";
 import SoundControls from "./components/SoundControls";
+import HelpPanel from "./components/HelpPanel";
 import { generateReport, reportToTxt, generateCrewManifest } from "./utils/reportGen";
 import { jsPDF } from "jspdf";
 import { saveAs } from "file-saver";
@@ -37,6 +38,9 @@ export default function App() {
   // Toast notification state
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  // Help panel state
+  const [showHelp, setShowHelp] = useState(false);
+  const [helpTarget, setHelpTarget] = useState<"templates"|"figure-bias"|"presets"|"produce-reroll"|"references"|undefined>(undefined);
   
   // Initialize sound system
   useEffect(() => {
@@ -465,6 +469,139 @@ export default function App() {
     setIsShareDialogOpen(true);
   };
 
+  // Copy helpers
+  const copyToClipboard = async (text: string, successMsg: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setToastMessage(successMsg);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 1800);
+    } catch (e) {
+      setToastMessage('Clipboard unavailable. Copy manually.');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 2000);
+    }
+  };
+
+  const copyStardate = async () => {
+    const value = (useStardateOverride && stardateOverride) ? stardateOverride : (report?.header.stardate || '');
+    if (!value) {
+      setToastMessage('No stardate available to copy.');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 1800);
+      return;
+    }
+    await copyToClipboard(String(value), 'Stardate copied to clipboard.');
+  };
+
+  const copyHeaderLine = async () => {
+    if (!report) {
+      setToastMessage('No report header to copy yet.');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 1800);
+      return;
+    }
+    const headerBlock = [
+      `Stardate ${report.header.stardate} · ${report.header.vessel}`,
+      `${report.header.title}`,
+      `To: ${report.header.toRecipient}`,
+      `CC: ${report.header.ccRecipient}`,
+      `Prepared By: ${report.header.preparedBy.rank} ${report.header.preparedBy.name}, Engineering`
+    ].join("\n");
+    await copyToClipboard(headerBlock, 'Header copied to clipboard.');
+  };
+
+  const copyAbstract = async () => {
+    if (!report?.abstract) {
+      setToastMessage('No abstract available to copy.');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 1800);
+      return;
+    }
+    await copyToClipboard(report.abstract, 'Abstract copied to clipboard.');
+  };
+
+  const copyProblems = async () => {
+    if (!report?.problems?.length) {
+      setToastMessage('No problems available to copy.');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 1800);
+      return;
+    }
+    const text = report.problems
+      .map((p, i) => `Problem ${i + 1}: ${p.title}\n${p.summary}`)
+      .join('\n\n');
+    await copyToClipboard(text, 'Problems copied to clipboard.');
+  };
+
+  const copyConclusion = async () => {
+    if (!report?.conclusion) {
+      setToastMessage('No conclusion available to copy.');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 1800);
+      return;
+    }
+    await copyToClipboard(report.conclusion, 'Conclusion copied to clipboard.');
+  };
+
+  const copyReferences = async () => {
+    if (!report?.references?.length) {
+      setToastMessage('No references available to copy.');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 1800);
+      return;
+    }
+    const text = report.references.map((r, i) => `[${i + 1}] ${r.text.replace(/^\[\d+\]\s*/, '')}`).join('\n');
+    await copyToClipboard(text, 'References copied to clipboard.');
+  };
+
+  const copyProblemItem = async (index: number) => {
+    if (!report?.problems?.[index]) return;
+    const p = report.problems[index];
+    const text = `Problem ${index + 1}: ${p.title}\n${p.summary}`;
+    await copyToClipboard(text, 'Problem copied to clipboard.');
+  };
+
+  const copyCrewManifest = async () => {
+    const crew = report?.crewManifest || [];
+    if (!crew.length) {
+      setToastMessage('No crew manifest to copy.');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 1500);
+      return;
+    }
+    const text = crew.map(cm => `${cm.rank} ${cm.name}, ${cm.role}`).join('\n');
+    await copyToClipboard(text, 'Crew manifest copied to clipboard.');
+  };
+
+  const copyFigures = async () => {
+    if (!report?.figures?.length) {
+      setToastMessage('No figures to copy.');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 1500);
+      return;
+    }
+    // Recreate sequential figure numbering by traversing problems in order
+    let n = 1;
+    const lines: string[] = [];
+    report.problems.forEach(p => {
+      const figs = (report.figures || []).filter(f => f.sectionAnchor === p.id);
+      figs.forEach(f => {
+        lines.push(`Figure ${n}: ${f.title} — ${f.caption}`);
+        n += 1;
+      });
+    });
+    // Include any figures not tied to a problem at the end
+    const anchoredIds = new Set(report.problems.flatMap(p => (report!.figures || []).filter(f=>f.sectionAnchor===p.id).map(f=>f.id)));
+    (report.figures || []).forEach(f => {
+      if (!anchoredIds.has(f.id)) {
+        lines.push(`Figure ${n}: ${f.title} — ${f.caption}`);
+        n += 1;
+      }
+    });
+    await copyToClipboard(lines.join('\n'), 'Figures copied to clipboard.');
+  };
+
   return (
     <div className="min-h-screen bg-[#0b0d16] text-slate-100 p-6">
       <div className="max-w-6xl mx-auto">
@@ -492,7 +629,8 @@ export default function App() {
           onGenerate={handleGenerate}
           onPreviewCrew={handlePreviewCrewToggle}
           manifestPanelOpen={manifestPanelOpen}
-          onRegenerate={regenerateReport}
+          onRegenerate={report ? regenerateReport : undefined}
+          onOpenHelp={(section) => { setHelpTarget(section); setShowHelp(true); }}
         />
         {manifestPanelOpen && (
           <CrewManifestPanel 
@@ -513,6 +651,15 @@ export default function App() {
           {useStardateOverride && (
             <span className="lcars-small">Current: {stardateOverride || "—"}</span>
           )}
+          <button
+            className="lcars-btn"
+            onClick={copyStardate}
+            title="Copy current stardate"
+            aria-label="Copy current stardate"
+            disabled={!((useStardateOverride && !!stardateOverride) || !!report)}
+          >
+            Copy Stardate
+          </button>
         </div>
         {showStardateCalc && (
           <StardateCalculator
@@ -522,6 +669,7 @@ export default function App() {
         )}
         <div id="button-bar" className="flex flex-wrap gap-3 mb-6 sticky top-4 z-10 bg-[#0b0d16] p-3 rounded-xl border border-slate-700 shadow-lg transition-all duration-300">
           <button onClick={exportTxt} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all duration-200">Download TXT</button>
+          <button onClick={async()=>{ if(!report){ setToastMessage('No report to copy.'); setShowToast(true); setTimeout(()=>setShowToast(false),1500); return;} await copyToClipboard(reportToTxt(report), 'Full report copied as TXT.'); }} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all duration-200" title="Copy full report as plain text" aria-label="Copy full report as plain text">Copy Full Report (TXT)</button>
           <button onClick={exportPdf} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all duration-200">Download PDF</button>
           <button onClick={exportDocx} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all duration-200">Download DOCX</button>
           <button onClick={handlePrint} className="px-3 py-2 rounded-xl bg-amber-600 text-black font-bold border border-amber-500 hover:bg-amber-500 transition-all duration-200">Print Report</button>
@@ -532,6 +680,8 @@ export default function App() {
           >
             Share Report
           </button>
+          
+          
           
           {report && (
             <button 
@@ -545,7 +695,19 @@ export default function App() {
               {chartEditingEnabled ? 'Exit Chart Editing' : 'Edit Charts'}
             </button>
           )}
+
+          <button
+            onClick={() => setShowHelp(true)}
+            className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all duration-200 ml-auto"
+            title="Open Help"
+            aria-label="Open Help"
+          >
+            Help
+          </button>
         </div>
+        {showHelp && (
+          <HelpPanel onClose={() => setShowHelp(false)} target={helpTarget} />
+        )}
         
         {report ? (
           <>
@@ -580,7 +742,15 @@ export default function App() {
             <ReportPreview 
               report={report} 
               onReportUpdate={handleReportUpdate}
-              editEnabled={chartEditingEnabled} 
+              editEnabled={chartEditingEnabled}
+              onCopyHeaderLine={copyHeaderLine}
+              onCopyAbstract={copyAbstract}
+              onCopyProblems={copyProblems}
+              onCopyConclusion={copyConclusion}
+              onCopyReferences={copyReferences}
+              onCopyProblemItem={copyProblemItem}
+              onCopyCrewManifest={copyCrewManifest}
+              missionTemplate={config?.missionTemplate || 'none'}
             />
           </>
         ) : (

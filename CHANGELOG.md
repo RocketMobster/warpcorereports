@@ -1,9 +1,20 @@
 # Starfleet Engineering Report Generator - Changelog
 
+## Version 0.2.4 - September 14, 2025
+
+### UI / Docs
+- **Help modal**: Added a scrollable help body and a dedicated “References & Canon Names” section with anchors for direct linking.
+- **Info button**: New ℹ️ in Controls next to “Allow Canon Names in References” opens Help directly to References.
+- **Anchors wired**: Existing ℹ️ buttons (Figure Bias, Templates, Presets, Produce vs Reroll) jump to their sections; added `references` target support.
+- **README**: Synced labels and behavior with in-app Help, including one‑per‑entry behavior, defaults, and share keys (`cn`, `ce`, `ff`, `fm`).
+
+### Notes
+- No generator behavior changes in this patch; this is a UX/documentation improvement.
+
 ## Version 0.2.3 - September 14, 2025
 
 ### Fixes
-- Signing Engineer reference is now always included in References when "Add Signatory Reference" is enabled. The entry is prepended deterministically and reference IDs are renumbered accordingly.
+- Signing Engineer reference is now always included in References when "Add Name to References" is enabled. The entry is prepended deterministically and reference IDs are renumbered accordingly.
 - Removed bracket prefixes from reference text to avoid double numbering with the ordered list in the UI and DOCX export.
 - Cleaned up legacy reference generation code to prevent confusion.
 

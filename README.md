@@ -4,7 +4,7 @@ A Star Trek-themed engineering report generator with LCARS UI styling, designed 
 
 ## Recently Fixed
 
-- Signing Engineer reference: When "Add Signatory Reference" is checked, the References section now always includes a signing engineer entry and consistent numbering. See CHANGELOG 0.2.3.
+- Signing Engineer reference: When "Add Name to References" is checked, the References section now always includes a signing engineer entry and consistent numbering. See CHANGELOG 0.2.3.
 
 ## Features
 
@@ -44,6 +44,14 @@ npm run preview
 5. **Graphs**: Toggle and control the number of data visualizations
 6. **Generate Report**: Click "Produce Report" to create your report
 
+### Produce vs Reroll
+
+- **Produce Report**: Applies the controls above (problems, detail, graphs, vessel, signatory, humor, figure bias, signatory reference, and seed) to create a new report. If you enter or lock a seed, it will be used; otherwise a seed is generated for you.
+- **Reroll Current Report**: Generates a new variation of the currently displayed report by creating a fresh seed (and stardate) while preserving the report’s existing settings (including Mission Template). Changes you make to the controls are NOT applied until you click Produce Report again.
+- **What changes on Reroll**: Randomized content only — problem topics and summaries, chart data, references selection, and other generated flavor text.
+- **What stays on Reroll**: The settings used to produce the currently displayed report — counts, detail level, graphs toggle/count, Mission Template, figure bias, vessel, signatory info, humor level, and signatory-reference choice.
+- **Seed lock nuance**: Seed lock affects the Seed control for Produce Report. Reroll always uses a fresh seed regardless of the lock or what’s currently typed in the Seed field.
+
 ### Advanced Features
 
 #### Reproducible Output
@@ -71,6 +79,22 @@ npm run preview
 #### Chart Control
 - **Figure Bias**: Choose from Auto, Warp, EPS, SIF, Deflector, Transporter, or Inertial to bias chart types
 - Affects what kinds of systems are visualized in your reports
+
+#### References & Canon Names
+- **Add Name to References**: Guarantees the signing engineer is included in References.
+- **Allow Canon Names in References**: Optionally include famous Star Trek names (curated for plausible ranks/titles).
+- **Filter Canon Names by Era**: Limits canon names to those active during the vessel’s timeframe.
+- **Famous Author Frequency**: How often famous canon names may appear: Off, Rare, Occasional, or Frequent. Humor and Mission Template can nudge frequency slightly.
+- **Famous Rotation Memory**: Avoids reusing recently seen famous names (default 6; 0 disables rotation).
+- **One-per-entry**: At most one famous author appears within a single reference entry.
+- **Defaults**: Canon names allowed; era filter on; frequency "Occasional"; rotation memory 6.
+- **Share keys**: Settings links encode these as `cn`, `ce`, `ff`, and `fm`.
+
+### Presets vs Mission Templates vs Figure Bias
+
+- **Presets**: One-click combinations that set numbers and toggles (problem count, detail level, graphs on/off and count, humor) and a default figure bias. You can tweak after selecting; the preset badge will show “Modified”.
+- **Mission Templates**: Content bias without changing your numeric controls. Incident favors systems like Deflector, Shields, EPS, SIF, Transporters and nudges charts to status/impact (bar, gauge, step, etc.). Survey favors Sensors/Subspace/Bussard and nudges charts to trends/distributions (line, scatter, heatmap, pie, radar). Reroll keeps the chosen template. Settings links include the template. Phase 2: also biases header recipients (To/CC/Submitted To), narrative tone in Abstract/Conclusion, figure captions, and reference sources.
+- **Figure Bias**: A global nudge for chart type selection (Warp/EPS/SIF/Deflector/etc.). If a Mission Template is set, its nudges apply first; figure bias further refines the choice. “Auto” lets the generator choose based on each problem’s system context.
 
 ### Sharing Your Report
 

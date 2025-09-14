@@ -1,7 +1,7 @@
 {
   "name": "starfleet-engineering-report",
   "private": true,
-  "version": "0.2.3",
+  "version": "0.2.4",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +9,8 @@
     "preview": "vite preview",
   "test:stardate": "node --experimental-specifier-resolution=node --loader ts-node/esm ./src/utils/stardate.test.ts",
   "test:reportgen": "node --experimental-specifier-resolution=node --loader ts-node/esm ./src/utils/reportGen.test.ts",
-  "test": "npm run test:stardate && npm run test:reportgen"
+  "test": "npm run test:stardate && npm run test:reportgen",
+  "make:sample-pdf": "node --experimental-specifier-resolution=node --loader ts-node/esm ./scripts/make_sample_pdf.ts"
   },
   "dependencies": {
     "chart.js": "^4.4.1",

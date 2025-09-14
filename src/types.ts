@@ -32,6 +32,11 @@ export interface GeneratorConfig {
   figureBias?: FigureBias;
   crewCount?: number; // Added for crew manifest control
   problemDetailLevel?: number; // Number of sentences per problem
+  missionTemplate?: MissionTemplate; // Content bias template (Phase 1)
+  allowCanonNames?: boolean; // Whether to allow famous canon names in references
+  filterCanonByEra?: boolean; // Whether to filter canon names by vessel era
+  famousAuthorFrequency?: FamousAuthorFrequency; // Frequency control for famous authors in references
+  famousRecentMemory?: number; // LRU size to reduce repeat famous authors (0 = no memory)
 }
 
 export interface ProblemSection { id: string; title: string; summary: string; }
@@ -75,3 +80,9 @@ export interface Figure {
 export interface CrewMember { name: string; rank: string; role: string; }
 
 export type FigureBias = "auto" | "warp" | "eps" | "sif" | "deflector" | "transporter" | "inertial";
+
+// Mission Templates bias content selection without changing control values
+export type MissionTemplate = "none" | "incident" | "survey";
+
+// Frequency control for famous/canon author appearances
+export type FamousAuthorFrequency = "off" | "rare" | "occasional" | "frequent";

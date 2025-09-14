@@ -1,11 +1,16 @@
-import { GeneratorConfig, Report, Figure, CrewMember, FigureBias } from "../types";
+import { GeneratorConfig, Report, Figure, CrewMember, FigureBias, MissionTemplate } from "../types";
 import { Reference } from "../types";
 import { STARFLEET_VESSELS } from "../types";
 import { pick, randint, POOLS, humorousAside, xorshift32, seedFromConfig, pickCrewName } from "./helpers";
 
 type FigType = "line" | "bar" | "scatter" | "gauge" | "pie" | "area" | "radar" | "heatmap" | "step" | "boxplot";
 
-function preferredTypesFor(system: string, bias: FigureBias): FigType[] {
+function preferredTypesFor(system: string, bias: FigureBias, missionTemplate?: MissionTemplate): FigType[] {
+  // Template-level nudges first
+  if (missionTemplate && missionTemplate !== "none") {
+    if (missionTemplate === "incident") return ["bar","gauge","line","step","scatter","boxplot"]; // status/impact
+    if (missionTemplate === "survey") return ["line","scatter","heatmap","pie","radar","area"]; // trends/distribution
+  }
   if (bias && bias !== "auto") {
     if (bias === "warp") return ["line","scatter","area","step"];
     if (bias === "eps") return ["bar","line","pie","heatmap"];
@@ -24,7 +29,7 @@ function preferredTypesFor(system: string, bias: FigureBias): FigType[] {
   return ["line","bar","scatter","gauge","pie","area","radar","heatmap","step","boxplot"];
 }
 
-function makeFigure(i:number, anchorId:string, sys:string, bias:FigureBias, rnd:()=>number): Figure {
+function makeFigure(i:number, anchorId:string, sys:string, bias:FigureBias, rnd:()=>number, missionTemplate?: MissionTemplate): Figure {
   // Helper to determine if a chart title is suitable for heatmap (categorical/distribution)
   function isHeatmapEligible(title: string): boolean {
     const forbidden = ["time", "over time", "temperature", "spectrum", "variance", "output", "analysis", "trend", "distribution"];
@@ -43,7 +48,7 @@ function makeFigure(i:number, anchorId:string, sys:string, bias:FigureBias, rnd:
   if (!(globalThis as any).__usedFigureCaptions) {
     (globalThis as any).__usedFigureCaptions = new Set<string>();
   }
-  let prefs = preferredTypesFor(sys, bias);
+  let prefs = preferredTypesFor(sys, bias, missionTemplate);
   let type = prefs[Math.floor(rnd()*prefs.length)];
   // Diverse chart/figure titles
   const chartTemplates = [
@@ -152,7 +157,7 @@ function makeFigure(i:number, anchorId:string, sys:string, bias:FigureBias, rnd:
   let caption;
   if (typeof (globalThis as any).__reportHumorLevel === "number") {
     const humor = (globalThis as any).__reportHumorLevel;
-    let options;
+    let options: string[];
     if (humor <= 2) {
       options = ["LCARS diagnostic output; post-corrective stability observed."];
     } else if (humor <= 7) {
@@ -171,6 +176,22 @@ function makeFigure(i:number, anchorId:string, sys:string, bias:FigureBias, rnd:
         "All readings nominal, except for the ones that aren't.",
         "Engineering team denies responsibility for any glitter found in system."
       ];
+    }
+    // Add template-specific flavor
+    if (missionTemplate && missionTemplate !== 'none') {
+      const incidentAdds = [
+        "Incident timeline metrics post-mitigation.",
+        "Impact assessment stabilized within acceptable thresholds.",
+        "Containment metrics trending toward nominal.",
+        "Response actions correlated with recovery curve."
+      ];
+      const surveyAdds = [
+        "Survey dataset trend visualization.",
+        "Distribution of observed phenomena by interval.",
+        "Signal-to-noise profile across passbands.",
+        "Exploratory analysis suitable for further study."
+      ];
+      options = options.concat(missionTemplate === 'incident' ? incidentAdds : surveyAdds);
     }
     // Filter out used captions
     const used = (globalThis as any).__usedFigureCaptions;
@@ -280,6 +301,50 @@ export function generateReport(cfg: GeneratorConfig & { crewManifest?: CrewMembe
     const last = pick(POOLS.crewLast, rnd);
     return `${rank} ${first} ${last}, ${role}`;
   }
+  // Template-specific recipient pools
+  const TEMPLATE_RECIPIENTS: Record<Exclude<MissionTemplate, "none">, { to: string[]; cc: string[]; submittedTo?: string[] }> = {
+    incident: {
+      to: [
+        "Chief of Starfleet Operations",
+        "Starfleet Corps of Engineers",
+        "Sector Operations Command",
+        "Ship's Captain",
+        "Chief Security Officer"
+      ],
+      cc: [
+        "Chief Engineer",
+        "First Officer",
+        "Tactical Officer",
+        "Damage Control Team Lead",
+        "Bridge Operations"
+      ],
+      submittedTo: [
+        "Starfleet Corps of Engineers",
+        "Operations Command",
+        "Fleet Readiness Board"
+      ]
+    },
+    survey: {
+      to: [
+        "Chief Science Officer",
+        "Astrometrics Department",
+        "Federation Science Council",
+        "Exploration Mission Command"
+      ],
+      cc: [
+        "Sensor Analysis Team",
+        "Subspace Communications",
+        "Stellar Cartography",
+        "Science Division",
+        "Bridge Operations"
+      ],
+      submittedTo: [
+        "Federation Science Council",
+        "Starfleet Science and Research",
+        "Astrometrics Directorate"
+      ]
+    }
+  } as const;
   // Helper to get vessel years
   function getVesselYears(vessel: string) {
     const found = STARFLEET_VESSELS.find(v => v.name === vessel);
@@ -326,6 +391,16 @@ export function generateReport(cfg: GeneratorConfig & { crewManifest?: CrewMembe
   const crewUsage: Record<number, number> = {};
   crewManifest.forEach((_, i) => crewUsage[i] = 0);
   const detailLevel = Math.max(1, Math.min(6, cfg.problemDetailLevel ?? 1));
+  // Template-biased system pools
+  const TEMPLATE_SYSTEMS: Record<Exclude<MissionTemplate, "none">, string[]> = {
+    incident: [
+      "Deflector Array","Shield Generators","EPS Manifold","Structural Integrity Field","Transporter Buffers","Plasma Conduits","Anti-Matter Containment","Computer Core"
+    ],
+    survey: [
+      "Sensor Array","Subspace Transceiver","Bussard Collectors","Navigational Deflector","Astrometrics","Quantum Slipstream Drive","Holodeck Grid","Tractor Beam Assembly"
+    ]
+  } as any;
+
   const problems = Array.from({length: cfg.problemsCount}, (_, i) => {
     // Pick 1 or 2 crew members for this problem, prioritizing those with least mentions
     let available = crewManifest.map((cm, idx) => ({cm, idx})).filter(({idx}) => crewUsage[idx] < 2);
@@ -341,7 +416,18 @@ export function generateReport(cfg: GeneratorConfig & { crewManifest?: CrewMembe
       "Transporter Chief": ["transporter", "pattern", "confinement", "biofilter", "enhancer", "matter stream"],
       "Operations": ["relay", "metrics", "calibration", "console", "monitor", "command"],
     };
-    let sys = pick(POOLS.systems, rnd);
+    let sys: string;
+    if (cfg.missionTemplate && cfg.missionTemplate !== "none") {
+      const pool = (TEMPLATE_SYSTEMS as any)[cfg.missionTemplate] as string[] | undefined;
+      // 70% from template pool, otherwise fallback to general systems
+      if (pool && pool.length && rnd() < 0.7) {
+        sys = pick(pool, rnd);
+      } else {
+        sys = pick(POOLS.systems, rnd);
+      }
+    } else {
+      sys = pick(POOLS.systems, rnd);
+    }
     // Extract main system keyword from sys
     const sysKey = sys.toLowerCase();
     let mainKeyword = "";
@@ -443,7 +529,7 @@ export function generateReport(cfg: GeneratorConfig & { crewManifest?: CrewMembe
     const count = Math.max(1, Math.min(10, cfg.graphsCount ?? 3));
     for (let i=0; i<count; i++) {
       const p = problems[i % problems.length];
-      figures.push(makeFigure(i, p.id, p.title, cfg.figureBias ?? "auto", rnd));
+      figures.push(makeFigure(i, p.id, p.title, cfg.figureBias ?? "auto", rnd, cfg.missionTemplate));
     }
   }
   delete (globalThis as any).__reportHumorLevel;
@@ -506,11 +592,76 @@ export function generateReport(cfg: GeneratorConfig & { crewManifest?: CrewMembe
       "Proceedings of the Starfleet Engineering Symposium", "Vulcan Science Directorate Bulletin", "Klingon Imperial Engineering Review", "Romulan Technical Compendium",
       "Bajor Institute of Technology Journal", "Ferengi Commerce Authority Technical Circular", "Starfleet R&D Conference Proceedings", "Federation Shipwrights Annual", "Starfleet Materials Science Digest", "Starfleet Systems Integration Review", "Starfleet Academy Engineering Thesis Series"
     ];
-    const famousAuthors = [
-      "Geordi La Forge", "Montgomery Scott", "Miles O'Brien", "B'Elanna Torres", "Jadzia Dax", "Spock", "Sarek", "Sybok", "Saavik", "Ezri Dax", "Nog", "Martok", "Worf", "Alexander Rozhenko",
-      "Keiko O'Brien", "Sela", "Barclay", "Trip Tucker", "Hoshi Sato", "Malcolm Reed", "Archer", "Shran", "T'Pau", "Morn", "Quark", "Odo", "Garak", "Dukat", "K'Ehleyr", "Talax", "Neelix", "Kes", "Silik", "Soval", "Trelane", "Gowron", "Lorca", "Saru", "Burnham", "Narek", "Noss", "Jeyal", "Tuvix", "Leeta", "Rom", "Icheb", "Vorik", "Evek", "Seska", "Jem'Hadar", "Weyoun", "Brunt", "Damar", "Ezral", "Tosk", "Hugh", "Soji", "Narissa", "Elim Garak", "Vash", "Ziyal", "Tora Ziyal", "Bareil Antos", "Shinzon"
+    const incidentJournals = [
+      "Starfleet Engineering Journal", "Engineering Best Practices", "Starfleet Systems Integration Review", "Deflector Array Maintenance Log", "Starfleet Technical Orders", "Starfleet R&D Conference Proceedings"
     ];
-    function randomStardate(maxYear: number) {
+    const surveyJournals = [
+      "Federation Science Quarterly", "Vulcan Science Directorate Bulletin", "Journal of Warp Field Theory", "Subspace Mechanics Digest", "Starfleet Journal of Advanced Propulsion", "Astrometrics Survey Records"
+    ];
+    const famousAuthors = [
+      "Geordi La Forge", "Montgomery Scott", "Miles O'Brien", "B'Elanna Torres", "Jadzia Dax", "Spock", "Ezri Dax", "Worf", "Barclay", "Trip Tucker", "Hoshi Sato", "Odo", "Quark", "Elim Garak",
+      "Seven of Nine", "Beverly Crusher", "Data", "T'Pol", "Christine Chapel", "Nyota Uhura"
+    ];
+    // Curated profiles to keep canon ranks/titles plausible for famous characters
+    const FAMOUS_PROFILES: Record<string, { rank?: string; titles: string[]; years?: [number, number] }> = {
+      "Geordi La Forge": { rank: "Lieutenant Commander", titles: ["Chief Engineer", "Starfleet Engineering"], years: [2364, 2371] },
+      "Montgomery Scott": { rank: "Commander", titles: ["Chief Engineer", "Starfleet Corps of Engineers"], years: [2265, 2293] },
+      "Miles O'Brien": { rank: "Senior Chief Petty Officer", titles: ["Chief of Operations", "Transporter Chief", "Engineering NCO"], years: [2364, 2375] },
+      "B'Elanna Torres": { rank: "Lieutenant", titles: ["Chief Engineer"], years: [2371, 2378] },
+      "Jadzia Dax": { rank: "Lieutenant", titles: ["Science Officer", "Astrophysicist"], years: [2369, 2374] },
+      "Ezri Dax": { rank: "Lieutenant", titles: ["Counselor", "Science Officer"], years: [2375, 2376] },
+      "Spock": { rank: "Commander", titles: ["Science Officer", "First Officer"], years: [2265, 2285] },
+      "Worf": { rank: "Lieutenant", titles: ["Tactical Officer", "Security Officer"], years: [2364, 2371] },
+      "Barclay": { rank: "Lieutenant", titles: ["Systems Analyst", "Holodeck Specialist"], years: [2366, 2375] },
+      "Trip Tucker": { rank: "Commander", titles: ["Chief Engineer"], years: [2151, 2155] },
+      "Hoshi Sato": { rank: "Lieutenant", titles: ["Communications Officer"], years: [2151, 2155] },
+      "Odo": { titles: ["Security Chief"], years: [2369, 2375] },
+      "Quark": { titles: ["Civilian Consultant"], years: [2369, 2375] },
+      "Elim Garak": { titles: ["Tailor", "Obsidian Order (ret.)"], years: [2369, 2375] },
+      "Seven of Nine": { titles: ["Astrometrics Officer", "Borg Systems Specialist"], years: [2374, 2378] },
+      "Beverly Crusher": { rank: "Doctor", titles: ["Chief Medical Officer"], years: [2364, 2370] },
+      "Data": { rank: "Lieutenant Commander", titles: ["Operations Officer", "Second Officer"], years: [2364, 2371] },
+      "T'Pol": { rank: "Commander", titles: ["Science Officer"], years: [2151, 2155] },
+      "Christine Chapel": { rank: "Doctor", titles: ["Medical Officer"], years: [2266, 2270] },
+      "Nyota Uhura": { rank: "Lieutenant", titles: ["Communications Officer"], years: [2266, 2270] }
+    };
+  function formatFamousAuthor(fullName: string, vesselYears: [number, number], respectEra: boolean, template?: MissionTemplate): string | null {
+      // Split into first/last for consistent output
+      let first = fullName, last = "";
+      if (fullName.includes(" ")) {
+        const parts = fullName.split(" ");
+        last = parts[parts.length - 1];
+        first = parts.slice(0, -1).join(" ");
+      } else {
+        last = fullName;
+        first = "";
+      }
+      const prof = FAMOUS_PROFILES[fullName];
+      if (prof) {
+        if (respectEra && prof.years) {
+          const [vy0, vy1] = vesselYears;
+          const [py0, py1] = prof.years;
+          // Disallow if vessel era doesn't intersect character's active years
+          const overlaps = !(vy1 < py0 || vy0 > py1);
+          if (!overlaps) return null;
+        }
+        // Bias title by mission template
+        let titlePool = prof.titles;
+        if (template && template !== 'none') {
+          if (template === 'incident') titlePool = prof.titles.filter(t => /Engineer|Operations|Tactical|Security/i.test(t)) || prof.titles;
+          if (template === 'survey') titlePool = prof.titles.filter(t => /Science|Astro|Research|Counselor/i.test(t)) || prof.titles;
+        }
+        const pickedTitle = pick(titlePool, rnd);
+        const rankPart = prof.rank ? ` ${prof.rank},` : "";
+        return `${last}, ${first}${rankPart} ${pickedTitle}`.replace(/\s+,/g, ",").replace(/\s+/g, " ").trim();
+      }
+      // If we don't have a curated profile, avoid inventing a mismatched rank/title
+      if (first && first.length) {
+        return `${last}, ${first}`.trim();
+      }
+      return `${last}`;
+    }
+  function randomStardate(maxYear: number) {
       // Pick a random year/month/day within allowed range
       const refYear = randint(2300, maxYear, rnd);
       const refMonth = 1 + Math.floor(rnd() * 12);
@@ -528,36 +679,128 @@ export function generateReport(cfg: GeneratorConfig & { crewManifest?: CrewMembe
       }
       return stardateNum.toFixed(1);
     }
+    // Track recent famous authors via localStorage for gentle rotation
+    let recent: string[] = [];
+    try { recent = JSON.parse(localStorage.getItem('wcr_recent_famous') || '[]'); } catch {}
+    function rememberFamous(name: string) {
+      try {
+        const arr = Array.isArray(recent) ? recent : [];
+        arr.unshift(name);
+        const maxLen = Math.max(0, Math.min(50, Math.floor(cfg.famousRecentMemory ?? 6)));
+        while (arr.length > maxLen) arr.pop();
+        localStorage.setItem('wcr_recent_famous', JSON.stringify(arr));
+      } catch {}
+    }
+    // Frequency base rate mapping
+    const baseRateMap: Record<string, number> = {
+      off: 0,
+      rare: 0.04,
+      occasional: 0.08,
+      frequent: 0.15
+    };
+    const freqKey = (cfg.famousAuthorFrequency || 'occasional') as keyof typeof baseRateMap;
+    let baseRate = baseRateMap[freqKey];
+    // Humor adjustments
+    if ((cfg.humorLevel ?? 0) >= 7) baseRate += 0.03;
+    if ((cfg.humorLevel ?? 0) <= 2) baseRate = Math.max(0, baseRate - 0.03);
+    // Template adjustments
+    if (cfg.missionTemplate && cfg.missionTemplate !== 'none') baseRate += 0.01;
+    // Ensure within bounds
+    baseRate = Math.max(0, Math.min(0.5, baseRate));
+    // Per-reference cap: at most one famous author in an entry
     // Build base references
   let refs = Array.from({length: n}, (_, i) => {
       const numAuthors = 1 + Math.floor(rnd() * 3);
-      const authors = Array.from({length: numAuthors}, () => {
-        // 1 in 3 chance to use a famous author
-        if (rnd() < 0.33) {
-          // Famous author: split into first/last if possible
-          const famous = pick(famousAuthors, rnd);
-          const rank = pick(authorRanks, rnd);
-          const title = pick(authorTitles, rnd);
-          let first = famous, last = "";
-          if (famous.includes(" ")) {
-            const parts = famous.split(" ");
-            last = parts[parts.length-1];
-            first = parts.slice(0, -1).join(" ");
-          } else {
-            last = famous;
-            first = "";
-          }
-          return `${last}, ${first} ${rank}, ${title}`.replace(/  /g, " ").trim();
-        } else {
+      let famousUsed = false;
+      // Helper to pick a generic author avoiding collisions with curated famous names
+      function pickGenericAuthor() {
+        const disallowedLasts = new Set<string>(["Spock", "Data", "Worf", "Odo", "Quark", "Garak", "Seven", "Uhura", "Chapel"]);
+        const disallowedPairs = new Set<string>([
+          "Scott|Montgomery", "O'Brien|Miles", "Torres|B'Elanna", "Dax|Jadzia", "Dax|Ezri",
+          "Crusher|Beverly", "Uhura|Nyota", "Chapel|Christine", "Sato|Hoshi", "Tucker|Trip"
+        ]);
+        let attempts = 0;
+        while (attempts++ < 20) {
           const rank = pick(authorRanks, rnd);
           const first = pick(POOLS.crewFirst, rnd);
           const last = pick(POOLS.crewLast, rnd);
+          if (disallowedLasts.has(last)) continue;
+          if (disallowedPairs.has(`${last}|${first}`)) continue;
           const title = pick(authorTitles, rnd);
           return `${last}, ${first} ${rank}, ${title}`;
         }
+        // Fallback if too many attempts
+        const rank = pick(authorRanks, rnd);
+        const first = pick(POOLS.crewFirst, rnd);
+        const last = "Taylor";
+        const title = pick(authorTitles, rnd);
+        return `${last}, ${first} ${rank}, ${title}`;
+      }
+      const authors = Array.from({length: numAuthors}, () => {
+        // Allow famous names only if enabled
+        const allowCanon = cfg.allowCanonNames !== false; // default true
+        const respectEra = !!cfg.filterCanonByEra;
+        if (allowCanon && !famousUsed && rnd() < baseRate) {
+          // Weighted pick biased by template and avoiding recent names
+          const weights: Record<string, number> = {
+            "Geordi La Forge": 1.0, "Miles O'Brien": 0.85, "B'Elanna Torres": 0.75,
+            "Spock": 0.9, "Jadzia Dax": 0.65, "Ezri Dax": 0.5,
+            "Montgomery Scott": 0.65, "Worf": 0.55, "Barclay": 0.5,
+            "Trip Tucker": 0.6, "Hoshi Sato": 0.5, "Odo": 0.4, "Quark": 0.3, "Elim Garak": 0.3,
+            "Seven of Nine": 0.6, "Beverly Crusher": 0.5, "Data": 0.6, "T'Pol": 0.5, "Christine Chapel": 0.35, "Nyota Uhura": 0.4
+          };
+          const pool = famousAuthors.filter(name => !recent.includes(name) || rnd() < 0.25);
+          // Template bias: incident → engineers/tactical; survey → science/research
+          function tplBoost(name: string): number {
+            if (!cfg.missionTemplate || cfg.missionTemplate === 'none') return 0;
+            if (cfg.missionTemplate === 'incident' && /La Forge|O'Brien|Torres|Worf|Scott|Tucker|Odo/i.test(name)) return 0.2;
+            if (cfg.missionTemplate === 'survey' && /Spock|Dax|Hoshi/i.test(name)) return 0.2;
+            return 0;
+          }
+          const vesselYears = getVesselYears(vessel) as [number, number];
+          const scored = pool.map(name => {
+            const w = (weights[name] ?? 0.3) + tplBoost(name);
+            // Era overlap bonus if applicable
+            const prof = FAMOUS_PROFILES[name];
+            let eraBonus = 0;
+            if (prof && prof.years) {
+              const [vy0, vy1] = vesselYears;
+              const [py0, py1] = prof.years;
+              const overlap = Math.max(0, Math.min(vy1, py1) - Math.max(vy0, py0));
+              eraBonus = overlap > 0 ? Math.min(0.2, overlap / 20) : -0.5; // penalize non-overlap
+            }
+            return { name, score: Math.max(0, w + eraBonus) };
+          }).filter(s => s.score > 0);
+          if (scored.length) {
+            const total = scored.reduce((a,b)=>a+b.score,0);
+            let pickVal = rnd() * total;
+            let choice = scored[0].name;
+            for (const s of scored) { pickVal -= s.score; if (pickVal <= 0) { choice = s.name; break; } }
+            const formatted = formatFamousAuthor(choice, vesselYears, respectEra, cfg.missionTemplate);
+            if (formatted) {
+              famousUsed = true;
+              rememberFamous(choice);
+              return formatted;
+            }
+          }
+        } else {
+          return pickGenericAuthor();
+        }
+        // Fallback to generic author if famous was unsuitable
+        return pickGenericAuthor();
       });
       const refTitle = pick(POOLS.references, rnd);
-      const journal = pick(journals, rnd);
+      // Template-weighted journal selection
+      let journalPool = journals;
+      if (cfg.missionTemplate && cfg.missionTemplate !== 'none') {
+        journalPool = cfg.missionTemplate === 'incident' ? journals.concat(incidentJournals).concat(incidentJournals) : journals.concat(surveyJournals).concat(surveyJournals);
+      }
+      // If authors include a famous name associated with science/engineering, bias journal domain gently
+      const hasFamousScience = authors.some(a => /Spock|Dax|Science/i.test(a));
+      const hasFamousEngineering = authors.some(a => /La Forge|Scott|O'Brien|Torres|Engineering/i.test(a));
+      if (hasFamousScience) journalPool = journalPool.concat(surveyJournals);
+      if (hasFamousEngineering) journalPool = journalPool.concat(incidentJournals);
+      const journal = pick(journalPool, rnd);
       const refStardate = randomStardate(year);
       // Add division and publication type for realism
       const division = pick([
@@ -599,6 +842,21 @@ export function generateReport(cfg: GeneratorConfig & { crewManifest?: CrewMembe
     return refs;
   }
 
+  // Choose recipients with template bias where applicable
+  const hasTemplate = cfg.missionTemplate && cfg.missionTemplate !== "none";
+  const toRecipient = hasTemplate
+    ? pick(TEMPLATE_RECIPIENTS[cfg.missionTemplate as Exclude<MissionTemplate, "none">].to, rnd)
+    : makeRecipient(rnd);
+  const ccRecipient = hasTemplate
+    ? pick(TEMPLATE_RECIPIENTS[cfg.missionTemplate as Exclude<MissionTemplate, "none">].cc, rnd)
+    : makeRecipient(rnd);
+  const submittedTo = hasTemplate
+    ? pick(
+        TEMPLATE_RECIPIENTS[cfg.missionTemplate as Exclude<MissionTemplate, "none">].submittedTo || ["Starfleet Corps of Engineers"],
+        rnd
+      )
+    : "Starfleet Corps of Engineers";
+
   const report: Report = {
     header: { 
       stardate, 
@@ -608,14 +866,14 @@ export function generateReport(cfg: GeneratorConfig & { crewManifest?: CrewMembe
         rank: cfg.signatoryRank, 
         division: "Engineering"
       }, 
-      submittedTo: "Starfleet Corps of Engineers", 
-      toRecipient: makeRecipient(rnd),
-      ccRecipient: makeRecipient(rnd),
+      submittedTo, 
+      toRecipient,
+      ccRecipient,
       title: `${vessel} Engineering Report`
     },
-    abstract: generateAbstract(problems, humor, rnd),
+  abstract: generateAbstract(problems, humor, rnd, cfg.missionTemplate),
     problems,
-    conclusion: generateConclusion(problems, humor, rnd),
+  conclusion: generateConclusion(problems, humor, rnd, cfg.missionTemplate),
     references: generateReferences(3 + Math.floor(rnd()*8)),
     figures,
     crewManifest,
@@ -628,7 +886,7 @@ export function generateReport(cfg: GeneratorConfig & { crewManifest?: CrewMembe
 }
 
 // Generate appropriate abstract based on humor level and problems
-function generateAbstract(problems: any[], humorLevel: number, rnd: () => number): string {
+function generateAbstract(problems: any[], humorLevel: number, rnd: () => number, missionTemplate?: MissionTemplate): string {
   // Pluralize generic system names
   function pluralizeSystem(name: string): string {
     // If name is already plural or is specific, return as is
@@ -662,15 +920,24 @@ function generateAbstract(problems: any[], humorLevel: number, rnd: () => number
     : systemsMentioned[0];
   const vessel = (globalThis as any).__reportVessel || "the vessel";
   const crewNames = (globalThis as any).__reportCrewNames || "engineering team";
+  const mt = missionTemplate && missionTemplate !== 'none' ? missionTemplate : undefined;
   if (humorLevel <= 2) {
     // Dry technical, multi-sentence
-    return `During routine operations aboard ${vessel}, anomalies were detected in the ${systemList}. Diagnostic procedures were conducted according to Starfleet Engineering Protocol ${randint(100, 999, rnd)}-${String.fromCharCode(65 + Math.floor(rnd() * 26))}. All issues have been addressed and systems are now functioning within acceptable parameters. Continued monitoring is recommended. Engineering team will review system logs and schedule additional diagnostics as needed.`;
+    const intro = mt === 'incident'
+      ? `During incident response aboard ${vessel}, anomalies were detected in the ${systemList}.`
+      : mt === 'survey'
+      ? `During survey operations aboard ${vessel}, anomalies were observed in the ${systemList}.`
+      : `During routine operations aboard ${vessel}, anomalies were detected in the ${systemList}.`;
+    return `${intro} Diagnostic procedures were conducted according to Starfleet Engineering Protocol ${randint(100, 999, rnd)}-${String.fromCharCode(65 + Math.floor(rnd() * 26))}. All issues have been addressed and systems are now functioning within acceptable parameters. Continued monitoring is recommended. Engineering team will review system logs and schedule additional diagnostics as needed.`;
   } else if (humorLevel <= 7) {
     // Balanced, multi-sentence
-    return `This report documents ${problems.length} engineering ${problems.length === 1 ? 'anomaly' : 'anomalies'} encountered in the ${systemList} during standard operations aboard ${vessel}. Engineering staff diagnosed and implemented corrective measures with minimal disruption to ship functions. Post-repair diagnostics indicate all systems are now operating within Starfleet specifications. Crew members involved in repairs have logged recommendations for future maintenance. Mission readiness is confirmed.`;
+    const context = mt === 'incident' ? 'anomalies encountered during incident response' : mt === 'survey' ? 'observations recorded during survey operations' : 'anomalies encountered during standard operations';
+    return `This report documents ${problems.length} engineering ${problems.length === 1 ? 'anomaly' : 'anomalies'} in the ${systemList} ${context} aboard ${vessel}. Engineering staff diagnosed and implemented corrective measures with minimal disruption to ship functions. Post-repair diagnostics indicate all systems are now operating within Starfleet specifications. Crew members involved in repairs have logged recommendations for future maintenance. Mission readiness is confirmed.`;
   } else {
     // Absurd, multi-sentence
     const absurdIntros = [
+      mt === 'incident' ? `Following a highly exciting red-alert sequence aboard ${vessel}, we experienced issues involving` :
+      mt === 'survey' ? `While charting remarkably peaceful star phenomena aboard ${vessel}, we noted curiosities in the` :
       `What started as a perfectly ordinary day aboard ${vessel} quickly turned into an engineering adventure involving`,
       `In what can only be described as an impressive display of Murphy's Law, the following systems decided to simultaneously express their creativity:`,
       `This report documents what happens when you let ensigns near the`,
@@ -679,7 +946,7 @@ function generateAbstract(problems: any[], humorLevel: number, rnd: () => number
     const absurdOutros = [
       `Despite the ${pick(['chaos', 'excitement', 'unexpected challenges', 'creative interpretations of physics'], rnd)}, our engineering team has heroically restored order to the ${pick(['universe', 'quadrant', 'ship', 'department'], rnd)}. Crew morale remains high, and the replicators are only slightly misbehaving.`,
       `The crew now recommends a ship-wide ban on unsupervised holodeck programs and all forms of cheese near plasma relays. All systems are nominal, but the warp core is humming the theme from "The Pirates of Penzance."`,
-      `Engineering morale remains high, though the replicators are still refusing to produce anything but lukewarm stew. All repairs are logged for future reference.`,
+      mt === 'survey' ? `Scientific curiosity remains high, though the replicators are still refusing to produce anything but lukewarm stew. All repairs are logged for future reference.` : `Engineering morale remains high, though the replicators are still refusing to produce anything but lukewarm stew. All repairs are logged for future reference.`,
       `All systems are nominal, but the ship now hums slightly off-key when exceeding Warp ${randint(5, 8, rnd)}. Engineering has decided to call this a "feature" rather than a "bug."` 
     ];
     return `${pick(absurdIntros, rnd)} ${systemList}. ${pick(absurdOutros, rnd)}`;
@@ -687,7 +954,7 @@ function generateAbstract(problems: any[], humorLevel: number, rnd: () => number
 }
 
 // Generate appropriate conclusion based on humor level and problems
-function generateConclusion(problems: any[], humorLevel: number, rnd: () => number): string {
+function generateConclusion(problems: any[], humorLevel: number, rnd: () => number, missionTemplate?: MissionTemplate): string {
   // Use full system names from POOLS.systems for natural phrasing
   const getFullSystemName = (title: string) => {
     const lower = title.toLowerCase();
@@ -700,16 +967,19 @@ function generateConclusion(problems: any[], humorLevel: number, rnd: () => numb
   const systemList = systemsMentioned.length > 1
     ? systemsMentioned.slice(0, -1).join(', ') + ' and ' + systemsMentioned[systemsMentioned.length - 1]
     : systemsMentioned[0];
+  const mt = missionTemplate && missionTemplate !== 'none' ? missionTemplate : undefined;
   if (humorLevel <= 2) {
     // Dry technical, multi-sentence
-    return `All reported anomalies in the ${systemList} have been successfully addressed. Systems have been recalibrated to operate within Starfleet specifications. It is recommended that routine monitoring continue for the next ${randint(3, 5, rnd)} duty cycles to ensure stabilization. Maintenance schedule has been updated accordingly in the engineering database. Engineering team will review system logs and schedule additional diagnostics as needed.`;
+    const tail = mt === 'incident' ? `Incident response logs updated and submitted to Operations.` : mt === 'survey' ? `Survey logs updated and transmitted to Science.` : `Maintenance schedule updated in the engineering database.`;
+    return `All reported anomalies in the ${systemList} have been successfully addressed. Systems have been recalibrated to operate within Starfleet specifications. It is recommended that routine monitoring continue for the next ${randint(3, 5, rnd)} duty cycles to ensure stabilization. ${tail} Engineering team will review system logs and schedule additional diagnostics as needed.`;
   } else if (humorLevel <= 7) {
     // Balanced, multi-sentence
-    return `All identified issues have been resolved and the ${systemList} are now functioning within normal parameters. The engineering team recommends implementing a ${randint(2, 7, rnd)}-hour diagnostic cycle for the affected systems over the next ${randint(3, 10, rnd)} days to ensure long-term stability. Crew members have logged recommendations for future maintenance. Mission operations may proceed without restriction. Continued vigilance is advised.`;
+    const context = mt === 'incident' ? 'incident post-analysis' : mt === 'survey' ? 'survey follow-up' : 'maintenance follow-up';
+    return `All identified issues have been resolved and the ${systemList} are now functioning within normal parameters. The engineering team recommends implementing a ${randint(2, 7, rnd)}-hour diagnostic cycle for the affected systems over the next ${randint(3, 10, rnd)} days to ensure long-term stability. Crew members have logged recommendations for future ${context}. Mission operations may proceed without restriction. Continued vigilance is advised.`;
   } else {
     // Absurd, multi-sentence
     const absurdConclusions = [
-      `All systems are now functioning as intended, though the ${pick(['warp core', 'computer', 'replicator', 'transporter'], rnd)} seems a bit sulky. Engineering recommends speaking to it nicely for the next few days. Crew morale remains high, and the replicators are only slightly misbehaving.`,
+      mt === 'survey' ? `All systems are now functioning as intended, though the ${pick(['sensor array', 'subspace transceiver', 'astrometrics lab', 'deflector'], rnd)} seems a bit sulky. Engineering recommends speaking to it nicely for the next few days. Crew morale remains high, and the replicators are only slightly misbehaving.` : `All systems are now functioning as intended, though the ${pick(['warp core', 'computer', 'replicator', 'transporter'], rnd)} seems a bit sulky. Engineering recommends speaking to it nicely for the next few days. Crew morale remains high, and the replicators are only slightly misbehaving.`,
       `Problems solved! We're as surprised as you are. Recommend celebrating with synthehol all around, preferably not near any of the systems mentioned in this report. All repairs are logged for future reference.`,
       `Everything's fixed, Captain! That said, if anyone asks where that spare ${pick(['dilithium crystal', 'power coupling', 'phase discriminator', 'quantum flux capacitor'], rnd)} went, we know nothing. All systems are nominal, but the ship now hums slightly off-key when exceeding Warp ${randint(5, 8, rnd)}. Engineering has decided to call this a "feature" rather than a "bug."`,
       `All repairs complete. The ship is now 17% more likely to survive a temporal anomaly, according to the computer. Engineering team requests permission to take the rest of the day off, unless the holodeck malfunctions again.`
