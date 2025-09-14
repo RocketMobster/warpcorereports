@@ -41,6 +41,30 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
   const [signatoryReference, setSignatoryReference] = useState<boolean>(DEFAULTS.signatoryReference);
   const [figureBias, setFigureBias] = useState<FigureBias>(DEFAULTS.figureBias);
   const [preset, setPreset] = useState<string>("custom");
+  const [wasReset, setWasReset] = useState<boolean>(false);
+  const [showToast, setShowToast] = useState<boolean>(false);
+  const [toastMsg, setToastMsg] = useState<string>("");
+
+  // Helper: compare current state to a given preset
+  const getPresetValues = (name: string) => {
+    if (name === "diagnostic") return { pc: 2, pd: 2, ge: true, gc: 2, fb: "eps", hu: 2 } as const;
+    if (name === "incident") return { pc: 4, pd: 4, ge: true, gc: 5, fb: "deflector", hu: 1 } as const;
+    if (name === "maintenance") return { pc: 3, pd: 3, ge: true, gc: 3, fb: "sif", hu: 4 } as const;
+    if (name === "performance") return { pc: 3, pd: 2, ge: true, gc: 6, fb: "warp", hu: 3 } as const;
+    return null;
+  };
+  const isPresetMatch = (name: string) => {
+    const p = getPresetValues(name);
+    if (!p) return false;
+    return (
+      problemsCount === p.pc && problemDetailLevel === p.pd && graphsEnabled === p.ge &&
+      graphsCount === p.gc && figureBias === p.fb && humor === p.hu
+    );
+  };
+  const presetStatus = useMemo(() => {
+    if (preset === "custom") return "Custom";
+    return isPresetMatch(preset) ? "Active" : "Modified";
+  }, [preset, problemsCount, problemDetailLevel, graphsEnabled, graphsCount, figureBias, humor]);
 
   const handleRandomName = () => {
   const rnd = xorshift32(Math.floor(Math.random() * 1e9));
@@ -112,11 +136,14 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
     setSignatoryReference(DEFAULTS.signatoryReference);
     setFigureBias(DEFAULTS.figureBias);
     setPreset("custom");
+    setWasReset(true);
+    try { localStorage.setItem('wcr_was_reset', 'true'); } catch {}
   };
 
   // Presets
   const applyPreset = (name: string) => {
     setPreset(name);
+    try { localStorage.setItem('wcr_preset', name); } catch {}
     if (name === "diagnostic") {
       setProblemsCount(2 as any); setProblemDetailLevel(2); setGraphsEnabled(true); setGraphsCount(2); setFigureBias("eps"); setHumor(2);
     } else if (name === "incident") {
@@ -152,10 +179,14 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
     url.hash = "";
     try {
       await navigator.clipboard.writeText(url.toString());
-      alert("Settings link copied to clipboard.");
+      setToastMsg('Settings link copied to clipboard.');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 1800);
     } catch (e) {
       console.error("Clipboard failed:", e);
-      alert("Unable to copy. Please copy from the address bar after navigation.");
+      setToastMsg('Unable to copy. Copy from the address bar.');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 2000);
     }
   };
 
@@ -179,10 +210,49 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
       if (cfg.rf != null) setSignatoryReference(!!cfg.rf);
       if (cfg.fb) setFigureBias(cfg.fb as FigureBias);
       setPreset("custom");
+      try { localStorage.setItem('wcr_preset', 'custom'); } catch {}
     } catch (e) {
       console.warn("Failed to parse cfg from URL", e);
     }
   }, []);
+
+  // If no cfg is provided, load persisted preset/reset state
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const hasCfg = !!params.get('cfg');
+    if (hasCfg) return;
+    try {
+      const p = localStorage.getItem('wcr_preset');
+      const wr = localStorage.getItem('wcr_was_reset');
+      if (p && p !== 'custom') {
+        applyPreset(p);
+      } else if (p === 'custom') {
+        setPreset('custom');
+      }
+      setWasReset(wr === 'true');
+    } catch {}
+  }, []);
+
+  // When any control changes and differs from defaults, clear wasReset
+  useEffect(() => {
+    const equalsDefaults = (
+      problemsCount === DEFAULTS.problemsCount &&
+      problemDetailLevel === DEFAULTS.problemDetailLevel &&
+      graphsEnabled === DEFAULTS.graphsEnabled &&
+      graphsCount === DEFAULTS.graphsCount &&
+      signatoryName === DEFAULTS.signatoryName &&
+      signatoryRank === DEFAULTS.signatoryRank &&
+      vessel === DEFAULTS.vessel &&
+      (seed || "") === (DEFAULTS.seed || "") &&
+      humor === DEFAULTS.humor &&
+      signatoryReference === DEFAULTS.signatoryReference &&
+      figureBias === DEFAULTS.figureBias
+    );
+    if (!equalsDefaults && wasReset) {
+      setWasReset(false);
+      try { localStorage.setItem('wcr_was_reset', 'false'); } catch {}
+    }
+  }, [problemsCount, problemDetailLevel, graphsEnabled, graphsCount, signatoryName, signatoryRank, vessel, seed, humor, signatoryReference, figureBias]);
 
   const generate = () => {
     const cfg: GeneratorConfig = {
@@ -209,6 +279,7 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
   };
 
   return (
+    <>
     <div className="grid md:grid-cols-3 gap-4 mb-6">
   <div className="lcars-card">
         <div className="lcars-rail"></div>
@@ -322,6 +393,12 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
             <option value="maintenance">Maintenance</option>
             <option value="performance">Performance</option>
           </select>
+          <span className={`text-xs px-2 py-1 rounded-md border ${presetStatus === 'Active' ? 'bg-green-600 border-green-500' : presetStatus === 'Modified' ? 'bg-amber-600 border-amber-500' : 'bg-slate-700 border-slate-600'}`}>
+            {presetStatus}
+          </span>
+          {wasReset && (
+            <span className="text-xs px-2 py-1 rounded-md border bg-blue-700 border-blue-500">Reset</span>
+          )}
         </div>
         <button onClick={copySettingsLink} className="lcars-btn" title="Copy a shareable link for current settings" aria-label="Copy shareable settings link">Copy Settings Link</button>
         <button
@@ -348,5 +425,11 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
         )}
       </div>
     </div>
+    {showToast && (
+      <div className="fixed bottom-4 right-4 bg-slate-900 text-amber-300 px-4 py-2 rounded-lg border border-amber-500 shadow-lg z-50">
+        {toastMsg}
+      </div>
+    )}
+    </>
   );
 }

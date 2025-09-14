@@ -16,6 +16,7 @@ import { randint } from "./utils/helpers";
 import { parseSharedReportUrl, decodeSharedReportId } from "./utils/urlParser";
 import { initSoundSettings, buttonClickSound, successSound, alertSound, notificationSound, playSound } from "./utils/sounds";
 import "./utils/print.css";
+import Footer from "./components/Footer";
 
 export default function App() {
   const [report, setReport] = useState<Report | null>(null);
@@ -593,6 +594,7 @@ export default function App() {
             {toastMessage}
           </div>
         )}
+        <Footer />
       </div>
     </div>
   );
