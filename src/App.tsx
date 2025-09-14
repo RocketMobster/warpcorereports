@@ -482,6 +482,14 @@ export default function App() {
           manifestPanelOpen={manifestPanelOpen}
           onRegenerate={regenerateReport}
         />
+        {manifestPanelOpen && (
+          <CrewManifestPanel 
+            count={currentCrewCount} 
+            onCrewChange={handleCrewChange} 
+            onRegenerate={regenerateCrewManifest}
+          />
+        )}
+
         <div className="mt-2 flex items-center gap-3">
           <button className="lcars-btn" onClick={()=>setShowStardateCalc(v=>!v)}>
             {showStardateCalc ? "Hide Stardate Calculator" : "Show Stardate Calculator"}
@@ -498,14 +506,6 @@ export default function App() {
           <StardateCalculator
             onStardateChange={(sd)=>setStardateOverride(sd)}
             currentStardate={stardateOverride}
-          />
-        )}
-        <StardateCalculator />
-        {manifestPanelOpen && (
-          <CrewManifestPanel 
-            count={currentCrewCount} 
-            onCrewChange={handleCrewChange} 
-            onRegenerate={regenerateCrewManifest}
           />
         )}
         <div id="button-bar" className="flex flex-wrap gap-3 mb-6 sticky top-4 z-10 bg-[#0b0d16] p-3 rounded-xl border border-slate-700 shadow-lg transition-all duration-300">
