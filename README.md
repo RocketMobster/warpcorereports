@@ -112,6 +112,17 @@ http://localhost:5173/sound-generator.html
 
 You can customize the sound experience using the sound control panel in the application header.
 
+## Randomize Controls
+
+For quick exploration and fine-tuned randomness:
+
+- "🎲" buttons appear beside many controls and will randomize just that field:
+	- Problems, Problem Detail Level, Graphs On/Off, Graph Count, Starship, Signing Engineer, Rank, Seed, and Humor Level
+- "Randomize All" randomizes all controls at once (respects the seed lock if enabled)
+- Tooltips on each "🎲" button explain exactly what will be randomized
+
+Tip: Lock the seed to keep results reproducible even when randomizing other controls.
+
 ## Browser Compatibility
 
 - Chrome/Edge (Recommended)

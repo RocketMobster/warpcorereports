@@ -31,6 +31,20 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
   setSignatoryName(pickCrewName(rnd));
   };
 
+  // Randomizers for specific controls
+  const randomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
+  const handleRandomProblemsCount = () => setProblemsCount(randomInt(1, 5) as 1|2|3|4|5);
+  const handleRandomProblemDetail = () => setProblemDetailLevel(randomInt(1, 6));
+  const handleRandomGraphsToggleAndCount = () => {
+    const enabled = Math.random() < 0.8;
+    setGraphsEnabled(enabled);
+    if (enabled) setGraphsCount(randomInt(1, 10));
+  };
+  const handleRandomGraphsCount = () => setGraphsCount(randomInt(1, 10));
+  const handleRandomVessel = () => setVessel(STARFLEET_VESSELS[Math.floor(Math.random() * STARFLEET_VESSELS.length)].name);
+  const handleRandomRank = () => setSignatoryRank(ranks[Math.floor(Math.random() * ranks.length)]);
+  const handleRandomHumor = () => setHumor(randomInt(0, 10));
+
   const handleRandomSeed = () => {
     const s = Math.floor(Math.random() * 1e9).toString(36);
     setLastRandomSeed(s);
@@ -47,6 +61,22 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
       // Unlock and restore lastRandomSeed into the field for convenience
       setSeed(lastRandomSeed);
       setSeedLocked(false);
+    }
+  };
+
+  // Randomize all configurable inputs at once (respects seed lock)
+  const handleRandomizeAll = () => {
+    handleRandomProblemsCount();
+    handleRandomProblemDetail();
+    handleRandomGraphsToggleAndCount();
+    handleRandomVessel();
+    handleRandomName();
+    handleRandomRank();
+    handleRandomHumor();
+    // 40% chance to include signatory as reference
+    setSignatoryReference(Math.random() < 0.4);
+    if (!seedLocked) {
+      handleRandomSeed();
     }
   };
 
@@ -78,10 +108,16 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
   <div className="lcars-card">
         <div className="lcars-rail"></div>
   <div className="lcars-body">
-          <label className="lcars-label">Problems</label>
+          <div className="flex items-center justify-between">
+            <label className="lcars-label">Problems</label>
+            <button onClick={handleRandomProblemsCount} className="lcars-btn" title="Randomize number of problems" aria-label="Randomize number of problems">🎲</button>
+          </div>
           <input type="range" min={1} max={5} value={problemsCount} onChange={(e)=>setProblemsCount(parseInt(e.target.value) as any)} />
           <div className="lcars-small">{problemsCount}</div>
-          <label className="lcars-label mt-2">Problem Detail Level</label>
+          <div className="flex items-center justify-between mt-2">
+            <label className="lcars-label">Problem Detail Level</label>
+            <button onClick={handleRandomProblemDetail} className="lcars-btn" title="Randomize problem detail level" aria-label="Randomize problem detail level">🎲</button>
+          </div>
           <input type="range" min={1} max={6} value={problemDetailLevel} onChange={e=>setProblemDetailLevel(parseInt(e.target.value))} />
           <div className="lcars-small">{problemDetailLevel} sentence{problemDetailLevel > 1 ? "s" : ""} per problem</div>
         </div>
@@ -90,13 +126,19 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
       <div className="lcars-card">
         <div className="lcars-rail lcars-rail-alt"></div>
         <div className="lcars-body">
-          <label className="lcars-label">Graphs</label>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between">
+            <label className="lcars-label">Graphs</label>
+            <button onClick={handleRandomGraphsToggleAndCount} className="lcars-btn" title="Randomize graphs on/off and count" aria-label="Randomize graphs on/off and count">🎲</button>
+          </div>
+          <div className="flex items-center gap-2 mt-1">
             <input type="checkbox" checked={graphsEnabled} onChange={e=>setGraphsEnabled(e.target.checked)} />
             <span className="lcars-small">Enable</span>
           </div>
           {graphsEnabled && <>
-            <label className="lcars-label mt-2">How many (1–10)</label>
+            <div className="flex items-center justify-between mt-2">
+              <label className="lcars-label">How many (1–10)</label>
+              <button onClick={handleRandomGraphsCount} className="lcars-btn" title="Randomize graph count" aria-label="Randomize graph count">🎲</button>
+            </div>
             <input type="range" min={1} max={10} value={graphsCount} onChange={(e)=>setGraphsCount(parseInt(e.target.value))} />
             <div className="lcars-small">{graphsCount}</div>
           </>}
@@ -107,13 +149,16 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
         <div className="lcars-rail lcars-rail-accent"></div>
         <div className="lcars-body space-y-2">
           <label className="lcars-label">Starship</label>
-          <select value={vessel} onChange={e=>setVessel(e.target.value)} className="lcars-input">
-            {STARFLEET_VESSELS.map(v => <option key={v.name} value={v.name}>{v.name}</option>)}
-          </select>
+          <div className="flex gap-2 items-center">
+            <select value={vessel} onChange={e=>setVessel(e.target.value)} className="lcars-input flex-1" aria-label="Select starship">
+              {STARFLEET_VESSELS.map(v => <option key={v.name} value={v.name}>{v.name}</option>)}
+            </select>
+            <button onClick={handleRandomVessel} className="lcars-btn" title="Randomize starship" aria-label="Randomize starship">🎲</button>
+          </div>
           <label className="lcars-label mt-2">Signing Engineer</label>
           <div className="flex gap-2">
             <input type="text" value={signatoryName} onChange={e=>setSignatoryName(e.target.value)} className="lcars-input flex-1" />
-            <button onClick={handleRandomName} className="lcars-btn">🎲</button>
+            <button onClick={handleRandomName} className="lcars-btn" title="Randomize signing engineer" aria-label="Randomize signing engineer">🎲</button>
           </div>
           <div className="flex items-center gap-2 mt-2">
             <input
@@ -127,15 +172,18 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
             </label>
           </div>
           <label className="lcars-label">Rank</label>
-          <select value={signatoryRank} onChange={e=>setSignatoryRank(e.target.value as Rank)} className="lcars-input">
-            {ranks.map(r=><option key={r}>{r}</option>)}
-          </select>
+          <div className="flex gap-2 items-center">
+            <select value={signatoryRank} onChange={e=>setSignatoryRank(e.target.value as Rank)} className="lcars-input flex-1" aria-label="Select rank">
+              {ranks.map(r=> <option key={r}>{r}</option>)}
+            </select>
+            <button onClick={handleRandomRank} className="lcars-btn" title="Randomize rank" aria-label="Randomize rank">🎲</button>
+          </div>
 
           <label className="lcars-label">Seed</label>
           <div className="flex gap-2">
-            <input type="text" value={seed} onChange={e=>setSeed(e.target.value)} className="lcars-input flex-1" placeholder="optional" />
-            <button onClick={handleRandomSeed} className="lcars-btn" title="Random seed">🎲</button>
-            <button onClick={toggleSeedLock} className={"lcars-btn " + (seedLocked ? "lcars-btn-locked" : "")} title="Lock/Unlock seed">{seedLocked ? "🔒" : "🔓"}</button>
+            <input type="text" value={seed} onChange={e=>setSeed(e.target.value)} className="lcars-input flex-1" placeholder="optional" aria-label="Seed (optional)" />
+            <button onClick={handleRandomSeed} className="lcars-btn" title="Generate random seed" aria-label="Generate random seed">🎲</button>
+            <button onClick={toggleSeedLock} className={"lcars-btn " + (seedLocked ? "lcars-btn-locked" : "")} title="Lock or unlock seed" aria-label="Lock or unlock seed">{seedLocked ? "🔒" : "🔓"}</button>
           </div>
 
           <label className="lcars-label">Figure Bias</label>
@@ -151,13 +199,17 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
               <option value="transporter">Transporter</option>
               <option value="inertial">Inertial</option>
             </select>
-            <label className="lcars-label">Humor Level</label>
+            <div className="flex items-center justify-between mt-2">
+              <label className="lcars-label">Humor Level</label>
+              <button onClick={handleRandomHumor} className="lcars-btn" title="Randomize humor level" aria-label="Randomize humor level">🎲</button>
+            </div>
           <input type="range" min={0} max={10} value={humor} onChange={e=>setHumor(parseInt(e.target.value))} />
         </div>
       </div>
 
       <div className="col-span-3 flex gap-2">
         <button onClick={generate} className="lcars-cta flex-1">Produce Report</button>
+        <button onClick={handleRandomizeAll} className="lcars-btn" title="Randomize all controls" aria-label="Randomize all controls">Randomize All 🎲</button>
         <button
           onClick={previewCrew}
           className={"lcars-btn " + (manifestPanelOpen ? "lcars-btn-highlighted" : "")}
