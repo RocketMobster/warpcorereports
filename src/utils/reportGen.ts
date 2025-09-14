@@ -530,7 +530,10 @@ export function generateReport(cfg: GeneratorConfig & { crewManifest?: CrewMembe
     // TNG/DS9/VOY era
     stardateNum = 41000 + (year - 2364) * 1000 + (dayOfYear / 365) * 1000;
   }
-  const stardate = `Stardate ${stardateNum.toFixed(1)}`;
+  // Use override if provided in cfg.stardate; accept raw number string or already-formatted
+  const stardate = (cfg.stardate && cfg.stardate.toString().trim().length)
+    ? (/^stardate/i.test(cfg.stardate.toString()) ? cfg.stardate.toString() : `Stardate ${cfg.stardate}`)
+    : `Stardate ${stardateNum.toFixed(1)}`;
 
   // Reference generator
   function generateReferences(n: number): Reference[] {

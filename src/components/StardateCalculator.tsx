@@ -1,9 +1,12 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { dateToStardate, stardateToDate, formatStardate } from "../utils/stardate";
 
-export default function StardateCalculator() {
+export default function StardateCalculator({ onStardateChange, currentStardate }: {
+  onStardateChange?: (sd: string) => void,
+  currentStardate?: string
+}) {
   const [dateInput, setDateInput] = useState<string>(() => new Date().toISOString().slice(0, 10));
-  const [sdInput, setSdInput] = useState<string>("41000.0");
+  const [sdInput, setSdInput] = useState<string>(currentStardate ?? "41000.0");
 
   const dateToSd = useMemo(() => {
     const d = new Date(dateInput + "T00:00:00Z");
@@ -17,6 +20,28 @@ export default function StardateCalculator() {
     const d = stardateToDate(n);
     return d.toISOString().slice(0, 10);
   }, [sdInput]);
+
+  // Emit stardate updates to parent (numeric string with one decimal)
+  useEffect(() => {
+    const n = Number(sdInput);
+    if (isFinite(n)) {
+      onStardateChange?.(formatStardate(n));
+    } else {
+      onStardateChange?.("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sdInput]);
+
+  // When date changes, update the emitted stardate as well
+  useEffect(() => {
+    const d = new Date(dateInput + "T00:00:00Z");
+    if (!isNaN(d.getTime())) {
+      const sd = formatStardate(dateToStardate(d));
+      onStardateChange?.(sd);
+      setSdInput(sd);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dateInput]);
 
   return (
     <div className="lcars-card mt-4">

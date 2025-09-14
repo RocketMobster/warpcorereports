@@ -27,6 +27,10 @@ export default function App() {
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [isSharedLink, setIsSharedLink] = useState(false);
   const [sharedLinkFormat, setSharedLinkFormat] = useState<"pdf" | "docx" | "txt" | undefined>(undefined);
+  // Stardate calculator state
+  const [showStardateCalc, setShowStardateCalc] = useState(false);
+  const [stardateOverride, setStardateOverride] = useState("");
+  const [useStardateOverride, setUseStardateOverride] = useState(false);
   // Chart editing state
   const [chartEditingEnabled, setChartEditingEnabled] = useState(false);
   // Toast notification state
@@ -111,8 +115,10 @@ export default function App() {
     // Always clone the config to avoid mutating the original
     const configToUse = { ...cfg };
     
-    // Ensure stardate is set if not already provided
-    if (!configToUse.stardate) {
+    // Ensure stardate is set if not already provided, or override is enabled
+    if (useStardateOverride && stardateOverride) {
+      configToUse.stardate = stardateOverride;
+    } else if (!configToUse.stardate) {
       configToUse.stardate = (50000 + Math.random() * 9999).toFixed(1);
     }
     
@@ -453,6 +459,24 @@ export default function App() {
           manifestPanelOpen={manifestPanelOpen}
           onRegenerate={regenerateReport}
         />
+        <div className="mt-2 flex items-center gap-3">
+          <button className="lcars-btn" onClick={()=>setShowStardateCalc(v=>!v)}>
+            {showStardateCalc ? "Hide Stardate Calculator" : "Show Stardate Calculator"}
+          </button>
+          <label className="flex items-center gap-2">
+            <input type="checkbox" checked={useStardateOverride} onChange={e=>setUseStardateOverride(e.target.checked)} />
+            <span className="lcars-label">Use Stardate in Report</span>
+          </label>
+          {useStardateOverride && (
+            <span className="lcars-small">Current: {stardateOverride || "—"}</span>
+          )}
+        </div>
+        {showStardateCalc && (
+          <StardateCalculator
+            onStardateChange={(sd)=>setStardateOverride(sd)}
+            currentStardate={stardateOverride}
+          />
+        )}
         <StardateCalculator />
         {manifestPanelOpen && (
           <CrewManifestPanel 

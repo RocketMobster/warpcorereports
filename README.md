@@ -123,6 +123,13 @@ For quick exploration and fine-tuned randomness:
 
 Tip: Lock the seed to keep results reproducible even when randomizing other controls.
 
+## Stardate Calculator
+
+- Toggle the panel below the main controls with "Show Stardate Calculator".
+- Convert Calendar Date ↔ Stardate using common TOS/TNG-era approximations.
+- Enable "Use Stardate in Report" to apply the calculator’s stardate to generated reports.
+- When enabled, the current override value is shown inline next to the toggle.
+
 ## Browser Compatibility
 
 - Chrome/Edge (Recommended)
