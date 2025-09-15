@@ -11,6 +11,8 @@ Live demo: https://rocketmobster.github.io/warpcorereports/
 - Add your name/rank and optionally check "Add Name to References" to include the signer in References.
 - Use the ℹ️ buttons in the UI for quick help on Templates, Figure Bias, Presets, Produce vs Reroll, and References.
 
+![Quick demo: Produce vs Reroll and Help anchors](docs/media/v0.2.4-demo.gif)
+
 ## Recently Fixed
 
 - Signing Engineer reference: When "Add Name to References" is checked, the References section now always includes a signing engineer entry and consistent numbering. See CHANGELOG 0.2.3.
