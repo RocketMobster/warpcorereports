@@ -2,6 +2,8 @@
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-rocketmobster.github.io%2Fwarpcorereports-blue?logo=github)](https://rocketmobster.github.io/warpcorereports/)
 
+![v0.2.4 Demo](docs/media/v0.2.4-demo.gif)
+
 A Star Trek-themed engineering report generator with LCARS UI styling, designed to create authentic-looking Starfleet engineering reports with dynamic content, interactive charts, and sharing capabilities.
 
 ## Getting Started (1 minute)
@@ -10,8 +12,6 @@ A Star Trek-themed engineering report generator with LCARS UI styling, designed 
 - Explore presets (Diagnostic/Incident/Maintenance/Performance) or pick a Mission Template (Incident/Survey) for focused content.
 - Add your name/rank and optionally check "Add Name to References" to include the signer in References.
 - Use the ℹ️ buttons in the UI for quick help on Templates, Figure Bias, Presets, Produce vs Reroll, and References.
-
-![Quick demo: Produce vs Reroll and Help anchors](docs/media/v0.2.4-demo.gif)
 
 ## Recently Fixed
 
