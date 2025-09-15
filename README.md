@@ -2,6 +2,8 @@
 
 A Star Trek-themed engineering report generator with LCARS UI styling, designed to create authentic-looking Starfleet engineering reports with dynamic content, interactive charts, and sharing capabilities.
 
+Live demo: https://rocketmobster.github.io/warpcorereports/
+
 ## Recently Fixed
 
 - Signing Engineer reference: When "Add Name to References" is checked, the References section now always includes a signing engineer entry and consistent numbering. See CHANGELOG 0.2.3.
