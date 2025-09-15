@@ -1,4 +1,4 @@
-# Starfleet Engineering Report Generator
+﻿# Starfleet Engineering Report Generator
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-rocketmobster.github.io%2Fwarpcorereports-blue?logo=github)](https://rocketmobster.github.io/warpcorereports/)
 
@@ -163,7 +163,7 @@ For quick exploration and fine-tuned randomness:
 - "🎲" buttons appear beside many controls and will randomize just that field:
 	- Problems, Problem Detail Level, Graphs On/Off, Graph Count, Starship, Signing Engineer, Rank, Seed, and Humor Level
 - "Randomize All" randomizes all controls at once (respects the seed lock if enabled)
-- Tooltips on each "🎲" button explain exactly what will be randomized
+- Tooltips on each "ðŸŽ²" button explain exactly what will be randomized
 
 Tip: Lock the seed to keep results reproducible even when randomizing other controls.
 
@@ -219,3 +219,4 @@ Upcoming features and improvements planned for future versions:
 ---
 
 "Live long and prosper! 🖖"
+
