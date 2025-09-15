@@ -1,8 +1,8 @@
 # Starfleet Engineering Report Generator
 
-A Star Trek-themed engineering report generator with LCARS UI styling, designed to create authentic-looking Starfleet engineering reports with dynamic content, interactive charts, and sharing capabilities.
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-rocketmobster.github.io%2Fwarpcorereports-blue?logo=github)](https://rocketmobster.github.io/warpcorereports/)
 
-Live demo: https://rocketmobster.github.io/warpcorereports/
+A Star Trek-themed engineering report generator with LCARS UI styling, designed to create authentic-looking Starfleet engineering reports with dynamic content, interactive charts, and sharing capabilities.
 
 ## Getting Started (1 minute)
 - Open the Live Demo and click "Produce Report" to generate your first report.
