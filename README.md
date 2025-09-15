@@ -4,6 +4,13 @@ A Star Trek-themed engineering report generator with LCARS UI styling, designed 
 
 Live demo: https://rocketmobster.github.io/warpcorereports/
 
+## Getting Started (1 minute)
+- Open the Live Demo and click "Produce Report" to generate your first report.
+- Try "Reroll Current Report" to get a fresh variant while keeping the same settings.
+- Explore presets (Diagnostic/Incident/Maintenance/Performance) or pick a Mission Template (Incident/Survey) for focused content.
+- Add your name/rank and optionally check "Add Name to References" to include the signer in References.
+- Use the ℹ️ buttons in the UI for quick help on Templates, Figure Bias, Presets, Produce vs Reroll, and References.
+
 ## Recently Fixed
 
 - Signing Engineer reference: When "Add Name to References" is checked, the References section now always includes a signing engineer entry and consistent numbering. See CHANGELOG 0.2.3.
