@@ -2,7 +2,7 @@
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-rocketmobster.github.io%2Fwarpcorereports-blue?logo=github)](https://rocketmobster.github.io/warpcorereports/)
 
-![v0.2.4 Demo](docs/media/v0.2.4-demo.gif)
+![v0.2.5 Demo](docs/media/v0.2.5-demo.gif)
 
 A Star Trek-themed engineering report generator with LCARS UI styling, designed to create authentic-looking Starfleet engineering reports with dynamic content, interactive charts, and sharing capabilities.
 
@@ -13,9 +13,15 @@ A Star Trek-themed engineering report generator with LCARS UI styling, designed 
 - Add your name/rank and optionally check "Add Name to References" to include the signer in References.
 - Use the ℹ️ buttons in the UI for quick help on Templates, Figure Bias, Presets, Produce vs Reroll, and References.
 
-## Recently Fixed
+## Recently Added (0.2.5)
 
-- Signing Engineer reference: When "Add Name to References" is checked, the References section now always includes a signing engineer entry and consistent numbering. See CHANGELOG 0.2.3.
+- Text-only zoom: Report text scales smoothly (0.8×–1.4×) while charts and the zoom/control bar remain visually steady via inverse scaling wrappers.
+- Chart base size selector (80/90/100%) with persistence across sessions.
+- Multi-layer anti-clipping system: dynamic safe zone padding, tiered internal `rightSafe` margins, transitional margin boost, adaptive post-render measurement, and SVG `overflow: visible` to eliminate right-edge truncation at high zoom.
+- Mobile collapsible control groups & mobile action bar with haptic feedback.
+- Copy buttons now include icons and responsive labels.
+
+See CHANGELOG 0.2.5 for full technical notes.
 
 ## Features
 
@@ -29,6 +35,8 @@ A Star Trek-themed engineering report generator with LCARS UI styling, designed 
 - **Seed-Based Generation**: Use seeds for reproducible reports
 - **LCARS Sound Effects**: Authentic Star Trek computer sounds for UI interactions
 - **Chart Editing**: Modify charts and visualizations with interactive editing tools
+- **Text-Only Zoom Architecture**: Scales typography while keeping charts a fixed visual size for stability
+- **Adaptive Anti-Clipping**: Eliminates edge truncation at high zoom via layered safety margins and measurement
 - **Footer**: LCARS-styled footer shows developer info, current app version, and a link to the GitHub repo. Version updates automatically on build.
 
 ## Quick Start
@@ -46,6 +54,16 @@ npm run preview
 
 ## Usage Guide
 
+### Zoom & Chart Size (since 0.2.5)
+
+- Use the zoom controls at the top of the report body to scale text-only from 80%–140%.
+- Charts maintain their visual footprint using an inverse scale wrapper (`.chart-no-zoom`) so axis alignment and legibility remain stable.
+- Select a chart base size (80%, 90%, 100%) to generate charts at that intrinsic width; changing this triggers a re-measure pass.
+- A dynamic right-side safe zone expands with zoom and adds internal tiered margins so the last character of titles/captions never clips.
+- An adaptive post-render pass adds minimal extra padding only if actual or near-overflow is detected.
+
+Technical layers: external safe zone → internal tiered `rightSafe` → transitional boost → adaptive measurement (incremental +4 / +8) → SVG overflow visibility.
+
 ### Basic Controls
 
 1. **Vessel Selection**: Choose from classic Star Trek vessels
@@ -57,10 +75,10 @@ npm run preview
 
 ### Produce vs Reroll
 
-- **Produce Report**: Applies the controls above (problems, detail, graphs, vessel, signatory, humor, figure bias, signatory reference, and seed) to create a new report. If you enter or lock a seed, it will be used; otherwise a seed is generated for you.
+- **Produce Report**: Applies the controls above (problems, detail, graphs, vessel, signature, humor, figure bias, signature reference, and seed) to create a new report. If you enter or lock a seed, it will be used; otherwise a seed is generated for you.
 - **Reroll Current Report**: Generates a new variation of the currently displayed report by creating a fresh seed (and stardate) while preserving the report’s existing settings (including Mission Template). Changes you make to the controls are NOT applied until you click Produce Report again.
 - **What changes on Reroll**: Randomized content only — problem topics and summaries, chart data, references selection, and other generated flavor text.
-- **What stays on Reroll**: The settings used to produce the currently displayed report — counts, detail level, graphs toggle/count, Mission Template, figure bias, vessel, signatory info, humor level, and signatory-reference choice.
+- **What stays on Reroll**: The settings used to produce the currently displayed report — counts, detail level, graphs toggle/count, Mission Template, figure bias, vessel, signature info, humor level, and signature-reference choice.
 - **Seed lock nuance**: Seed lock affects the Seed control for Produce Report. Reroll always uses a fresh seed regardless of the lock or what’s currently typed in the Seed field.
 
 ### Advanced Features
@@ -161,7 +179,7 @@ The repository ignores accidental large artifacts and documents (e.g., screensho
 For quick exploration and fine-tuned randomness:
 
 - "🎲" buttons appear beside many controls and will randomize just that field:
-	- Problems, Problem Detail Level, Graphs On/Off, Graph Count, Starship, Signing Engineer, Rank, Seed, and Humor Level
+	- Problems, Problem Detail Level, Graphs On/Off, Graph Count, Starship, Signature (Engineer Name), Rank, Seed, and Humor Level
 - "Randomize All" randomizes all controls at once (respects the seed lock if enabled)
 - Tooltips on each "ðŸŽ²" button explain exactly what will be randomized
 
