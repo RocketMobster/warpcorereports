@@ -1,5 +1,38 @@
 # Starfleet Engineering Report Generator - Changelog
 
+## Version 0.2.5 - September 17, 2025
+
+### Zoom & Anti-Clipping Architecture
+- Implemented text-only zoom: report body scales; charts and control bar remain visually steady using inverse scale wrappers (`.chart-no-zoom`, `.controls-no-zoom`).
+- Added chart base size selector (80%, 90%, 100%) with persistence (`wcr_chart_base_scale`).
+- Introduced dynamic right-edge safe zone (`safeZonePx`) with zoom-proportional expansion and conditional bump for large charts at high zoom.
+- Added internal `rightSafe` tiered margins (+10 at ≥1.3×, +2 at ≥1.35× plus transitional +4 when crossing threshold) to prevent late glyph clipping.
+- Adaptive post-render measurement for figure title/caption adds incremental `adaptivePad` (+4 then +8 only if needed) to eliminate residual single-character truncation at 1.3–1.4×.
+- SVG roots now `overflow: visible` to avoid stroke cropping.
+
+### Mobile & UX Enhancements
+- New `Collapsible` component groups controls on mobile with persisted open state.
+- Added `MobileActionBar` with Produce / Reroll / Share / Help / Stardate / Crew / More actions and haptic feedback.
+- Drawer component scaffold for future slide-in panels.
+- Improved sound controls (responsive layout, accessible labels, smaller text on mobile).
+- Header and section copy buttons now include icons and hide text labels on narrow viewports for space efficiency.
+
+### Utilities & Infrastructure
+- Haptics utility (`haptics.ts`) with light/medium/heavy/success/error vibration patterns respecting `prefers-reduced-motion`.
+- Media query hook (`useMediaQuery`).
+- Lazy KaTeX loader with math presence detection (`lazyKatex.ts`).
+- LTTB downsampling utilities (`chartDownsample.ts`) for future high-density chart optimization.
+- Sample export scripts & generated sample artifacts (PDF, DOCX, TXT) for distribution demo.
+
+### Fixes
+- Resolved final high-zoom (≥1.35×) edge-case clipping of last 1–2 characters in figure titles/captions.
+- Prevented control bar button wrapping/clipping at elevated zoom levels.
+
+### Technical Notes
+The anti-clipping solution layers: (1) dynamic container safe zone, (2) tiered internal margins, (3) adaptive DOM measurement with minimal incremental padding, (4) inverse-scaling strategy to avoid reflow/measurement instability in SVG charts.
+
+---
+
 ## Version 0.2.4 - September 14, 2025
 
 ### UI / Docs
