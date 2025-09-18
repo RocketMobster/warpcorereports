@@ -1,0 +1,29 @@
+USS Enterprise NCC-1701-D Engineering Report
+
+Stardate: 48041.1
+Vessel: USS Enterprise NCC-1701-D
+Prepared By: Lt. Cmdr. Engineer, Test, Engineering
+Submitted To: Starfleet Corps of Engineers
+
+Abstract
+This sample demonstrates the TXT layout: headings, paragraph flow, and references numbering. Charts are omitted in the sample.
+
+Problem 1: Warp Core Containment
+Detected anomaly in the warp core containment field. Engineering team executed diagnostics and implemented corrective measures per Starfleet regulation 1287-A.
+
+Problem 2: EPS Conduit Overheating
+Localized overheating in EPS conduits. Re-routed power and recalibrated regulators. Post-repair diagnostics indicate nominal performance.
+
+Crew Manifest (Mentioned)
+- Lieutenant Engineer, Test (Chief Engineer)
+- Ensign Smith, Jane (Diagnostics)
+- Ensign Doe, John (Operations)
+- Lieutenant JG Park, Amy (Systems)
+
+Conclusion
+All identified issues have been resolved. Systems operating within normal parameters. Continued monitoring recommended.
+
+References
+[1] Engineer, Test Lieutenant, Chief Engineer — Engineering Log: Shipboard Diagnostics (Technical Bulletin), Starfleet Engineering Journal, Engineering Division, Stardate: 48041.1
+[2] La Forge, Geordi Lt. Cmdr., Chief Engineer — Warp Core Diagnostics (Journal Article), Starfleet Technical Orders, Engineering Division, Stardate: 48022.5
+[3] O'Brien, Miles Chief, Transporter Chief — EPS Conduit Maintenance (Maintenance Log), Starfleet Ship Systems Compendium, Operations Division, Stardate: 48012.3

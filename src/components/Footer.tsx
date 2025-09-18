@@ -3,16 +3,19 @@ import React from "react";
 // Declare the global constant injected by Vite define
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const __APP_VERSION__: string;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const __GIT_HASH__: string;
 
 export default function Footer() {
   const version = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0';
+  const hash = (typeof __GIT_HASH__ !== 'undefined' && __GIT_HASH__) ? __GIT_HASH__.slice(0,7) : '';
   return (
     <footer className="mt-12 py-6 border-t border-slate-700 text-sm">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="h-4 w-1.5 rounded-full" style={{ background: '#FFB300' }} />
           <span className="font-semibold">RocketMobster Software</span>
-          <span className="opacity-70">v{version}</span>
+          <span className="opacity-70">v{version}{hash && ` (${hash})`}</span>
         </div>
         <a
           href="https://github.com/RocketMobster/warpcorereports"

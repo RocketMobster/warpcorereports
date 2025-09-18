@@ -8,6 +8,7 @@ export default defineConfig({
   // For local development, use '/'
   base: process.env.NODE_ENV === 'production' ? '/warpcorereports/' : '/',
   define: {
-    __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '0.0.0')
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '0.0.0'),
+    __GIT_HASH__: JSON.stringify(process.env.GITHUB_SHA || process.env.VITE_GIT_SHA || '')
   }
 })
