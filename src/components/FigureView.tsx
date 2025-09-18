@@ -9,6 +9,9 @@ interface FigureViewProps {
   fig: Figure;
   onFigureUpdate?: (updatedFigure: Figure) => void;
   editEnabled?: boolean;
+  safeZonePx?: number;
+  zoomScale?: number;
+  baseScale?: number;
 }
 
 export default function FigureView({ fig, onFigureUpdate, editEnabled = false }: FigureViewProps) {

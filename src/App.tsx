@@ -23,6 +23,11 @@ import MobileActionBar from "./components/MobileActionBar";
 import Drawer from "./components/Drawer";
 
 export default function App() {
+  // Restored compact density preference
+  const [densityCompact, setDensityCompact] = useState<boolean>(() => {
+    try { return localStorage.getItem('wcr_density_compact') === 'true'; } catch { return false; }
+  });
+  useEffect(()=>{ try { localStorage.setItem('wcr_density_compact', String(densityCompact)); } catch {} }, [densityCompact]);
   const isDesktop = useMediaQuery('(min-width: 768px)');
   const [mobileControlsOpen, setMobileControlsOpen] = useState(false);
   const [mobileCrewOpen, setMobileCrewOpen] = useState(false);
@@ -612,11 +617,17 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0d16] text-slate-100 p-6">
+    <div className={`min-h-screen bg-[#0b0d16] text-slate-100 p-6 ${densityCompact ? 'density-compact' : ''}`}>   
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-extrabold">Starfleet Engineering Report Generator</h1>
           <SoundControls />
+        </div>
+        <div className="flex items-center gap-4 mb-4 text-xs">
+          <label className="flex items-center gap-2 select-none">
+            <input type="checkbox" checked={densityCompact} onChange={e=>setDensityCompact(e.target.checked)} />
+            <span className="lcars-label mb-0">Compact Density</span>
+          </label>
         </div>
         
         {isSharedLink && (
