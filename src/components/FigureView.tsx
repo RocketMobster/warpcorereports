@@ -14,7 +14,7 @@ interface FigureViewProps {
   baseScale?: number;
 }
 
-export default function FigureView({ fig, onFigureUpdate, editEnabled = false }: FigureViewProps) {
+export default function FigureView({ fig, onFigureUpdate, editEnabled = false, baseScale = 1 }: FigureViewProps) {
   const [currentFigure, setCurrentFigure] = useState<Figure>(fig);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const accent = LCARS.accents[(fig.index ?? 0) % LCARS.accents.length];
@@ -44,8 +44,8 @@ export default function FigureView({ fig, onFigureUpdate, editEnabled = false }:
         {currentFigure.displayId || currentFigure.id}. {currentFigure.title}
       </div>
       
-      <div className="h-48">
-        <LCARSChart figure={currentFigure} />
+      <div className="h-48" style={{ width: `${Math.round(320*baseScale)}px` }}>
+        <LCARSChart figure={currentFigure} width={Math.round(320*baseScale)} height={180} />
       </div>
       
       <div className="text-xs text-slate-400 mt-2 italic">

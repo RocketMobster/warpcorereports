@@ -75,7 +75,7 @@ export default function ReportPreview({ report, onReportUpdate, editEnabled = fa
     <div
       id="printable-report"
       ref={containerRef}
-      className="rounded-2xl border border-slate-700 overflow-hidden"
+  className="rounded-2xl border border-slate-700"
       style={{ marginRight: Math.min(14, Math.max(0, safeZonePx + 4)) }}
     >
       <div className="px-6 py-4 bg-[#12182c] border-b border-slate-700 sticky top-0 z-10" style={{ paddingRight: Math.max(0, safeZonePx + 4) }}>
