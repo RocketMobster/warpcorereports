@@ -18,8 +18,17 @@ import { parseSharedReportUrl, decodeSharedReportId } from "./utils/urlParser";
 import { initSoundSettings, buttonClickSound, successSound, alertSound, notificationSound, playSound } from "./utils/sounds";
 import "./utils/print.css";
 import Footer from "./components/Footer";
+import useMediaQuery from "./hooks/useMediaQuery";
+import MobileActionBar from "./components/MobileActionBar";
+import Drawer from "./components/Drawer";
 
 export default function App() {
+  const isDesktop = useMediaQuery('(min-width: 768px)');
+  const [mobileControlsOpen, setMobileControlsOpen] = useState(false);
+  const [mobileCrewOpen, setMobileCrewOpen] = useState(false);
+  const [mobileStardateOpen, setMobileStardateOpen] = useState(false);
+  const [mobileHelpOpen, setMobileHelpOpen] = useState(false);
+  const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
   const [report, setReport] = useState<Report | null>(null);
   const [crewManifest, setCrewManifest] = useState<any[]>([]);
   const [lastCfg, setLastCfg] = useState<any | null>(null);
@@ -774,6 +783,53 @@ export default function App() {
             </svg>
             {toastMessage}
           </div>
+        )}
+        {/* Mobile overlays (non-desktop) */}
+        {!isDesktop && (
+          <>
+            <MobileActionBar
+              onOpenControls={()=>setMobileControlsOpen(true)}
+              onOpenCrew={()=>setMobileCrewOpen(true)}
+              onOpenStardate={()=>setMobileStardateOpen(true)}
+              onOpenHelp={()=>setMobileHelpOpen(true)}
+              onOpenMore={()=>setMobileMoreOpen(true)}
+            />
+            <Drawer open={mobileControlsOpen} onClose={()=>setMobileControlsOpen(false)} title="Controls">
+              <ReportControls
+                onGenerate={handleGenerate}
+                onPreviewCrew={handlePreviewCrewToggle}
+                manifestPanelOpen={manifestPanelOpen}
+                onRegenerate={report ? regenerateReport : undefined}
+                onOpenHelp={(section) => { setHelpTarget(section); setMobileControlsOpen(false); setMobileHelpOpen(true); }}
+              />
+            </Drawer>
+            <Drawer open={mobileCrewOpen} onClose={()=>setMobileCrewOpen(false)} title="Crew Manifest">
+              <CrewManifestPanel
+                count={currentCrewCount}
+                onCrewChange={handleCrewChange}
+                onRegenerate={regenerateCrewManifest}
+              />
+            </Drawer>
+            <Drawer open={mobileStardateOpen} onClose={()=>setMobileStardateOpen(false)} title="Stardate">
+              <div className="space-y-3 text-sm">
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={useStardateOverride} onChange={e=>setUseStardateOverride(e.target.checked)} />
+                  <span>Use Override</span>
+                  {useStardateOverride && (<span className="opacity-70">{stardateOverride || '—'}</span>)}
+                </label>
+                <StardateCalculator onStardateChange={(sd)=>setStardateOverride(sd)} currentStardate={stardateOverride} />
+                <button onClick={copyStardate} className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-xs" disabled={!((useStardateOverride && !!stardateOverride) || !!report)}>Copy Stardate</button>
+              </div>
+            </Drawer>
+            <Drawer open={mobileHelpOpen} onClose={()=>setMobileHelpOpen(false)} title="Help">
+              <HelpPanel onClose={()=>setMobileHelpOpen(false)} target={helpTarget} />
+            </Drawer>
+            <Drawer open={mobileMoreOpen} onClose={()=>setMobileMoreOpen(false)} title="More">
+              <div className="space-y-4 text-sm">
+                <SoundControls />
+              </div>
+            </Drawer>
+          </>
         )}
         <Footer />
       </div>
