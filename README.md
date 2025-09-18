@@ -6,6 +6,22 @@
 
 A Star Trek-themed engineering report generator with LCARS UI styling, designed to create authentic-looking Starfleet engineering reports with dynamic content, interactive charts, and sharing capabilities.
 
+## Live Demo
+
+**URL:** https://rocketmobster.github.io/warpcorereports/
+
+[![Deploy Status](https://github.com/RocketMobster/warpcorereports/actions/workflows/deploy.yml/badge.svg)](https://github.com/RocketMobster/warpcorereports/actions/workflows/deploy.yml)
+
+This site is automatically built (Vite) and deployed to GitHub Pages on every push to `master` (and can also be run manually via the workflow dispatch). The Vite `base` is set to `/warpcorereports/` in production so all assets resolve correctly under the project subpath. If you encounter a hard refresh 404 on a deep path, return to the root URL — the app is a single-page application served from `index.html`.
+
+After merging new changes to `master`, expect the workflow to:
+1. Install dependencies with `npm ci`
+2. Build with `npm run build` (production, base path applied)
+3. Upload `dist` as a Pages artifact
+4. Deploy via `actions/deploy-pages`
+
+Deployment usually completes within 1–2 minutes.
+
 ## Getting Started (1 minute)
 - Open the Live Demo and click "Produce Report" to generate your first report.
 - Try "Reroll Current Report" to get a fresh variant while keeping the same settings.
