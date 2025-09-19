@@ -2,7 +2,7 @@
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-rocketmobster.github.io%2Fwarpcorereports-blue?logo=github)](https://rocketmobster.github.io/warpcorereports/)
 
-![v0.2.5 Demo](docs/media/v0.2.5-demo.gif)
+![v0.2.6 Demo](docs/media/v0.2.6-demo.gif)
 
 A Star Trek-themed engineering report generator with LCARS UI styling, designed to create authentic-looking Starfleet engineering reports with dynamic content, interactive charts, and sharing capabilities.
 
@@ -29,6 +29,14 @@ Deployment usually completes within 1–2 minutes.
 - Add your name/rank and optionally check "Add Name to References" to include the signer in References.
 - Use the ℹ️ buttons in the UI for quick help on Templates, Figure Bias, Presets, Produce vs Reroll, and References.
 
+## Recently Added (0.2.6)
+
+- Mobile Export drawer (renamed from Print/Share) in the floating action bar.
+- Mobile “Stardate” accordion with toggle and calculator.
+- Mobile action bar styling tweaks (Produce orange/black, Reroll purple/black, Export blue/white) and larger Settings gear.
+- Compact Density moved to Settings; top-of-app Sound controls removed (sounds live in Settings).
+- Right-justified mobile action row (Randomize All, Reset, Copy Settings, Preview Crew) with LCARS accents.
+
 ## Recently Added (0.2.5)
 
 - Text-only zoom: Report text scales smoothly (0.8×–1.4×) while charts and the zoom/control bar remain visually steady via inverse scaling wrappers.
@@ -37,7 +45,78 @@ Deployment usually completes within 1–2 minutes.
 - Mobile collapsible control groups & mobile action bar with haptic feedback.
 - Copy buttons now include icons and responsive labels.
 
-See CHANGELOG 0.2.5 for full technical notes.
+See CHANGELOG 0.2.6 for the latest changes and details.
+
+## Mobile Controls Restoration Incident (2025-09)
+
+In mid‑September 2025 we discovered that the previously implemented mobile experience (collapsible control groups, floating mobile action bar, mobile zoom handling, and several responsive layout safeguards) had been unintentionally wiped out. The desktop feature work continued, but a merge/stash overwrite eliminated a large portion of the mobile‑specific logic and styles. Only fragments (some CSS helpers and structural vestiges) remained.
+
+### What Happened
+- A prior recovery of lost zoom/figure sizing logic relied on re‑applying a stash that did not include the mobile controls refactor.
+- A large patch (adding chart sizing experimentation + layout math changes) replaced `ReportPreview` and related components wholesale, overwriting earlier mobile conditional render blocks.
+- Because mobile code lived inline (rather than isolated behind a dedicated `MobileControls` module) the overwrite removed functionality silently—no build errors occurred.
+
+### Impact
+- Mobile action bar and drawers disappeared.
+- Zoom & anti‑clipping protections regressed on small screens.
+- Several touch affordances (larger tap targets and spacing logic) were lost.
+
+### Recovery Actions (Phase 1 – Complete)
+1. Forensically restored text‑only zoom architecture and inverse chart isolation.
+2. Re‑implemented adaptive right‑edge safety (safe zone + post‑render overflow measurement).
+3. Rebuilt chart sizing as fixed visual width independent of zoom, eliminating content spill.
+4. Added explicit Zoom Persistence toggle (desktop & mobile) with deterministic reset when disabled.
+5. Added micro‑centering correction for minor rounding drift between zoom levels.
+
+### Still Pending (Phase 2 – To Be Rebuilt)
+- Original mobile control cluster grouping & progressive disclosure.
+- Enhanced mobile spacing/density adjustments beyond current compact density class.
+- Gesture/haptic feedback layer (early prototype previously removed).
+- Mobile help / reference overlay refinements.
+- Full responsive audit of chart edit mode overlays.
+
+### Prevention / Hardening Recommendations
+- Isolate mobile UI into dedicated components (`/components/mobile/`) to reduce blast radius of future rewrites.
+- Add a lightweight Cypress or Playwright smoke test that asserts presence of mobile action bar at narrow viewport widths.
+- Introduce a pre‑merge Git hook / CI check that runs a headless layout probe (e.g. screenshot diff or DOM presence assertions).
+- Keep recovered or experimental layout logic in feature branches; avoid large “squash & replace” patches to core containers.
+- Document critical architectural contracts (like text‑only zoom & chart isolation) in-code with short headers so accidental removals surface in code review.
+
+If you notice missing mobile functionality: open an issue tagged `mobile-regression` so it can be tracked against Phase 2 restoration.
+
+## Updated Zoom & Chart System (Post‑Recovery)
+
+The zoom system was refactored during recovery to prioritize stability and eliminate cumulative layout drift.
+
+### Design Goals
+- Text scales smoothly (0.8×–1.4×) without charts visually resizing.
+- Charts never clip the right edge at any supported zoom.
+- Zero reliance on reflowing chart data; chart pixel width is stable.
+- Persistence optional; disabling it always loads at 100%.
+
+### Implementation Layers
+1. `report-zoom` container applies `transform: scale(var(--zoom))` and width compensation.
+2. Each chart wrapper (`.chart-no-zoom`) applies inverse transform `scale(1 / var(--zoom))` so the net perceived chart size stays fixed.
+3. Fixed chart width measured once (capped & narrowed) and applied to chart content; wrapper width no longer multiplies with zoom.
+4. Adaptive safe zone + overflow measurement adds right padding only when needed.
+5. Micro‑centering effect: a post‑layout measurement can nudge charts ±3px via translate to counter fractional rounding shifts between zoom levels.
+6. Zoom persistence toggle (desktop header + mobile “More”) controls whether `previewZoom` is saved; unchecking clears the stored value.
+
+### Why Not Pure CSS Zoom / Layout Reflow
+Standard layout reflow approaches caused:
+- Inconsistent chart aspect ratios at higher zooms.
+- Right‑edge truncation when combined with flex/grid widths.
+- Unwanted scaling of UI affordances (edit buttons, copy controls).
+
+### Tradeoffs & Known Minor Artifacts
+- Sub‑pixel rounding can still produce ≤1px asymmetry on some zoom steps; micro‑centering keeps it imperceptible.
+- Fixed chart width means extreme narrow mobile viewports may require a future responsive downscale (Phase 2 task).
+
+### Extension Points
+- A future “Dynamic Chart Density” mode could allow optional responsive min() width for ultra‑narrow devices with a controlled lower bound.
+- Per‑chart width override (edit mode) could be added without altering core zoom math if bounded before the inverse scale wrapper.
+
+---
 
 ## Features
 
@@ -116,8 +195,8 @@ Technical layers: external safe zone → internal tiered `rightSafe` → transit
 - Changes are saved automatically when you exit edit mode
 
 #### LCARS Sound Effects
-- Toggle sounds on/off with the sound control in the header
-- Adjust volume using the slider control
+- Toggle sounds on/off from the Settings panel
+- Adjust volume using the slider in Settings
 - Authentic LCARS UI sounds for button clicks, toggles, and notifications
 - Sound preferences are saved between sessions
 
@@ -203,11 +282,11 @@ Tip: Lock the seed to keep results reproducible even when randomizing other cont
 
 ## Stardate Calculator
 
-- Toggle the panel below the main controls with "Show Stardate Calculator".
+- Access the Stardate controls from the mobile “Stardate” accordion.
 - Convert Calendar Date ↔ Stardate using common TOS/TNG-era approximations.
 - Enable "Use Stardate in Report" to apply the calculator’s stardate to generated reports.
 - When enabled, the current override value is shown inline next to the toggle.
- - Click the info icon to view the exact formulas used. Formulas are rendered with KaTeX for clarity, and you can copy them with the "Copy formulas" button.
+- Click the info icon to view formulas where available. Formulas are rendered with KaTeX for clarity, and you can copy them when supported.
 
 ## Browser Compatibility
 

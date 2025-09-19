@@ -1,4 +1,36 @@
-# Starfleet Engineering Report Generator - Changelog
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+## [0.2.6] - 2025-09-19
+
+### Added
+- Mobile Export drawer (renamed from Print/Share) accessible from the bottom action bar.
+- Dedicated Stardate accordion in mobile controls with toggle and calculator.
+- LCARS accents for mobile accordions (amber rail, shadows) and right-aligned action row.
+
+### Changed
+- Mobile action bar restyled: Produce (orange/black), Reroll (purple/black), Export (blue/white), enlarged Settings gear.
+- Force-mobile and Persist Zoom remain in Settings; moved Compact Density to Settings (removed from top header).
+- Reorganized mobile action row: Randomize All, Reset, Copy Settings Link, Preview Crew; right-justified for alignment.
+- Moved Copy Settings Link and Reset outside of the previous Advanced/Misc and into the main action group.
+
+### Removed
+- Top-of-app Sound controls (now only in Settings panel).
+- Duplicate stardate controls below the controls area; stardate is only inside the Stardate accordion on mobile.
+- Visible Produce/Reroll buttons in the mobile controls; Produce is triggered via the floating menu (hidden button retained for programmatic click).
+
+### Fixed
+- Reliable mobile gating and UI layout improvements to prevent accidental desktop view on mobile.
+- Spacing below mobile buttons to avoid report header touching the action row.
+
+## [0.2.5] - 2025-09-xx
+- Recovery of text-only zoom, inverse chart scaling, anti-clipping, and persistence.
+- Reinstated LCARS desktop 3-column controls and desktop button bar.
+- Device gating via width + pointer detection with force-mobile override.
+- Initial reintroduction of mobile accordions and bottom action bar.
+
+[0.2.6]: https://github.com/RocketMobster/warpcorereports/compare/v0.2.5...v0.2.6# Starfleet Engineering Report Generator - Changelog
 
 ## Version 0.2.5 - September 17, 2025
 

@@ -28,10 +28,16 @@ export default function App() {
     try { return localStorage.getItem('wcr_density_compact') === 'true'; } catch { return false; }
   });
   useEffect(()=>{ try { localStorage.setItem('wcr_density_compact', String(densityCompact)); } catch {} }, [densityCompact]);
+  const [forceMobile, setForceMobile] = useState<boolean>(() => {
+    try { return localStorage.getItem('wcr_force_mobile') === '1'; } catch { return false; }
+  });
+  useEffect(()=>{ try { localStorage.setItem('wcr_force_mobile', forceMobile ? '1' : '0'); } catch {} }, [forceMobile]);
   const isDesktop = useMediaQuery('(min-width: 768px)');
-  const [mobileControlsOpen, setMobileControlsOpen] = useState(false);
+  const isCoarsePointer = useMediaQuery('(pointer: coarse)');
+  const showDesktopControls = !forceMobile && isDesktop && !isCoarsePointer;
+  const showMobileUI = forceMobile || !showDesktopControls;
   const [mobileCrewOpen, setMobileCrewOpen] = useState(false);
-  const [mobileStardateOpen, setMobileStardateOpen] = useState(false);
+  const [mobileExportOpen, setMobileExportOpen] = useState(false);
   const [mobileHelpOpen, setMobileHelpOpen] = useState(false);
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
   const [report, setReport] = useState<Report | null>(null);
@@ -54,7 +60,11 @@ export default function App() {
   const [toastMessage, setToastMessage] = useState('');
   // Help panel state
   const [showHelp, setShowHelp] = useState(false);
+  const [persistZoom, setPersistZoom] = useState<boolean>(() => {
+    try { return localStorage.getItem('wcr_zoom_persist_enabled') === '0' ? false : true; } catch { return true; }
+  });
   const [helpTarget, setHelpTarget] = useState<"templates"|"figure-bias"|"presets"|"produce-reroll"|"references"|undefined>(undefined);
+  
   
   // Initialize sound system
   useEffect(() => {
@@ -621,14 +631,8 @@ export default function App() {
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-extrabold">Starfleet Engineering Report Generator</h1>
-          <SoundControls />
         </div>
-        <div className="flex items-center gap-4 mb-4 text-xs">
-          <label className="flex items-center gap-2 select-none">
-            <input type="checkbox" checked={densityCompact} onChange={e=>setDensityCompact(e.target.checked)} />
-            <span className="lcars-label mb-0">Compact Density</span>
-          </label>
-        </div>
+        {/* Compact density moved to Settings drawer */}
         
         {isSharedLink && (
           <div className="bg-blue-700 text-white p-4 rounded-lg mb-6">
@@ -645,13 +649,36 @@ export default function App() {
           </div>
         )}
         
-        <ReportControls
-          onGenerate={handleGenerate}
-          onPreviewCrew={handlePreviewCrewToggle}
-          manifestPanelOpen={manifestPanelOpen}
-          onRegenerate={report ? regenerateReport : undefined}
-          onOpenHelp={(section) => { setHelpTarget(section); setShowHelp(true); }}
-        />
+        {/* Desktop controls only on fine pointer devices */}
+        {showDesktopControls && (
+          <ReportControls
+            onGenerate={handleGenerate}
+            onPreviewCrew={handlePreviewCrewToggle}
+            manifestPanelOpen={manifestPanelOpen}
+            onRegenerate={report ? regenerateReport : undefined}
+            onOpenHelp={(section) => { setHelpTarget(section); setShowHelp(true); }}
+            persistZoom={persistZoom}
+            onTogglePersistZoom={(v)=>{ try { localStorage.setItem('wcr_zoom_persist_enabled', v? '1':'0'); if(!v) localStorage.removeItem('previewZoom'); } catch {}; setPersistZoom(v); window.dispatchEvent(new Event('wcr-zoom-persist-changed')); }}
+            variant="desktop"
+          />
+        )}
+        {/* Mobile controls inline (accordions) when not showing desktop controls */}
+        {showMobileUI && (
+          <div id="mobile-controls" className="mt-4">
+            <ReportControls
+              onGenerate={handleGenerate}
+              onPreviewCrew={handlePreviewCrewToggle}
+              manifestPanelOpen={manifestPanelOpen}
+              onRegenerate={report ? regenerateReport : undefined}
+              onOpenHelp={(section) => { setHelpTarget(section); setShowHelp(true); }}
+              stardateOverride={stardateOverride}
+              onStardateChange={(sd)=>setStardateOverride(sd)}
+              useStardateOverride={useStardateOverride}
+              onUseStardateToggle={(v)=>setUseStardateOverride(v)}
+              variant="mobile"
+            />
+          </div>
+        )}
         {manifestPanelOpen && (
           <CrewManifestPanel 
             count={currentCrewCount} 
@@ -660,33 +687,8 @@ export default function App() {
           />
         )}
 
-        <div className="mt-2 flex items-center gap-3">
-          <button className="lcars-btn" onClick={()=>setShowStardateCalc(v=>!v)}>
-            {showStardateCalc ? "Hide Stardate Calculator" : "Show Stardate Calculator"}
-          </button>
-          <label className="flex items-center gap-2">
-            <input type="checkbox" checked={useStardateOverride} onChange={e=>setUseStardateOverride(e.target.checked)} />
-            <span className="lcars-label">Use Stardate in Report</span>
-          </label>
-          {useStardateOverride && (
-            <span className="lcars-small">Current: {stardateOverride || "—"}</span>
-          )}
-          <button
-            className="lcars-btn"
-            onClick={copyStardate}
-            title="Copy current stardate"
-            aria-label="Copy current stardate"
-            disabled={!((useStardateOverride && !!stardateOverride) || !!report)}
-          >
-            Copy Stardate
-          </button>
-        </div>
-        {showStardateCalc && (
-          <StardateCalculator
-            onStardateChange={(sd)=>setStardateOverride(sd)}
-            currentStardate={stardateOverride}
-          />
-        )}
+        {/* Stardate controls moved into the Stardate accordion in mobile controls */}
+        {showDesktopControls && (
         <div id="button-bar" className="flex flex-wrap gap-3 mb-6 sticky top-4 z-10 bg-[#0b0d16] p-3 rounded-xl border border-slate-700 shadow-lg transition-all duration-300">
           <button onClick={exportTxt} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all duration-200">Download TXT</button>
           <button onClick={async()=>{ if(!report){ setToastMessage('No report to copy.'); setShowToast(true); setTimeout(()=>setShowToast(false),1500); return;} await copyToClipboard(reportToTxt(report), 'Full report copied as TXT.'); }} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all duration-200" title="Copy full report as plain text" aria-label="Copy full report as plain text">Copy Full Report (TXT)</button>
@@ -700,31 +702,22 @@ export default function App() {
           >
             Share Report
           </button>
-          
-          
-          
           {report && (
             <button 
               onClick={toggleChartEditing} 
-              className={`px-3 py-2 rounded-xl font-bold border transition-all duration-200 ${
-                chartEditingEnabled 
-                  ? 'bg-purple-600 border-purple-500 text-white hover:bg-purple-700' 
-                  : 'bg-slate-800 border-slate-700 text-white hover:bg-purple-900 hover:border-purple-700'
-              }`}
+              className={`px-3 py-2 rounded-xl font-bold border transition-all duration-200 ${chartEditingEnabled ? 'bg-purple-600 border-purple-500 text-white hover:bg-purple-700' : 'bg-slate-800 border-slate-700 text-white hover:bg-purple-900 hover:border-purple-700'}`}
             >
               {chartEditingEnabled ? 'Exit Chart Editing' : 'Edit Charts'}
             </button>
           )}
-
           <button
             onClick={() => setShowHelp(true)}
             className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all duration-200 ml-auto"
             title="Open Help"
             aria-label="Open Help"
-          >
-            Help
-          </button>
+          >Help</button>
         </div>
+        )}
         {showHelp && (
           <HelpPanel onClose={() => setShowHelp(false)} target={helpTarget} />
         )}
@@ -795,25 +788,23 @@ export default function App() {
             {toastMessage}
           </div>
         )}
-        {/* Mobile overlays (non-desktop) */}
-        {!isDesktop && (
+        {/* Mobile overlays (touch devices or small screens) */}
+        {showMobileUI && (
           <>
             <MobileActionBar
-              onOpenControls={()=>setMobileControlsOpen(true)}
-              onOpenCrew={()=>setMobileCrewOpen(true)}
-              onOpenStardate={()=>setMobileStardateOpen(true)}
+              onOpenControls={()=>{
+                const btn = document.getElementById('produce-button') as HTMLButtonElement | null;
+                if (btn) { btn.click(); }
+                else {
+                  const el = document.getElementById('mobile-controls');
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              }}
+              onOpenCrew={()=>{ if (report) { regenerateReport(); } else { /* no-op if no report */ } }}
+              onOpenStardate={()=>setMobileExportOpen(true)}
               onOpenHelp={()=>setMobileHelpOpen(true)}
               onOpenMore={()=>setMobileMoreOpen(true)}
             />
-            <Drawer open={mobileControlsOpen} onClose={()=>setMobileControlsOpen(false)} title="Controls">
-              <ReportControls
-                onGenerate={handleGenerate}
-                onPreviewCrew={handlePreviewCrewToggle}
-                manifestPanelOpen={manifestPanelOpen}
-                onRegenerate={report ? regenerateReport : undefined}
-                onOpenHelp={(section) => { setHelpTarget(section); setMobileControlsOpen(false); setMobileHelpOpen(true); }}
-              />
-            </Drawer>
             <Drawer open={mobileCrewOpen} onClose={()=>setMobileCrewOpen(false)} title="Crew Manifest">
               <CrewManifestPanel
                 count={currentCrewCount}
@@ -821,23 +812,38 @@ export default function App() {
                 onRegenerate={regenerateCrewManifest}
               />
             </Drawer>
-            <Drawer open={mobileStardateOpen} onClose={()=>setMobileStardateOpen(false)} title="Stardate">
+            <Drawer open={mobileExportOpen} onClose={()=>setMobileExportOpen(false)} title="Export">
               <div className="space-y-3 text-sm">
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" checked={useStardateOverride} onChange={e=>setUseStardateOverride(e.target.checked)} />
-                  <span>Use Override</span>
-                  {useStardateOverride && (<span className="opacity-70">{stardateOverride || '—'}</span>)}
-                </label>
-                <StardateCalculator onStardateChange={(sd)=>setStardateOverride(sd)} currentStardate={stardateOverride} />
-                <button onClick={copyStardate} className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-xs" disabled={!((useStardateOverride && !!stardateOverride) || !!report)}>Copy Stardate</button>
+                <div className="grid grid-cols-2 gap-2">
+                  <button onClick={exportTxt} className="px-2 py-2 rounded bg-slate-800 border border-slate-700">Download TXT</button>
+                  <button onClick={async()=>{ if(!report){ setToastMessage('No report to copy.'); setShowToast(true); setTimeout(()=>setShowToast(false),1500); return;} await copyToClipboard(reportToTxt(report), 'Full report copied as TXT.'); }} className="px-2 py-2 rounded bg-slate-800 border border-slate-700">Copy Full (TXT)</button>
+                  <button onClick={exportPdf} className="px-2 py-2 rounded bg-slate-800 border border-slate-700">Download PDF</button>
+                  <button onClick={exportDocx} className="px-2 py-2 rounded bg-slate-800 border border-slate-700">Download DOCX</button>
+                  <button onClick={handlePrint} className="px-2 py-2 rounded bg-amber-600 text-black border border-amber-500">Print</button>
+                  <button onClick={handleShare} className="px-2 py-2 rounded bg-blue-600 text-white border border-blue-500" disabled={!report}>Share</button>
+                </div>
               </div>
             </Drawer>
             <Drawer open={mobileHelpOpen} onClose={()=>setMobileHelpOpen(false)} title="Help">
               <HelpPanel onClose={()=>setMobileHelpOpen(false)} target={helpTarget} />
             </Drawer>
-            <Drawer open={mobileMoreOpen} onClose={()=>setMobileMoreOpen(false)} title="More">
+            <Drawer open={mobileMoreOpen} onClose={()=>setMobileMoreOpen(false)} title="Settings">
               <div className="space-y-4 text-sm">
                 <SoundControls />
+                <div className="flex items-center gap-2">
+                  <input id="densityCompactMobile" type="checkbox" checked={densityCompact} onChange={e=>setDensityCompact(e.target.checked)} />
+                  <label htmlFor="densityCompactMobile" className="text-xs uppercase tracking-wider opacity-80">Compact Density</label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input id="persistZoomMobile" type="checkbox" checked={persistZoom} onChange={e=>{ const v=e.target.checked; try { localStorage.setItem('wcr_zoom_persist_enabled', v? '1':'0'); if(!v) localStorage.removeItem('previewZoom'); } catch {}; setPersistZoom(v); window.dispatchEvent(new Event('wcr-zoom-persist-changed')); }} />
+                  <label htmlFor="persistZoomMobile" className="text-xs uppercase tracking-wider opacity-80">Persist Zoom</label>
+                </div>
+                <p className="text-[10px] text-slate-400 leading-snug">When disabled, report zoom always resets to 100% on load.</p>
+                <div className="flex items-center gap-2 pt-2 border-t border-slate-700">
+                  <input id="forceMobile" type="checkbox" checked={forceMobile} onChange={e=>setForceMobile(e.target.checked)} />
+                  <label htmlFor="forceMobile" className="text-xs uppercase tracking-wider opacity-80">Force Mobile Controls</label>
+                </div>
+                <p className="text-[10px] text-slate-400 leading-snug">Enable if your device shows the desktop controls.</p>
               </div>
             </Drawer>
           </>

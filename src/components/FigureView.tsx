@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import LCARSChart from "./LCARSChart";
 import ChartEditor from "./ChartEditor";
 import { Figure } from "../types";
@@ -12,12 +12,44 @@ interface FigureViewProps {
   safeZonePx?: number;
   zoomScale?: number;
   baseScale?: number;
+  fixedWidth?: number; // externally enforced fixed pixel width for text-only zoom stability
 }
 
-export default function FigureView({ fig, onFigureUpdate, editEnabled = false, baseScale = 1 }: FigureViewProps) {
+export default function FigureView({ fig, onFigureUpdate, editEnabled = false, baseScale = 1, fixedWidth, zoomScale }: FigureViewProps) {
   const [currentFigure, setCurrentFigure] = useState<Figure>(fig);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const accent = LCARS.accents[(fig.index ?? 0) % LCARS.accents.length];
+  const containerRef = useRef<HTMLDivElement|null>(null);
+  const [measuredWidth, setMeasuredWidth] = useState<number>(320);
+  const chartOuterRef = useRef<HTMLDivElement|null>(null);
+  const [offsetX, setOffsetX] = useState<number>(0); // micro-centering translation
+
+  // Measure available width inside figure container (responsive charts)
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    // Use ResizeObserver for responsiveness
+    const ro = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const w = entry.contentRect.width; // visual width (pre-transform width compensation not applied here)
+        if (w && w > 0) {
+          setMeasuredWidth(w);
+        }
+      }
+    });
+    ro.observe(el);
+    return () => { ro.disconnect(); };
+  }, []);
+
+  const chartPixelWidth = useMemo(() => {
+    if (fixedWidth) return fixedWidth;
+    const targetFull = 360;
+    const raw = targetFull * baseScale;
+    const effectiveMax = Math.min(measuredWidth, 400);
+    return Math.round(Math.min(raw, effectiveMax));
+  }, [measuredWidth, baseScale, fixedWidth]);
+
+  const chartPixelHeight = useMemo(() => Math.round(chartPixelWidth * (180 / 320)), [chartPixelWidth]);
   
   // Update local state when the figure prop changes
   useEffect(() => {
@@ -34,6 +66,36 @@ export default function FigureView({ fig, onFigureUpdate, editEnabled = false, b
     }
   };
 
+  // Micro-centering: measure padding asymmetry and apply tiny translateX
+  useEffect(() => {
+    const el = containerRef.current;
+    const inner = chartOuterRef.current;
+    if (!el || !inner) return;
+    const apply = () => {
+      try {
+        const parentRect = el.getBoundingClientRect();
+        const innerRect = inner.getBoundingClientRect();
+        // compute horizontal leftover space inside figure container
+        const leftGap = innerRect.left - parentRect.left;
+        const rightGap = parentRect.right - innerRect.right;
+        const diff = rightGap - leftGap; // positive means inner shifted left
+        // Only adjust if imbalance > 1px; clamp to +/-3px
+        if (Math.abs(diff) > 1) {
+          const adjust = Math.max(-3, Math.min(3, Math.round(diff / 2))); // halve diff to move toward center
+          setOffsetX(adjust);
+        } else {
+          setOffsetX(0);
+        }
+      } catch {}
+    };
+    apply();
+    const ro = new ResizeObserver(() => apply());
+    ro.observe(el);
+    if (inner) ro.observe(inner);
+    window.addEventListener('resize', apply);
+    return () => { ro.disconnect(); window.removeEventListener('resize', apply); };
+  }, [zoomScale, fixedWidth]);
+
   return (
     <div className={`figure-container rounded-2xl p-4 border bg-[#101425] relative group ${
       editEnabled 
@@ -44,8 +106,10 @@ export default function FigureView({ fig, onFigureUpdate, editEnabled = false, b
         {currentFigure.displayId || currentFigure.id}. {currentFigure.title}
       </div>
       
-      <div className="h-48" style={{ width: `${Math.round(320*baseScale)}px` }}>
-        <LCARSChart figure={currentFigure} width={Math.round(320*baseScale)} height={180} />
+      <div ref={containerRef} className="h-48" style={{ width: '100%', position: 'relative' }}>
+        <div ref={chartOuterRef} style={{ width: chartPixelWidth, margin: '0 auto', transform: offsetX ? `translateX(${offsetX}px)` : undefined }}>
+          <LCARSChart figure={currentFigure} width={chartPixelWidth} height={chartPixelHeight} />
+        </div>
       </div>
       
       <div className="text-xs text-slate-400 mt-2 italic">

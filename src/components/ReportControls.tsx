@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import StardateCalculator from "./StardateCalculator";
 import { GeneratorConfig, Rank, STARFLEET_VESSELS, FigureBias, MissionTemplate, FamousAuthorFrequency } from "../types";
 import { pick, hashCode, xorshift32, POOLS, pickCrewName } from "../utils/helpers";
 
@@ -7,12 +8,38 @@ const ranks: Rank[] = [
   "Ensign","Lieutenant Junior Grade","Lieutenant","Lieutenant Commander","Commander"
 ];
 
-export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate, manifestPanelOpen, onOpenHelp }: {
+// Lightweight accordion for mobile variant
+function AccordionSection({ title, children, defaultOpen=false }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="relative border border-slate-700 rounded-xl overflow-hidden bg-slate-900 shadow-md">
+      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500" aria-hidden="true"></div>
+      <button type="button" onClick={()=>setOpen(o=>!o)} className="w-full pl-4 pr-3 py-2 flex items-center justify-between text-left bg-slate-800/90 hover:bg-slate-700 transition-colors" aria-expanded={open}>
+        <span className="font-semibold tracking-wide text-xs uppercase text-amber-300">{title}</span>
+        <span className="text-[10px] text-slate-300">{open ? "▲" : "▼"}</span>
+      </button>
+      {open && (
+        <div className="p-3 pl-4 space-y-3">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate, manifestPanelOpen, onOpenHelp, persistZoom, onTogglePersistZoom, variant = 'desktop', stardateOverride, onStardateChange, useStardateOverride, onUseStardateToggle }: {
   onGenerate: (cfg: GeneratorConfig) => void,
   onPreviewCrew: (count?:number, seed?:string)=>void,
   onRegenerate?: () => void,
   manifestPanelOpen?: boolean,
-  onOpenHelp?: (section?: "templates" | "figure-bias" | "presets" | "produce-reroll" | "references") => void
+  onOpenHelp?: (section?: "templates" | "figure-bias" | "presets" | "produce-reroll" | "references") => void,
+  persistZoom?: boolean,
+  onTogglePersistZoom?: (v:boolean)=>void,
+  variant?: 'desktop' | 'mobile',
+  stardateOverride?: string,
+  onStardateChange?: (sd: string) => void,
+  useStardateOverride?: boolean,
+  onUseStardateToggle?: (v: boolean) => void
 }) {
   const DEFAULTS = useMemo(() => ({
     problemsCount: 3 as 1|2|3|4|5,
@@ -299,6 +326,232 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
     onPreviewCrew(undefined, seed);
   };
 
+  // Mobile variant: stacked accordions and compact action bar
+  if (variant === 'mobile') {
+    return (
+      <>
+        <div className="space-y-3 mb-4">
+          <AccordionSection title="Ship & Signature" defaultOpen>
+            <div className="space-y-2">
+              <div>
+                <label className="lcars-label">Starship</label>
+                <div className="flex gap-2 items-center mt-1">
+                  <select value={vessel} onChange={e=>setVessel(e.target.value)} className="lcars-input flex-1" aria-label="Select starship">
+                    {STARFLEET_VESSELS.map(v => <option key={v.name} value={v.name}>{v.name}</option>)}
+                  </select>
+                  <button onClick={handleRandomVessel} className="lcars-btn" title="Randomize starship" aria-label="Randomize starship">🎲</button>
+                </div>
+              </div>
+              <div>
+                <label className="lcars-label">Signing Engineer</label>
+                <div className="flex gap-2 mt-1">
+                  <input type="text" value={signatoryName} onChange={e=>setSignatoryName(e.target.value)} className="lcars-input flex-1" />
+                  <button onClick={handleRandomName} className="lcars-btn" title="Randomize signing engineer" aria-label="Randomize signing engineer">🎲</button>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 mt-2">
+                <input type="checkbox" id="signatoryReference_m" checked={signatoryReference} onChange={e => setSignatoryReference(e.target.checked)} />
+                <label htmlFor="signatoryReference_m" className="lcars-label">Add Name to References</label>
+              </div>
+              <div>
+                <label className="lcars-label">Rank</label>
+                <div className="flex gap-2 items-center mt-1">
+                  <select value={signatoryRank} onChange={e=>setSignatoryRank(e.target.value as Rank)} className="lcars-input flex-1" aria-label="Select rank">
+                    {ranks.map(r=> <option key={r}>{r}</option>)}
+                  </select>
+                  <button onClick={handleRandomRank} className="lcars-btn" title="Randomize rank" aria-label="Randomize rank">🎲</button>
+                </div>
+              </div>
+            </div>
+          </AccordionSection>
+
+          <AccordionSection title="Problems & Graphs" defaultOpen>
+            <div className="space-y-2">
+              <div>
+                <div className="flex items-center justify-between">
+                  <label className="lcars-label">Problems</label>
+                  <button onClick={handleRandomProblemsCount} className="lcars-btn" title="Randomize number of problems" aria-label="Randomize number of problems">🎲</button>
+                </div>
+                <input type="range" min={1} max={5} value={problemsCount} onChange={(e)=>setProblemsCount(parseInt(e.target.value) as any)} />
+                <div className="lcars-small">{problemsCount}</div>
+              </div>
+              <div>
+                <div className="flex items-center justify-between">
+                  <label className="lcars-label">Problem Detail Level</label>
+                  <button onClick={handleRandomProblemDetail} className="lcars-btn" title="Randomize problem detail level" aria-label="Randomize problem detail level">🎲</button>
+                </div>
+                <input type="range" min={1} max={6} value={problemDetailLevel} onChange={e=>setProblemDetailLevel(parseInt(e.target.value))} />
+                <div className="lcars-small">{problemDetailLevel} sentence{problemDetailLevel > 1 ? 's' : ''} per problem</div>
+              </div>
+              <div>
+                <div className="flex items-center justify-between">
+                  <label className="lcars-label">Graphs</label>
+                  <button onClick={handleRandomGraphsToggleAndCount} className="lcars-btn" title="Randomize graphs on/off and count" aria-label="Randomize graphs on/off and count">🎲</button>
+                </div>
+                <div className="flex items-center gap-2 mt-1">
+                  <input type="checkbox" checked={graphsEnabled} onChange={e=>setGraphsEnabled(e.target.checked)} />
+                  <span className="lcars-small">Enable</span>
+                </div>
+                {graphsEnabled && (
+                  <div className="mt-1">
+                    <div className="flex items-center justify-between">
+                      <label className="lcars-label">How many (1–10)</label>
+                      <button onClick={handleRandomGraphsCount} className="lcars-btn" title="Randomize graph count" aria-label="Randomize graph count">🎲</button>
+                    </div>
+                    <input type="range" min={1} max={10} value={graphsCount} onChange={(e)=>setGraphsCount(parseInt(e.target.value))} />
+                    <div className="lcars-small">{graphsCount}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </AccordionSection>
+
+          <AccordionSection title="References & Canon Names">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <input type="checkbox" id="allowCanonNames_m" checked={allowCanonNames} onChange={e => setAllowCanonNames(e.target.checked)} />
+                <label htmlFor="allowCanonNames_m" className="lcars-label">Allow Canon Names in References</label>
+                {onOpenHelp && (
+                  <button type="button" className="lcars-btn" onClick={() => onOpenHelp('references')} title="Open Help about References & Canon Names" aria-label="Open Help about References & Canon Names">ℹ️</button>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <input type="checkbox" id="filterCanonByEra_m" checked={filterCanonByEra} onChange={e => setFilterCanonByEra(e.target.checked)} disabled={!allowCanonNames} />
+                <label htmlFor="filterCanonByEra_m" className="lcars-label">Filter Canon Names by Era</label>
+              </div>
+              <div>
+                <div className="flex items-center justify-between">
+                  <label className="lcars-label">Famous Author Frequency</label>
+                  <span className="lcars-small">(References)</span>
+                </div>
+                <select value={famousAuthorFrequency} onChange={e=>setFamousAuthorFrequency(e.target.value as FamousAuthorFrequency)} className="lcars-input" disabled={!allowCanonNames}>
+                  <option value="off">Off</option>
+                  <option value="rare">Rare</option>
+                  <option value="occasional">Occasional</option>
+                  <option value="frequent">Frequent</option>
+                </select>
+              </div>
+              <div>
+                <div className="flex items-center justify-between">
+                  <label className="lcars-label">Famous Rotation Memory</label>
+                  <span className="lcars-small">(0–20, default 6)</span>
+                </div>
+                <input type="range" min={0} max={20} value={famousRecentMemory} onChange={e=>setFamousRecentMemory(parseInt(e.target.value))} disabled={!allowCanonNames} />
+                <div className="lcars-small">{famousRecentMemory}</div>
+              </div>
+            </div>
+          </AccordionSection>
+
+          <AccordionSection title="Generation Options" defaultOpen>
+            <div className="space-y-2">
+              <div>
+                <div className="flex items-center justify-between">
+                  <label className="lcars-label">Figure Bias</label>
+                  {onOpenHelp && (
+                    <button type="button" className="lcars-btn" onClick={() => onOpenHelp('figure-bias')} title="Open Help about figure bias" aria-label="Open Help about figure bias">ℹ️</button>
+                  )}
+                </div>
+                <select value={figureBias} onChange={e=>setFigureBias(e.target.value as FigureBias)} className="lcars-input mt-1">
+                  <option value="auto">Auto</option>
+                  <option value="warp">Warp</option>
+                  <option value="eps">EPS</option>
+                  <option value="sif">SIF</option>
+                  <option value="deflector">Deflector</option>
+                  <option value="transporter">Transporter</option>
+                  <option value="inertial">Inertial</option>
+                </select>
+              </div>
+              <div>
+                <div className="flex items-center justify-between">
+                  <label className="lcars-label">Mission Template</label>
+                  {onOpenHelp && (
+                    <button type="button" className="lcars-btn" onClick={() => onOpenHelp('templates')} title="Open Help about templates" aria-label="Open Help about templates">ℹ️</button>
+                  )}
+                </div>
+                <select value={missionTemplate} onChange={e=>setMissionTemplate(e.target.value as MissionTemplate)} className="lcars-input mt-1">
+                  <option value="none">None</option>
+                  <option value="incident">Incident</option>
+                  <option value="survey">Survey</option>
+                </select>
+              </div>
+              <div>
+                <div className="flex items-center justify-between">
+                  <label className="lcars-label">Humor Level</label>
+                  <button onClick={handleRandomHumor} className="lcars-btn" title="Randomize humor level" aria-label="Randomize humor level">🎲</button>
+                </div>
+                <input type="range" min={0} max={10} value={humor} onChange={e=>setHumor(parseInt(e.target.value))} />
+              </div>
+              <div>
+                <label className="lcars-label">Seed</label>
+                <div className="flex gap-2 mt-1">
+                  <input type="text" value={seed} onChange={e=>setSeed(e.target.value)} className="lcars-input flex-1" placeholder="optional" aria-label="Seed (optional)" />
+                  <button onClick={handleRandomSeed} className="lcars-btn" title="Generate random seed" aria-label="Generate random seed">🎲</button>
+                  <button onClick={toggleSeedLock} className={"lcars-btn "+(seedLocked?"lcars-btn-locked":"")} title="Lock or unlock seed" aria-label="Lock or unlock seed">{seedLocked ? '🔒' : '🔓'}</button>
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <label className="lcars-label">Preset</label>
+                    {onOpenHelp && (
+                      <button type="button" className="lcars-btn" onClick={() => onOpenHelp('presets')} title="Open Help about presets" aria-label="Open Help about presets">ℹ️</button>
+                    )}
+                  </div>
+                  <select value={preset} onChange={(e)=>applyPreset(e.target.value)} className="lcars-input">
+                    <option value="custom">Custom</option>
+                    <option value="diagnostic">Diagnostic</option>
+                    <option value="incident">Incident</option>
+                    <option value="maintenance">Maintenance</option>
+                    <option value="performance">Performance</option>
+                  </select>
+                  <span className={`text-xs px-2 py-1 rounded-md border ${presetStatus === 'Active' ? 'bg-green-600 border-green-500' : presetStatus === 'Modified' ? 'bg-amber-600 border-amber-500' : 'bg-slate-700 border-slate-600'}`}>{presetStatus}</span>
+                  {wasReset && (<span className="text-xs px-2 py-1 rounded-md border bg-blue-700 border-blue-500">Reset</span>)}
+                </div>
+              </div>
+            </div>
+          </AccordionSection>
+
+          <AccordionSection title="Stardate">
+            <div className="space-y-3">
+              {onStardateChange && onUseStardateToggle && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="useStardateOverride_m"
+                      checked={!!useStardateOverride}
+                      onChange={e => onUseStardateToggle(e.target.checked)}
+                    />
+                    <label htmlFor="useStardateOverride_m" className="lcars-label">Use Stardate in Report</label>
+                    {useStardateOverride && (
+                      <span className="lcars-small">Current: {stardateOverride || "—"}</span>
+                    )}
+                  </div>
+                  <StardateCalculator onStardateChange={onStardateChange} currentStardate={stardateOverride || ""} />
+                </div>
+              )}
+            </div>
+          </AccordionSection>
+        </div>
+
+        {/* Hidden produce trigger for the floating action bar */}
+        <button id="produce-button" onClick={generate} className="hidden" aria-hidden="true" tabIndex={-1} />
+
+        <div className="flex flex-wrap gap-2 pt-1 justify-end mb-4 bg-slate-900/40 border border-slate-700 rounded-xl px-2 py-2">
+          <button onClick={handleRandomizeAll} className="lcars-btn">Randomize All 🎲</button>
+          <button onClick={resetToDefaults} className="lcars-btn" title="Reset controls to defaults" aria-label="Reset controls to defaults">Reset</button>
+          <button onClick={copySettingsLink} className="lcars-btn" title="Copy a shareable link for current settings" aria-label="Copy shareable settings link">Copy Settings Link</button>
+          <button onClick={previewCrew} className={"lcars-btn "+(manifestPanelOpen?"lcars-btn-highlighted":"")}>{manifestPanelOpen ? 'Hide Crew' : 'Preview Crew'}</button>
+        </div>
+
+        {showToast && (
+          <div className="fixed bottom-4 right-4 bg-slate-900 text-amber-300 px-4 py-2 rounded-lg border border-amber-500 shadow-lg z-50">{toastMsg}</div>
+        )}
+      </>
+    );
+  }
+
+  // Desktop variant (default): original 3-column LCARS layout
   return (
     <>
     <div className="grid md:grid-cols-3 gap-4 mb-6">
@@ -509,7 +762,7 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
         </div>
       </div>
 
-      <div className="col-span-3 flex flex-wrap gap-2">
+  <div className="col-span-3 flex flex-wrap gap-2">
         <button
           onClick={generate}
           className="lcars-cta flex-1"
