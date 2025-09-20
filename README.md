@@ -1,6 +1,8 @@
 ﻿# Starfleet Engineering Report Generator
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-rocketmobster.github.io%2Fwarpcorereports-blue?logo=github)](https://rocketmobster.github.io/warpcorereports/)
+[![Build Status](https://github.com/RocketMobster/warpcorereports/actions/workflows/deploy.yml/badge.svg)](https://github.com/RocketMobster/warpcorereports/actions/workflows/deploy.yml)
+[![Latest Release](https://img.shields.io/github/v/release/RocketMobster/warpcorereports)](https://github.com/RocketMobster/warpcorereports/releases)
 
 ![v0.2.7 Demo](docs/media/v0.2.7-demo.gif)
 
@@ -8,9 +10,9 @@ A Star Trek-themed engineering report generator with LCARS UI styling, designed 
 
 ## Live Demo
 
-**URL:** https://rocketmobster.github.io/warpcorereports/
+**Deployed at:** https://rocketmobster.github.io/warpcorereports/
 
-[![Deploy Status](https://github.com/RocketMobster/warpcorereports/actions/workflows/deploy.yml/badge.svg)](https://github.com/RocketMobster/warpcorereports/actions/workflows/deploy.yml)
+The site is automatically built and deployed on every push to `master`.
 
 This site is automatically built (Vite) and deployed to GitHub Pages on every push to `master` (and can also be run manually via the workflow dispatch). The Vite `base` is set to `/warpcorereports/` in production so all assets resolve correctly under the project subpath. If you encounter a hard refresh 404 on a deep path, return to the root URL — the app is a single-page application served from `index.html`.
 
