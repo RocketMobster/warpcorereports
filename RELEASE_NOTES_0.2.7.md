@@ -1,5 +1,7 @@
 # Starfleet Engineering Report Generator — Release v0.2.7 (2025-09-20)
 
+Live Demo: https://rocketmobster.github.io/warpcorereports/
+
 ## Highlights
 - Header Settings gear moved to header; mobile bar simplified.
 - Mobile action bar order: Produce (amber), Reroll (purple), Edit (rose), Export (blue), Help.

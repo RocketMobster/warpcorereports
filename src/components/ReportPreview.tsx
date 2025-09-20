@@ -19,8 +19,8 @@ interface ReportPreviewProps {
 export default function ReportPreview({ report, onReportUpdate, editEnabled = false, onCopyHeaderLine, onCopyAbstract, onCopyProblems, onCopyConclusion, onCopyReferences, onCopyProblemItem, onCopyCrewManifest, missionTemplate = "none" }: ReportPreviewProps) {
   // Create a local copy of the report to track changes
   const [currentReport, setCurrentReport] = useState<Report>(report);
-  const containerRef = useRef<HTMLDivElement|null>(null);
-  const contentRef = useRef<HTMLDivElement|null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const contentRef = useRef<HTMLDivElement | null>(null);
   const [adaptivePad, setAdaptivePad] = useState(0);
   const [fixedChartWidth, setFixedChartWidth] = useState<number|null>(null);
   const [persistZoom, setPersistZoom] = useState<boolean>(() => {
@@ -124,7 +124,6 @@ export default function ReportPreview({ report, onReportUpdate, editEnabled = fa
         fig.id === updatedFigure.id ? updatedFigure : fig
       )
     };
-    
     // Update local state
     setCurrentReport(updatedReport);
     
@@ -138,10 +137,10 @@ export default function ReportPreview({ report, onReportUpdate, editEnabled = fa
     <div
       id="printable-report"
       ref={containerRef}
-      className="rounded-2xl border border-slate-700"
+      className="rounded-2xl border border-slate-700 overflow-hidden"
       style={{ marginRight: Math.min(14, Math.max(0, safeZonePx + adaptivePad/2 + 4)) }}
     >
-      <div className="px-6 py-4 bg-[#12182c] border-b border-slate-700 sticky top-0 z-10" style={{ paddingRight: Math.max(0, safeZonePx + 4) }}>
+      <div className="px-6 py-4 bg-[#12182c] border-b border-slate-700 sticky top-0 z-10 rounded-t-2xl" style={{ paddingRight: Math.max(0, safeZonePx + 4) }}>
         <div className="flex items-center gap-2">
           <div className="text-xs text-slate-400 flex-1">Stardate {currentReport.header.stardate} · {currentReport.header.vessel}</div>
           {onCopyHeaderLine && (
