@@ -3,6 +3,7 @@
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-rocketmobster.github.io%2Fwarpcorereports-blue?logo=github)](https://rocketmobster.github.io/warpcorereports/)
 [![Build Status](https://github.com/RocketMobster/warpcorereports/actions/workflows/deploy.yml/badge.svg)](https://github.com/RocketMobster/warpcorereports/actions/workflows/deploy.yml)
 [![Latest Release](https://img.shields.io/github/v/release/RocketMobster/warpcorereports)](https://github.com/RocketMobster/warpcorereports/releases)
+[![Pages Status](https://img.shields.io/github/deployments/RocketMobster/warpcorereports/github-pages?label=Pages&logo=github)](https://github.com/RocketMobster/warpcorereports/deployments/github-pages)
 
 ![v0.2.7 Demo](docs/media/v0.2.7-demo.gif)
 
