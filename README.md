@@ -2,7 +2,7 @@
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-rocketmobster.github.io%2Fwarpcorereports-blue?logo=github)](https://rocketmobster.github.io/warpcorereports/)
 
-![v0.2.6 Demo](docs/media/v0.2.6-demo.gif)
+![v0.2.7 Demo](docs/media/v0.2.7-demo.gif)
 
 A Star Trek-themed engineering report generator with LCARS UI styling, designed to create authentic-looking Starfleet engineering reports with dynamic content, interactive charts, and sharing capabilities.
 
@@ -28,6 +28,16 @@ Deployment usually completes within 1–2 minutes.
 - Explore presets (Diagnostic/Incident/Maintenance/Performance) or pick a Mission Template (Incident/Survey) for focused content.
 - Add your name/rank and optionally check "Add Name to References" to include the signer in References.
 - Use the ℹ️ buttons in the UI for quick help on Templates, Figure Bias, Presets, Produce vs Reroll, and References.
+
+## Recently Added (0.2.7)
+
+- Settings gear moved to the header (removed from the mobile bar) to make room for primary actions.
+- Mobile floating action bar order and styling updated: Produce (amber), Reroll (purple), Edit (rose), Export (blue), Help.
+- Consolidated action buttons inside Generation Options: Randomize All, Reset, Copy Settings Link, Preview Crew (compact single-row).
+- Per-accordion LCARS colors: distinct rail/title accents for each section for scanability.
+- Stardate Calculator visuals simplified; standardized blue info button and info panel.
+- Help opens as a centered modal with scrolling to avoid bottom clipping on mobile.
+- Crew preview panel and drawer themed pink to match the Preview Crew button; added a pink “×” close control.
 
 ## Recently Added (0.2.6)
 

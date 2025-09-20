@@ -10,7 +10,7 @@ export default function Footer() {
   const version = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0';
   const hash = (typeof __GIT_HASH__ !== 'undefined' && __GIT_HASH__) ? __GIT_HASH__.slice(0,7) : '';
   return (
-    <footer className="mt-12 py-6 border-t border-slate-700 text-sm">
+  <footer className="mt-12 pb-24 pt-6 border-t border-slate-700 text-sm">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="h-4 w-1.5 rounded-full" style={{ background: '#FFB300' }} />

@@ -79,43 +79,38 @@ export default function StardateCalculator({ onStardateChange, currentStardate }
   }, [showInfo]);
 
   return (
-    <div className="lcars-card mt-4">
-      <div className="lcars-rail"></div>
-      <div className="lcars-body space-y-3">
+    <div className="mt-2 space-y-3">
         <div className="flex items-center justify-between">
           <div className="text-lg font-semibold">Stardate Calculator</div>
           <button
             type="button"
-            className="lcars-btn p-2 text-amber-300 transition transform hover:-translate-y-0.5 active:translate-y-0"
+            className="px-2 py-1 rounded bg-blue-600 text-white border border-blue-500 hover:bg-blue-500"
             title="Show formulas used for stardates"
             aria-label="Show stardate formula information"
             onClick={() => setShowInfo(v => !v)}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-              <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm.75 15h-1.5v-6h1.5v6zM12 9.25a.875.875 0 110-1.75.875.875 0 010 1.75z" />
-            </svg>
+            i
           </button>
         </div>
         {showInfo && (
-          <div className="text-sm text-slate-300 bg-slate-800/60 border border-slate-600 rounded-lg p-3 pt-4 space-y-3 relative overflow-hidden">
-            <div className="absolute left-0 top-0 h-2 w-full bg-amber-500" />
+          <div className="text-sm text-slate-300 bg-slate-800/60 border border-slate-600 rounded-lg p-3 pt-3 space-y-3 relative overflow-hidden">
             <button
               type="button"
-              className="absolute top-2 right-2 text-amber-300 hover:text-amber-200 transition-colors"
+              className="absolute top-2 right-2 text-slate-300 hover:text-white transition-colors"
               aria-label="Close formula information"
               title="Close"
               onClick={() => setShowInfo(false)}
             >
               ×
             </button>
-            <div className="font-semibold text-amber-300">Formulas Used (Approximate)</div>
+            <div className="font-semibold text-blue-300">Formulas Used (Approximate)</div>
             <p>
               These are fan-derived approximations for fun and consistency. Canon varies. Two regimes are used.
             </p>
             <div>
               <button
                 type="button"
-                className="lcars-btn text-amber-300 transition transform hover:-translate-y-0.5 active:translate-y-0"
+                className="px-2 py-1 rounded bg-blue-600 text-white border border-blue-500 hover:bg-blue-500"
                 title="Copy formulas to clipboard"
                 onClick={async () => {
                   const text = [
@@ -136,15 +131,15 @@ export default function StardateCalculator({ onStardateChange, currentStardate }
               </button>
             </div>
             <div>
-              <div className="text-amber-200 font-medium">TNG-era (from 2364):</div>
+              <div className="text-blue-200 font-medium">TNG-era (from 2364):</div>
               <div ref={tngRef} className="mt-1 overflow-x-auto select-text" style={{paddingTop: '6px', paddingBottom: '10px'}} />
             </div>
             <div>
-              <div className="text-amber-200 font-medium">Pre‑TNG (before 2364):</div>
+              <div className="text-blue-200 font-medium">Pre‑TNG (before 2364):</div>
               <div ref={preRef} className="mt-1 overflow-x-auto select-text" style={{paddingTop: '6px', paddingBottom: '10px'}} />
             </div>
             <div>
-              <div className="text-amber-200 font-medium">Inverse (Stardate → Date):</div>
+              <div className="text-blue-200 font-medium">Inverse (Stardate → Date):</div>
               <div ref={inv1Ref} className="mt-1 overflow-x-auto select-text" style={{paddingTop: '6px', paddingBottom: '10px'}} />
               <div ref={inv2Ref} className="mt-1 overflow-x-auto select-text" style={{paddingTop: '6px', paddingBottom: '10px'}} />
               <div className="mt-1 text-slate-400">where f is the fractional part within the 1000 range.</div>
@@ -181,7 +176,6 @@ export default function StardateCalculator({ onStardateChange, currentStardate }
         <div className="lcars-small text-slate-300">
           Approximation note: Uses common fan-calculated formulas (pre-TNG and TNG-era). Results are approximate and for fun.
         </div>
-      </div>
     </div>
   );
 }

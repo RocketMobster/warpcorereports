@@ -3,9 +3,9 @@ import React from 'react';
 type MobileActionBarProps = {
   onOpenControls: () => void;
   onOpenCrew: () => void;
+  onEditCharts: () => void;
   onOpenStardate: () => void;
   onOpenHelp: () => void;
-  onOpenMore: () => void;
 };
 
 const Btn: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = ({ children, className = "", ...rest }) => (
@@ -17,7 +17,7 @@ const Btn: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = ({ children
   </button>
 );
 
-export default function MobileActionBar({ onOpenControls, onOpenCrew, onOpenStardate, onOpenHelp, onOpenMore }: MobileActionBarProps) {
+export default function MobileActionBar({ onOpenControls, onOpenCrew, onEditCharts, onOpenStardate, onOpenHelp }: MobileActionBarProps) {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-30 px-3 pb-3 pt-2 bg-gradient-to-t from-slate-950/90 via-slate-950/60 to-transparent">
       <div className="grid grid-cols-5 gap-2">
@@ -36,6 +36,13 @@ export default function MobileActionBar({ onOpenControls, onOpenCrew, onOpenStar
           <span>Reroll</span>
         </Btn>
         <Btn
+          onClick={onEditCharts}
+          title="Edit Charts"
+          className="bg-rose-500 hover:bg-rose-400 text-black border border-rose-400"
+        >
+          <span>Edit</span>
+        </Btn>
+        <Btn
           onClick={onOpenStardate}
           title="Export options"
           className="bg-blue-600 hover:bg-blue-500 text-white border border-blue-500"
@@ -44,9 +51,6 @@ export default function MobileActionBar({ onOpenControls, onOpenCrew, onOpenStar
         </Btn>
         <Btn onClick={onOpenHelp} title="Help" className="bg-slate-800/80 backdrop-blur border border-slate-600 hover:bg-slate-700">
           Help
-        </Btn>
-        <Btn onClick={onOpenMore} title="Settings" className="bg-slate-800/80 backdrop-blur border border-slate-600 hover:bg-slate-700">
-          <span className="text-xl leading-none">⚙︎</span>
         </Btn>
       </div>
     </div>

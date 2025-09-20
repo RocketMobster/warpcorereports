@@ -8,14 +8,14 @@ const ranks: Rank[] = [
   "Ensign","Lieutenant Junior Grade","Lieutenant","Lieutenant Commander","Commander"
 ];
 
-// Lightweight accordion for mobile variant
-function AccordionSection({ title, children, defaultOpen=false }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
+// Lightweight accordion for mobile variant with customizable LCARS colors
+function AccordionSection({ title, children, defaultOpen=false, railClass="bg-amber-500", titleClass="text-amber-300" }: { title: string; children: React.ReactNode; defaultOpen?: boolean; railClass?: string; titleClass?: string }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="relative border border-slate-700 rounded-xl overflow-hidden bg-slate-900 shadow-md">
-      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500" aria-hidden="true"></div>
+      <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${railClass}`} aria-hidden="true"></div>
       <button type="button" onClick={()=>setOpen(o=>!o)} className="w-full pl-4 pr-3 py-2 flex items-center justify-between text-left bg-slate-800/90 hover:bg-slate-700 transition-colors" aria-expanded={open}>
-        <span className="font-semibold tracking-wide text-xs uppercase text-amber-300">{title}</span>
+        <span className={`font-semibold tracking-wide text-xs uppercase ${titleClass}`}>{title}</span>
         <span className="text-[10px] text-slate-300">{open ? "▲" : "▼"}</span>
       </button>
       {open && (
@@ -331,7 +331,7 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
     return (
       <>
         <div className="space-y-3 mb-4">
-          <AccordionSection title="Ship & Signature" defaultOpen>
+          <AccordionSection title="Ship & Signature" defaultOpen railClass="bg-amber-500" titleClass="text-amber-300">
             <div className="space-y-2">
               <div>
                 <label className="lcars-label">Starship</label>
@@ -365,7 +365,7 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
             </div>
           </AccordionSection>
 
-          <AccordionSection title="Problems & Graphs" defaultOpen>
+          <AccordionSection title="Problems & Graphs" defaultOpen railClass="bg-purple-500" titleClass="text-purple-300">
             <div className="space-y-2">
               <div>
                 <div className="flex items-center justify-between">
@@ -406,7 +406,7 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
             </div>
           </AccordionSection>
 
-          <AccordionSection title="References & Canon Names">
+          <AccordionSection title="References & Canon Names" railClass="bg-cyan-500" titleClass="text-cyan-300">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <input type="checkbox" id="allowCanonNames_m" checked={allowCanonNames} onChange={e => setAllowCanonNames(e.target.checked)} />
@@ -442,7 +442,7 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
             </div>
           </AccordionSection>
 
-          <AccordionSection title="Generation Options" defaultOpen>
+          <AccordionSection title="Generation Options" defaultOpen railClass="bg-pink-500" titleClass="text-pink-300">
             <div className="space-y-2">
               <div>
                 <div className="flex items-center justify-between">
@@ -505,13 +505,21 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
                     <option value="performance">Performance</option>
                   </select>
                   <span className={`text-xs px-2 py-1 rounded-md border ${presetStatus === 'Active' ? 'bg-green-600 border-green-500' : presetStatus === 'Modified' ? 'bg-amber-600 border-amber-500' : 'bg-slate-700 border-slate-600'}`}>{presetStatus}</span>
-                  {wasReset && (<span className="text-xs px-2 py-1 rounded-md border bg-blue-700 border-blue-500">Reset</span>)}
                 </div>
+              </div>
+              {/* Action buttons inside Generation Options (compact, single row when possible) */}
+              <div className="mt-2 flex gap-2 flex-wrap md:flex-nowrap">
+                <button onClick={resetToDefaults} className="px-2 py-1 rounded-md bg-blue-600 text-white border border-blue-500 hover:bg-blue-500 text-[11px] uppercase tracking-wide" title="Reset controls to defaults" aria-label="Reset controls to defaults">Reset</button>
+                <button onClick={handleRandomizeAll} className="px-2 py-1 rounded-md bg-amber-500 text-black border border-amber-400 hover:bg-amber-400 text-[11px] uppercase tracking-wide" title="Randomize all controls" aria-label="Randomize all controls">Randomize All 🎲</button>
+                <button onClick={copySettingsLink} className="px-2 py-1 rounded-md bg-slate-800 text-slate-100 border border-slate-600 hover:bg-slate-700 text-[11px] uppercase tracking-wide" title="Copy a shareable link for current settings" aria-label="Copy shareable settings link">Copy Settings Link</button>
+                <button onClick={previewCrew} className={"px-2 py-1 rounded-md bg-pink-500 hover:bg-pink-400 text-black border border-pink-400 text-[11px] uppercase tracking-wide "+(manifestPanelOpen?" font-bold":"")}>
+                  {manifestPanelOpen ? 'Hide Crew' : 'Preview Crew'}
+                </button>
               </div>
             </div>
           </AccordionSection>
 
-          <AccordionSection title="Stardate">
+          <AccordionSection title="Stardate" railClass="bg-blue-600" titleClass="text-blue-300">
             <div className="space-y-3">
               {onStardateChange && onUseStardateToggle && (
                 <div className="space-y-2">
@@ -537,12 +545,7 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
         {/* Hidden produce trigger for the floating action bar */}
         <button id="produce-button" onClick={generate} className="hidden" aria-hidden="true" tabIndex={-1} />
 
-        <div className="flex flex-wrap gap-2 pt-1 justify-end mb-4 bg-slate-900/40 border border-slate-700 rounded-xl px-2 py-2">
-          <button onClick={handleRandomizeAll} className="lcars-btn">Randomize All 🎲</button>
-          <button onClick={resetToDefaults} className="lcars-btn" title="Reset controls to defaults" aria-label="Reset controls to defaults">Reset</button>
-          <button onClick={copySettingsLink} className="lcars-btn" title="Copy a shareable link for current settings" aria-label="Copy shareable settings link">Copy Settings Link</button>
-          <button onClick={previewCrew} className={"lcars-btn "+(manifestPanelOpen?"lcars-btn-highlighted":"")}>{manifestPanelOpen ? 'Hide Crew' : 'Preview Crew'}</button>
-        </div>
+        {/* External button bar removed; actions moved into Generation Options */}
 
         {showToast && (
           <div className="fixed bottom-4 right-4 bg-slate-900 text-amber-300 px-4 py-2 rounded-lg border border-amber-500 shadow-lg z-50">{toastMsg}</div>

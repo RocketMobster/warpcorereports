@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.7] - 2025-09-20
+
+### Changed
+- Header Settings gear restored and moved from mobile bar to the header for more space on mobile.
+- Mobile floating action bar reordered and refined: Produce (amber), Reroll (purple), Edit (rose), Export (blue), Help.
+- Mobile controls reorganization: moved Randomize All, Reset, Copy Settings Link, and Preview Crew into the Generation Options accordion (compact single-row where possible).
+- Per-accordion LCARS theming: distinct rail/title colors for each section (e.g., amber/purple/cyan/pink/blue).
+- Stardate Calculator visuals simplified: removed outer card/rail; standardized blue info button and accent panel.
+- Help now uses a centered modal with scrollable body (replaces mobile bottom drawer to avoid clipping).
+- Crew preview panel and drawer themed to match Preview Crew button (pink) with light panel background and pink accents.
+
+### Added
+- Close “×” control on the inline Crew preview panel; wired `onClose` so it appears in both inline and drawer contexts.
+
+### Fixed
+- Removed duplicate/non-functional Reset badge and fixed the working Reset; consolidated actions to eliminate confusion.
+- Footer now has extra bottom padding to avoid overlap with the floating action bar.
+- Improved device gating to ensure mobile accordions show only on touch/coarse pointers at narrow widths (with Force Mobile override).
+
+### Notes
+- Desktop remains the original 3-column LCARS layout; accordions are mobile-only.
+- Settings: Force Mobile, Persist Zoom, and Density live in the Settings drawer accessible from the header gear.
+
 ## [0.2.6] - 2025-09-19
 
 ### Added

@@ -5,11 +5,13 @@ import { CrewMember } from "../types";
 export default function CrewManifestPanel({ 
   count = 8, 
   onCrewChange, 
-  onRegenerate 
+  onRegenerate,
+  onClose
 }: { 
   count?: number; 
   onCrewChange?: (crew: any[]) => void;
   onRegenerate?: () => void;
+  onClose?: () => void;
 }) {
   // Use a ref to track previous count
   const prevCountRef = useRef<number>(count);
@@ -35,17 +37,28 @@ export default function CrewManifestPanel({
   }, [count]); // Only depend on count
 
   return (
-    <div className="rounded-2xl border border-slate-700 bg-[#101425] p-4" style={{ margin: '16px 0', background: '#222', borderRadius: 12, padding: 16 }}>
-      <h3 className="text-lg font-semibold mb-2" style={{ color: '#FFB300', fontWeight: 'bold', fontSize: 18, marginBottom: 8 }}>
+    <div className="mt-4 rounded-2xl border border-pink-400/40 bg-pink-500/10 p-4 shadow-md relative">
+      {onClose && (
+        <button
+          type="button"
+          className="absolute top-2 right-2 text-pink-300 hover:text-pink-200"
+          aria-label="Close"
+          title="Close"
+          onClick={onClose}
+        >
+          ×
+        </button>
+      )}
+      <h3 className="text-lg font-bold mb-2 text-pink-300">
         Crew Manifest Preview ({crew.length} crew members)
       </h3>
-      <ul className="text-sm text-slate-200 space-y-1" style={{ color: '#fff', fontSize: 15, marginBottom: 12 }}>
+      <ul className="text-[15px] text-slate-100 space-y-1 mb-3">
         {crew.map((member, i) => (
           <li key={i}>{member.rank} {member.name} – {member.role}</li>
         ))}
       </ul>
       <button
-        style={{ padding: '8px 18px', background: '#FFB300', color: '#222', border: 'none', borderRadius: 8, fontWeight: 'bold', fontSize: 16, cursor: 'pointer' }}
+        className="px-4 py-2 rounded-md bg-pink-500 hover:bg-pink-400 text-black border border-pink-400 font-bold text-sm"
         onClick={onRegenerate}
       >
         Regenerate Crew Manifest

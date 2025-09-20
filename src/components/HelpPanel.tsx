@@ -43,14 +43,14 @@ export default function HelpPanel({ onClose, target }: { onClose: () => void, ta
       aria-labelledby="help-title"
       onClick={onBackdropClick}
     >
-      <div className="w-full max-w-3xl lcars-card shadow-2xl" onClick={(e)=>e.stopPropagation()}>
+      <div className="w-full max-w-3xl lcars-card shadow-2xl max-h-[80vh] overflow-y-auto" onClick={(e)=>e.stopPropagation()}>
         <div className="lcars-rail lcars-rail-alt"></div>
         <div className="lcars-body">
           <div className="flex items-center justify-between">
             <h2 id="help-title" className="text-lg font-bold">Help & Usage</h2>
             <button ref={closeBtnRef} onClick={onClose} className="lcars-btn" aria-label="Close help">Close</button>
           </div>
-          <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-2 mt-2">
+          <div className="space-y-3 pr-2 mt-2">
           <div ref={sectionRefs['produce-reroll']}>
             <div className="lcars-label">Produce vs Reroll</div>
             <ul className="list-disc pl-6 text-sm space-y-1">

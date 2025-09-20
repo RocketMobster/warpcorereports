@@ -39,7 +39,7 @@ export default function App() {
   const [mobileCrewOpen, setMobileCrewOpen] = useState(false);
   const [mobileExportOpen, setMobileExportOpen] = useState(false);
   const [mobileHelpOpen, setMobileHelpOpen] = useState(false);
-  const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
+  const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false);
   const [report, setReport] = useState<Report | null>(null);
   const [crewManifest, setCrewManifest] = useState<any[]>([]);
   const [lastCfg, setLastCfg] = useState<any | null>(null);
@@ -631,6 +631,15 @@ export default function App() {
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-extrabold">Starfleet Engineering Report Generator</h1>
+          {/* Settings gear moved to header */}
+          <button
+            onClick={() => setMobileSettingsOpen(true)}
+            className="ml-4 px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 hover:bg-slate-700 text-sm"
+            title="Settings"
+            aria-label="Open Settings"
+          >
+            <span className="text-xl leading-none">⚙︎</span>
+          </button>
         </div>
         {/* Compact density moved to Settings drawer */}
         
@@ -684,6 +693,7 @@ export default function App() {
             count={currentCrewCount} 
             onCrewChange={handleCrewChange} 
             onRegenerate={regenerateCrewManifest}
+            onClose={() => setManifestPanelOpen(false)}
           />
         )}
 
@@ -801,15 +811,24 @@ export default function App() {
                 }
               }}
               onOpenCrew={()=>{ if (report) { regenerateReport(); } else { /* no-op if no report */ } }}
+              onEditCharts={()=>{ if (report) { toggleChartEditing(); } else { setToastMessage('No report to edit yet.'); setShowToast(true); setTimeout(()=>setShowToast(false),1500); } }}
               onOpenStardate={()=>setMobileExportOpen(true)}
               onOpenHelp={()=>setMobileHelpOpen(true)}
-              onOpenMore={()=>setMobileMoreOpen(true)}
             />
-            <Drawer open={mobileCrewOpen} onClose={()=>setMobileCrewOpen(false)} title="Crew Manifest">
+            <Drawer
+              open={mobileCrewOpen}
+              onClose={()=>setMobileCrewOpen(false)}
+              title="Crew Manifest"
+              accentClass="bg-pink-500"
+              titleClass="font-semibold text-sm tracking-wide text-pink-300"
+              panelClassName="bg-pink-500/10"
+              headerClassName="border-pink-400/40"
+            >
               <CrewManifestPanel
                 count={currentCrewCount}
                 onCrewChange={handleCrewChange}
                 onRegenerate={regenerateCrewManifest}
+                onClose={()=>setMobileCrewOpen(false)}
               />
             </Drawer>
             <Drawer open={mobileExportOpen} onClose={()=>setMobileExportOpen(false)} title="Export">
@@ -824,10 +843,10 @@ export default function App() {
                 </div>
               </div>
             </Drawer>
-            <Drawer open={mobileHelpOpen} onClose={()=>setMobileHelpOpen(false)} title="Help">
+            {mobileHelpOpen && (
               <HelpPanel onClose={()=>setMobileHelpOpen(false)} target={helpTarget} />
-            </Drawer>
-            <Drawer open={mobileMoreOpen} onClose={()=>setMobileMoreOpen(false)} title="Settings">
+            )}
+            <Drawer open={mobileSettingsOpen} onClose={()=>setMobileSettingsOpen(false)} title="Settings">
               <div className="space-y-4 text-sm">
                 <SoundControls />
                 <div className="flex items-center gap-2">

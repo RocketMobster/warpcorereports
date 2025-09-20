@@ -6,9 +6,13 @@ type DrawerProps = {
   title?: string;
   side?: 'left' | 'right' | 'bottom';
   children: ReactNode;
+  accentClass?: string; // rail color class
+  titleClass?: string;  // title text classes
+  panelClassName?: string; // panel container classes (background/border)
+  headerClassName?: string; // header border/background overrides
 };
 
-export default function Drawer({ open, onClose, title, side = 'bottom', children }: DrawerProps) {
+export default function Drawer({ open, onClose, title, side = 'bottom', children, accentClass, titleClass, panelClassName, headerClassName }: DrawerProps) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     if (open) window.addEventListener('keydown', onKey);
@@ -24,16 +28,16 @@ export default function Drawer({ open, onClose, title, side = 'bottom', children
       />
       {/* Panel */}
       <div
-        className={`absolute pointer-events-auto flex flex-col bg-slate-900 border-t border-slate-700 shadow-xl w-full max-h-[80%] ${
+        className={`absolute pointer-events-auto flex flex-col ${panelClassName ?? 'bg-slate-900'} border-t ${headerClassName ?? 'border-slate-700'} shadow-xl w-full max-h-[80%] ${
           side === 'bottom' ? 'left-0 bottom-0 rounded-t-xl' : ''
         } transition-transform duration-300 ${open ? 'translate-y-0' : 'translate-y-full'}`}
         role="dialog"
         aria-modal="true"
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700">
+        <div className={`flex items-center justify-between px-4 py-3 border-b ${headerClassName ?? 'border-slate-700'}`}>
           <div className="flex items-center gap-3">
-            <div className="h-4 w-1.5 rounded-full" style={{ background: '#FFB300' }} />
-            <span className="font-semibold text-sm tracking-wide">{title}</span>
+            <div className={`h-4 w-1.5 rounded-full ${accentClass ?? ''}`} style={!accentClass ? { background: '#FFB300' } : undefined} />
+            <span className={`${titleClass ?? 'font-semibold text-sm tracking-wide'}`}>{title}</span>
           </div>
           <button
             onClick={onClose}
