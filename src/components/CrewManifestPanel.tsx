@@ -30,7 +30,7 @@ export default function CrewManifestPanel({
   onClose?: () => void;
 }) {
   type Department = "Command" | "Operations" | "Engineering" | "Science" | "Medical" | "Security" | "Other";
-  type UICrewMember = CrewMember & { id: string; department: Department };
+  type UICrewMember = CrewMember & { id: string; department: Department; locked?: boolean };
 
   const STORAGE_KEY = "wcr_crew_manifest_v1";
 
@@ -41,21 +41,21 @@ export default function CrewManifestPanel({
 
   const roleToDepartment = (role: string): Department => {
     const r = role.toLowerCase();
-    if (r.includes("captain") || r.includes("commander") || r.includes("command")) return "Command";
-    if (r.includes("ops") || r.includes("operations") || r.includes("tactical") || r.includes("helm") || r.includes("communications")) return "Operations";
-    if (r.includes("warp") || r.includes("eps") || r.includes("engineer") || r.includes("structural") || r.includes("deflector") || r.includes("transporter")) return "Engineering";
-    if (r.includes("science") || r.includes("sensor") || r.includes("astrometric") || r.includes("cartography")) return "Science";
-    if (r.includes("medical") || r.includes("doctor") || r.includes("medic") || r.includes("nurse")) return "Medical";
-    if (r.includes("security")) return "Security";
+    if (r.includes("captain") || r.includes("commander") || r.includes("command") || r.includes("xo") || r.includes("first officer")) return "Command";
+    if (r.includes("ops") || r.includes("operations") || r.includes("tactical") || r.includes("helm") || r.includes("communications") || r.includes("shield") || r.includes("holodeck")) return "Operations";
+    if (r.includes("warp") || r.includes("eps") || r.includes("engineer") || r.includes("structural") || r.includes("deflector") || r.includes("transporter") || r.includes("impulse") || r.includes("dilithium")) return "Engineering";
+    if (r.includes("science") || r.includes("sensor") || r.includes("astrometric") || r.includes("cartography") || r.includes("subspace") || r.includes("quantum")) return "Science";
+    if (r.includes("medical") || r.includes("doctor") || r.includes("medic") || r.includes("nurse") || r.includes("bio")) return "Medical";
+    if (r.includes("security") || r.includes("safety") || r.includes("brig")) return "Security";
     return "Other";
   };
 
   const augment = (list: CrewMember[]): UICrewMember[] =>
-    list.map(cm => ({ ...cm, id: crypto.randomUUID(), department: roleToDepartment(cm.role) }));
+    list.map(cm => ({ ...cm, id: crypto.randomUUID(), department: roleToDepartment(cm.role), locked: false }));
 
   const saveCrew = (list: UICrewMember[]) => {
     try {
-      const toSave = list.map(({ id, department, ...rest }) => ({ id, department, ...rest }));
+      const toSave = list.map(({ id, department, locked, ...rest }) => ({ id, department, locked: !!locked, ...rest }));
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ v: 1, crew: toSave }));
     } catch {}
   };
@@ -69,6 +69,33 @@ export default function CrewManifestPanel({
     } catch { return null; }
   };
 
+  // Ensure coverage across departments by adjusting roles for a minimal presence
+  const ensureDepartmentCoverage = (list: UICrewMember[]): UICrewMember[] => {
+    const need: Department[] = ["Command","Operations","Medical","Security","Science"];
+    const have = new Set(list.map(c => c.department));
+    const suggestions: Record<Department, string[]> = {
+      Command: ["Ship's Captain","First Officer","Chief of Operations"],
+      Operations: ["Tactical Officer","Helm Officer","Communications Officer","Operations"],
+      Medical: ["Medical Officer","Chief Medical Officer","Nurse"],
+      Security: ["Security Officer","Chief Security Officer"],
+      Science: ["Science Officer","Chief Science Officer","Astrometrics Specialist"],
+      Engineering: ["Engineer","Chief Engineer","Warp Specialist"],
+      Other: ["Crewman"]
+    };
+    const next = [...list];
+    for (const dept of need) {
+      if (!have.has(dept)) {
+        // Pick the first non-locked member currently in a dominant dept to repurpose
+        const idx = next.findIndex(c => !c.locked && (c.department === "Engineering" || c.department === "Other"));
+        if (idx !== -1) {
+          const role = suggestions[dept][0];
+          next[idx] = { ...next[idx], role, department: dept };
+        }
+      }
+    }
+    return next;
+  };
+
   const prevCountRef = useRef<number>(count);
   const [crew, setCrew] = useState<UICrewMember[]>([]);
   const [selectedDepts, setSelectedDepts] = useState<Set<Department>>(new Set());
@@ -80,10 +107,11 @@ export default function CrewManifestPanel({
   useEffect(() => {
     const persisted = loadCrew();
     if (persisted && persisted.length) {
-      setCrew(persisted);
-      onCrewChange?.(persisted);
+      const adjusted = ensureDepartmentCoverage(persisted.map(c => ({ ...c, department: roleToDepartment(c.role) })));
+      setCrew(adjusted);
+      onCrewChange?.(adjusted);
     } else {
-      const generated = augment(generateCrewManifest(count));
+      const generated = ensureDepartmentCoverage(augment(generateCrewManifest(count)));
       setCrew(generated);
       onCrewChange?.(generated);
       saveCrew(generated);
@@ -94,7 +122,7 @@ export default function CrewManifestPanel({
   // Update crew when count changes
   useEffect(() => {
     if (count !== prevCountRef.current) {
-      const generated = augment(generateCrewManifest(count));
+      const generated = ensureDepartmentCoverage(augment(generateCrewManifest(count)));
       setCrew(generated);
       onCrewChange?.(generated);
       saveCrew(generated);
@@ -169,8 +197,29 @@ export default function CrewManifestPanel({
   };
 
   const handleRegenerateClick = () => {
-    try { localStorage.removeItem(STORAGE_KEY); } catch {}
+    // Regenerate only unlocked slots and preserve locked members in place
+    const lockedCount = crew.filter(c => c.locked).length;
+    const toGenerate = Math.max(0, (crew.length || count) - lockedCount);
+    const newOnes = augment(generateCrewManifest(toGenerate));
+    let cursor = 0;
+    const merged = crew.map(c => c.locked ? c : (() => {
+      const nextOne = newOnes[cursor++];
+      return { ...nextOne, id: c.id }; // preserve position id for stable DnD ordering
+    })());
+    const adjusted = ensureDepartmentCoverage(merged);
+    setCrew(adjusted);
+    onCrewChange?.(adjusted);
+    saveCrew(adjusted);
+    // Optionally still signal parent regenerate for broader updates
     onRegenerate?.();
+  };
+
+  const handleResetCrew = () => {
+    try { localStorage.removeItem(STORAGE_KEY); } catch {}
+    const generated = ensureDepartmentCoverage(augment(generateCrewManifest(count)));
+    setCrew(generated);
+    onCrewChange?.(generated);
+    saveCrew(generated);
   };
 
   function SortableRow({ member }: { member: UICrewMember }) {
@@ -205,6 +254,19 @@ export default function CrewManifestPanel({
           )}
         </div>
         <span className="text-xs text-pink-300 border border-pink-400/30 rounded px-1.5 py-0.5">{member.department}</span>
+        <button
+          className={`ml-1 px-2 py-0.5 rounded border text-xs ${member.locked ? 'bg-pink-500 text-black border-pink-400' : 'bg-pink-500/10 text-pink-200 border-pink-400/40 hover:bg-pink-500/20'}`}
+          onClick={() => {
+            const updated = crew.map(c => c.id === member.id ? { ...c, locked: !c.locked } : c);
+            setCrew(updated);
+            onCrewChange?.(updated);
+            saveCrew(updated);
+          }}
+          title={member.locked ? 'Unlock (allow regenerate)' : 'Lock (preserve on regenerate)'}
+          aria-pressed={!!member.locked}
+        >
+          {member.locked ? 'Locked' : 'Lock'}
+        </button>
       </li>
     );
   }
@@ -226,6 +288,7 @@ export default function CrewManifestPanel({
 
       {/* Toolbar: Filters + Search + Actions */}
       <div className="mb-3 flex flex-col gap-2">
+        <div className="text-pink-200 text-xs">Filter by department:</div>
         <div className="flex flex-wrap gap-1">
           <button className={`px-2 py-1 text-xs rounded border ${selectedDepts.size === 0 ? 'bg-pink-500 text-black border-pink-400' : 'bg-pink-500/10 text-pink-200 border-pink-400/40 hover:bg-pink-500/20'}`} onClick={clearFilters} title="Show all departments">All</button>
           {DEPTS.map(d => (
@@ -241,6 +304,7 @@ export default function CrewManifestPanel({
           />
           <button className="px-3 py-1.5 rounded-md bg-pink-500 hover:bg-pink-400 text-black border border-pink-400 font-bold text-sm" onClick={shuffleCrew}>Shuffle</button>
           <button className="px-3 py-1.5 rounded-md bg-pink-500/20 hover:bg-pink-500/30 text-pink-100 border border-pink-400/60 font-bold text-sm" onClick={handleRegenerateClick}>Regenerate</button>
+          <button className="px-3 py-1.5 rounded-md bg-slate-700/70 hover:bg-slate-700 text-pink-200 border border-pink-400/40 font-bold text-sm" onClick={handleResetCrew} title="Reset crew to a fresh random set and clear edits">Reset</button>
         </div>
       </div>
 
