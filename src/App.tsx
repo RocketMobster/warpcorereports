@@ -64,6 +64,8 @@ export default function App() {
   const errorDetailRef = React.useRef<string>("");
   // Simple error toast throttle
   const [lastErrorAt, setLastErrorAt] = useState<number>(0);
+  const [lastReportAt, setLastReportAt] = useState<number>(0);
+  const [reportDisabled, setReportDisabled] = useState<boolean>(false);
   // Help panel state
   const [showHelp, setShowHelp] = useState(false);
   const [persistZoom, setPersistZoom] = useState<boolean>(() => {
@@ -843,7 +845,7 @@ export default function App() {
             )}
             {toastIsError && (
               <a
-                href={`mailto:rocketmobster+warpcorereports@gmail.com?subject=${encodeURIComponent('WarpCoreReports Error ' + (pkg?.version || ''))}&body=${encodeURIComponent(
+                href={reportDisabled ? undefined : `mailto:rocketmobster+warpcorereports@gmail.com?subject=${encodeURIComponent('WarpCoreReports Error ' + (pkg?.version || ''))}&body=${encodeURIComponent(
                   [
                     `App Version: ${pkg?.version || ''}`,
                     `URL: ${window.location.href}`,
@@ -854,8 +856,19 @@ export default function App() {
                     (errorDetailRef.current || toastMessage)
                   ].join('\n')
                 )}`}
-                className="ml-1 px-2 py-1 rounded bg-blue-500 text-white border border-blue-400 text-xs"
-                title="Report this bug via email"
+                onClick={(e)=>{
+                  const now = Date.now();
+                  if (now - lastReportAt < 5000) { // 5s cooldown
+                    e.preventDefault();
+                    return;
+                  }
+                  setLastReportAt(now);
+                  setReportDisabled(true);
+                  setTimeout(()=>setReportDisabled(false), 5000);
+                }}
+                className={`ml-1 px-2 py-1 rounded border text-xs ${reportDisabled ? 'bg-blue-900 text-blue-300 border-blue-700 cursor-not-allowed' : 'bg-blue-500 text-white border-blue-400'}`}
+                aria-disabled={reportDisabled}
+                title={reportDisabled ? 'Please wait a moment…' : 'Report this bug via email'}
               >Report</a>
             )}
           </div>
