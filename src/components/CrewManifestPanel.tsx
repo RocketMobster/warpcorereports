@@ -32,6 +32,25 @@ export default function CrewManifestPanel({
 
   const STORAGE_KEY = "wcr_crew_manifest_v1";
 
+  const uid = () => {
+    try {
+      // Prefer standards if available
+      if (typeof crypto !== 'undefined' && (crypto as any).randomUUID) return (crypto as any).randomUUID();
+      if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+        const buf = new Uint8Array(16);
+        crypto.getRandomValues(buf);
+        // RFC4122-ish v4 formatting
+        buf[6] = (buf[6] & 0x0f) | 0x40;
+        buf[8] = (buf[8] & 0x3f) | 0x80;
+        const toHex = (n:number) => n.toString(16).padStart(2,'0');
+        const b = Array.from(buf, toHex).join('');
+        return `${b.slice(0,8)}-${b.slice(8,12)}-${b.slice(12,16)}-${b.slice(16,20)}-${b.slice(20)}`;
+      }
+    } catch {}
+    // Fallback: time + random
+    return `id_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+  };
+
   const DEFAULT_ROLES = useMemo(() => [
     "Sensor Technician","Warp Specialist","EPS Engineer","Structural Engineer","Deflector Officer","Transporter Chief","Operations",
     "Medical Officer","Science Officer","Security Officer","Helm Officer","Communications Officer","Tactical Officer","Chief Engineer","Chief Science Officer"
@@ -49,7 +68,7 @@ export default function CrewManifestPanel({
   };
 
   const augment = (list: CrewMember[]): UICrewMember[] =>
-    list.map(cm => ({ ...cm, id: crypto.randomUUID(), department: roleToDepartment(cm.role), locked: false }));
+    list.map(cm => ({ ...cm, id: uid(), department: roleToDepartment(cm.role), locked: false }));
 
   const saveCrew = (list: UICrewMember[]) => {
     try {
