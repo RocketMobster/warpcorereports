@@ -21,6 +21,8 @@ import Footer from "./components/Footer";
 import useMediaQuery from "./hooks/useMediaQuery";
 import MobileActionBar from "./components/MobileActionBar";
 import Drawer from "./components/Drawer";
+// @ts-ignore - vite supports importing JSON in ESM by default
+import pkg from "../package.json";
 
 export default function App() {
   // Restored compact density preference
@@ -838,6 +840,23 @@ export default function App() {
                 className="ml-2 px-2 py-1 rounded bg-amber-500 text-black border border-amber-400 text-xs"
                 title="Copy error details"
               >Copy</button>
+            )}
+            {toastIsError && (
+              <a
+                href={`mailto:rocketmobster+warpcorereports@gmail.com?subject=${encodeURIComponent('WarpCoreReports Error ' + (pkg?.version || ''))}&body=${encodeURIComponent(
+                  [
+                    `App Version: ${pkg?.version || ''}`,
+                    `URL: ${window.location.href}`,
+                    `Time: ${new Date().toISOString()}`,
+                    `User Agent: ${navigator.userAgent}`,
+                    '',
+                    'Details:',
+                    (errorDetailRef.current || toastMessage)
+                  ].join('\n')
+                )}`}
+                className="ml-1 px-2 py-1 rounded bg-blue-500 text-white border border-blue-400 text-xs"
+                title="Report this bug via email"
+              >Report</a>
             )}
           </div>
         )}
