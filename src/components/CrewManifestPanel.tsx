@@ -21,12 +21,10 @@ import { CSS } from "@dnd-kit/utilities";
 export default function CrewManifestPanel({ 
   count = 8, 
   onCrewChange, 
-  onRegenerate,
   onClose
 }: { 
   count?: number; 
   onCrewChange?: (crew: any[]) => void;
-  onRegenerate?: () => void;
   onClose?: () => void;
 }) {
   type Department = "Command" | "Operations" | "Engineering" | "Science" | "Medical" | "Security" | "Other";
@@ -102,6 +100,7 @@ export default function CrewManifestPanel({
   const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftRole, setDraftRole] = useState<string>("");
+  const [targetSize, setTargetSize] = useState<number>(count);
 
   // Initialize crew (prefer persisted)
   useEffect(() => {
@@ -127,6 +126,7 @@ export default function CrewManifestPanel({
       onCrewChange?.(generated);
       saveCrew(generated);
       prevCountRef.current = count;
+      setTargetSize(count);
     }
   }, [count]);
 
@@ -210,8 +210,6 @@ export default function CrewManifestPanel({
     setCrew(adjusted);
     onCrewChange?.(adjusted);
     saveCrew(adjusted);
-    // Optionally still signal parent regenerate for broader updates
-    onRegenerate?.();
   };
 
   const handleResetCrew = () => {
@@ -220,6 +218,35 @@ export default function CrewManifestPanel({
     setCrew(generated);
     onCrewChange?.(generated);
     saveCrew(generated);
+  };
+
+  const applyResize = () => {
+    const locked = crew.filter(c => c.locked);
+    const unlocked = crew.filter(c => !c.locked);
+    const minAllowed = locked.length; // cannot shrink below locked
+    const desired = Math.max(minAllowed, Math.min(20, Math.max(1, Math.floor(targetSize || crew.length))));
+    if (desired === crew.length) return;
+    if (desired > crew.length) {
+      const toAdd = desired - crew.length;
+      const additions = augment(generateCrewManifest(toAdd));
+      const next = ensureDepartmentCoverage([...crew, ...additions]);
+      setCrew(next);
+      onCrewChange?.(next);
+      saveCrew(next);
+      return;
+    }
+    // desired < crew.length, remove from unlocked (end-first)
+    const toRemove = crew.length - desired;
+    const nextUnlocked = [...unlocked];
+    const keepUnlocked = nextUnlocked.slice(0, Math.max(0, nextUnlocked.length - toRemove));
+    // Preserve original order: interleave locked in their original positions
+    const lockedIds = new Set(locked.map(c => c.id));
+    const keepIds = new Set([...locked.map(c => c.id), ...keepUnlocked.map(c => c.id)]);
+    const next = crew.filter(c => keepIds.has(c.id));
+    const adjusted = ensureDepartmentCoverage(next);
+    setCrew(adjusted);
+    onCrewChange?.(adjusted);
+    saveCrew(adjusted);
   };
 
   function SortableRow({ member }: { member: UICrewMember }) {
@@ -295,13 +322,32 @@ export default function CrewManifestPanel({
             <button key={d} className={`px-2 py-1 text-xs rounded border ${selectedDepts.has(d) ? 'bg-pink-500 text-black border-pink-400' : 'bg-pink-500/10 text-pink-200 border-pink-400/40 hover:bg-pink-500/20'}`} onClick={() => toggleDept(d)}>{d}</button>
           ))}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <input
             className="flex-1 px-2 py-1 rounded bg-slate-900/60 border border-pink-400/40 text-slate-100 placeholder-pink-300/50"
             placeholder="Search name or role"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          <div className="flex items-center gap-2 px-2 py-1 rounded bg-slate-800/60 border border-pink-400/30 text-pink-200">
+            <label className="text-xs" htmlFor="crew-size">Crew size</label>
+            <input
+              id="crew-size"
+              type="number"
+              min={Math.max(1, crew.filter(c=>c.locked).length)}
+              max={20}
+              value={targetSize}
+              onChange={(e)=> setTargetSize(Number(e.target.value))}
+              className="w-16 px-2 py-1 rounded bg-slate-900/60 border border-pink-400/40 text-slate-100"
+              title="Set desired crew size; locked members are preserved"
+            />
+            <button
+              className="px-2 py-1 rounded bg-pink-600 text-black border border-pink-400 font-bold text-xs"
+              onClick={applyResize}
+              title="Apply crew size"
+            >Apply</button>
+            <span className="text-[11px] opacity-80">Locked: {crew.filter(c=>c.locked).length}</span>
+          </div>
           <button className="px-3 py-1.5 rounded-md bg-pink-500 hover:bg-pink-400 text-black border border-pink-400 font-bold text-sm" onClick={shuffleCrew}>Shuffle</button>
           <button className="px-3 py-1.5 rounded-md bg-pink-500/20 hover:bg-pink-500/30 text-pink-100 border border-pink-400/60 font-bold text-sm" onClick={handleRegenerateClick}>Regenerate</button>
           <button className="px-3 py-1.5 rounded-md bg-slate-700/70 hover:bg-slate-700 text-pink-200 border border-pink-400/40 font-bold text-sm" onClick={handleResetCrew} title="Reset crew to a fresh random set and clear edits">Reset</button>

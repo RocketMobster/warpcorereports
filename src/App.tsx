@@ -692,7 +692,6 @@ export default function App() {
           <CrewManifestPanel 
             count={currentCrewCount} 
             onCrewChange={handleCrewChange} 
-            onRegenerate={regenerateCrewManifest}
             onClose={() => setManifestPanelOpen(false)}
           />
         )}
@@ -827,7 +826,6 @@ export default function App() {
               <CrewManifestPanel
                 count={currentCrewCount}
                 onCrewChange={handleCrewChange}
-                onRegenerate={regenerateCrewManifest}
                 onClose={()=>setMobileCrewOpen(false)}
               />
             </Drawer>
