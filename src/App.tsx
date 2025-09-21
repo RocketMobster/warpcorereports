@@ -58,6 +58,8 @@ export default function App() {
   // Toast notification state
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  // Simple error toast throttle
+  const [lastErrorAt, setLastErrorAt] = useState<number>(0);
   // Help panel state
   const [showHelp, setShowHelp] = useState(false);
   const [persistZoom, setPersistZoom] = useState<boolean>(() => {
@@ -70,6 +72,33 @@ export default function App() {
   useEffect(() => {
     initSoundSettings();
   }, []);
+
+  // Surface runtime errors in a toast for easier mobile debugging
+  useEffect(() => {
+    const onErr = (event: ErrorEvent) => {
+      const now = Date.now();
+      if (now - lastErrorAt < 2000) return; // throttle
+      setLastErrorAt(now);
+      setToastMessage(`Error: ${event.message?.slice(0, 120) || 'Unknown error'}`);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    };
+    const onRej = (event: PromiseRejectionEvent) => {
+      const reason = (event.reason && (event.reason.message || String(event.reason))) || 'Unhandled rejection';
+      const now = Date.now();
+      if (now - lastErrorAt < 2000) return; // throttle
+      setLastErrorAt(now);
+      setToastMessage(`Error: ${String(reason).slice(0, 120)}`);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    };
+    window.addEventListener('error', onErr);
+    window.addEventListener('unhandledrejection', onRej as any);
+    return () => {
+      window.removeEventListener('error', onErr);
+      window.removeEventListener('unhandledrejection', onRej as any);
+    };
+  }, [lastErrorAt]);
 
   // Load persisted stardate override settings
   useEffect(() => {
