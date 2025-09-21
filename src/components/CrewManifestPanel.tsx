@@ -367,6 +367,11 @@ export default function CrewManifestPanel({
             >Apply</button>
             <span className="text-[11px] opacity-80">Locked: {crew.filter(c=>c.locked).length}</span>
           </div>
+          {targetSize < crew.filter(c=>c.locked).length && (
+            <div className="text-[11px] text-amber-300 -mt-1">
+              Target is below locked count; will clamp to {crew.filter(c=>c.locked).length}.
+            </div>
+          )}
           <button className="px-3 py-1.5 rounded-md bg-pink-500 hover:bg-pink-400 text-black border border-pink-400 font-bold text-sm" onClick={shuffleCrew}>Shuffle</button>
           <button className="px-3 py-1.5 rounded-md bg-pink-500/20 hover:bg-pink-500/30 text-pink-100 border border-pink-400/60 font-bold text-sm" onClick={handleRegenerateClick}>Regenerate</button>
           <button className="px-3 py-1.5 rounded-md bg-slate-700/70 hover:bg-slate-700 text-pink-200 border border-pink-400/40 font-bold text-sm" onClick={handleResetCrew} title="Reset crew to a fresh random set and clear edits">Reset</button>
