@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 
-export default function HelpPanel({ onClose, target }: { onClose: () => void, target?: "templates"|"figure-bias"|"presets"|"produce-reroll"|"references" }) {
+export default function HelpPanel({ onClose, target }: { onClose: () => void, target?: "templates"|"figure-bias"|"presets"|"produce-reroll"|"references"|"crew-size" }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const sectionRefs = {
@@ -8,7 +8,8 @@ export default function HelpPanel({ onClose, target }: { onClose: () => void, ta
     'presets': useRef<HTMLDivElement>(null),
     'templates': useRef<HTMLDivElement>(null),
     'figure-bias': useRef<HTMLDivElement>(null),
-    'references': useRef<HTMLDivElement>(null)
+    'references': useRef<HTMLDivElement>(null),
+    'crew-size': useRef<HTMLDivElement>(null)
   } as const;
 
   useEffect(() => {
@@ -43,14 +44,14 @@ export default function HelpPanel({ onClose, target }: { onClose: () => void, ta
       aria-labelledby="help-title"
       onClick={onBackdropClick}
     >
-      <div className="w-full max-w-3xl lcars-card shadow-2xl max-h-[80vh] overflow-y-auto" onClick={(e)=>e.stopPropagation()}>
+      <div className="w-full max-w-3xl lcars-card shadow-2xl max-h-[85vh] overflow-hidden" onClick={(e)=>e.stopPropagation()}>
         <div className="lcars-rail lcars-rail-alt"></div>
-        <div className="lcars-body">
-          <div className="flex items-center justify-between">
+        <div className="lcars-body flex flex-col max-h-[85vh]">
+          <div className="flex items-center justify-between flex-none">
             <h2 id="help-title" className="text-lg font-bold">Help & Usage</h2>
             <button ref={closeBtnRef} onClick={onClose} className="lcars-btn" aria-label="Close help">Close</button>
           </div>
-          <div className="space-y-3 pr-2 mt-2">
+          <div className="space-y-3 pr-2 mt-2 overflow-y-auto flex-1 min-h-0">
           <div ref={sectionRefs['produce-reroll']}>
             <div className="lcars-label">Produce vs Reroll</div>
             <ul className="list-disc pl-6 text-sm space-y-1">
@@ -78,6 +79,16 @@ export default function HelpPanel({ onClose, target }: { onClose: () => void, ta
               <li><strong>Reroll behavior</strong>: Reroll keeps the chosen template for the current report.</li>
               <li><strong>Shareable settings</strong>: The settings link encodes the template as well.</li>
               <li><strong>Also affects</strong>: Header recipients (To/CC/Submitted To), narrative tone in Abstract/Conclusion, figure captions, and reference sources are gently biased by the template.</li>
+            </ul>
+          </div>
+          <div ref={sectionRefs['crew-size']}>
+            <div className="lcars-label">Crew Size Controls</div>
+            <ul className="list-disc pl-6 text-sm space-y-1">
+              <li><strong>Grow/Shrink</strong>: Use the Crew Size control to increase or decrease the number of crew entries. Order is preserved.</li>
+              <li><strong>Locked Preservation</strong>: Locked members are never removed or regenerated. Shrinking below the number of locked members is clamped.</li>
+              <li><strong>Coverage Enforcement</strong>: The panel ensures at least one of Command, Operations, Medical, Security, and Science is present where possible (unlocked members only).</li>
+              <li><strong>Regenerate vs Apply</strong>: Apply changes the list size. Regenerate re-fills only unlocked slots without changing the target size.</li>
+              <li><strong>Persistence</strong>: Your crew and locks are saved locally so they stick around between sessions.</li>
             </ul>
           </div>
           <div ref={sectionRefs['references']}>

@@ -69,3 +69,9 @@ body { @apply bg-[#0b0d16] text-slate-100; }
 .density-compact #printable-report .text-base { font-size: 0.9rem; }
 .density-compact #printable-report .text-sm { font-size: 0.8125rem; }
 .density-compact #printable-report .leading-relaxed { line-height: 1.4; }
+
+/* Compact tweaks for Crew Manifest panel */
+.density-compact .crew-toolbar .lcars-btn { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
+.density-compact .crew-toolbar input[type="number"],
+.density-compact .crew-toolbar input[type="text"] { padding: 0.25rem 0.5rem; font-size: 0.8125rem; }
+.density-compact .crew-role-btn { font-size: 0.75rem; padding: 0.25rem 0.375rem; }

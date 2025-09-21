@@ -80,6 +80,18 @@ export default function App() {
     initSoundSettings();
   }, []);
 
+  // Listen for help open requests from child components (e.g., crew-size info)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { section?: any } | undefined;
+      const section = detail?.section as any;
+      setHelpTarget(section);
+      if (showMobileUI) setMobileHelpOpen(true); else setShowHelp(true);
+    };
+    window.addEventListener('wcr-open-help', handler as any);
+    return () => window.removeEventListener('wcr-open-help', handler as any);
+  }, [showMobileUI]);
+
   // Surface runtime errors in a toast for easier mobile debugging
   useEffect(() => {
     const onErr = (event: ErrorEvent) => {

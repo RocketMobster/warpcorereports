@@ -273,15 +273,19 @@ export default function CrewManifestPanel({
     const style: React.CSSProperties = { transform: CSS.Transform.toString(transform), transition };
     const isEditing = editingId === member.id;
     return (
-      <li ref={setNodeRef} style={style} className="flex items-center gap-2 px-2 py-1 rounded-md bg-pink-500/5 border border-pink-400/20">
+  <li ref={setNodeRef} style={style} className="flex items-center gap-2 px-2 py-1 rounded-md bg-pink-500/5 border border-pink-400/20">
         <button aria-label="Drag handle" title="Drag to reorder" className="cursor-grab active:cursor-grabbing text-pink-300 hover:text-pink-200" {...attributes} {...listeners}>
           ≡
         </button>
-        <div className="flex-1 text-slate-100">
-          <span className="font-medium">{member.rank} {member.name}</span>
-          <span className="mx-2 text-pink-400">–</span>
+        <div className="flex-1 text-slate-100 min-w-0">
+          <span className="font-medium whitespace-nowrap overflow-hidden text-ellipsis inline-block align-middle max-w-[50%] sm:max-w-none">{member.rank} {member.name}</span>
+          <span className="mx-2 text-pink-400 hidden xs:inline">–</span>
           {!isEditing ? (
-            <button className="px-2 py-0.5 rounded bg-pink-500/20 border border-pink-400/30 text-pink-100 hover:bg-pink-500/30" onClick={() => startEdit(member.id, member.role)} title="Edit role">
+            <button
+              className="crew-role-btn px-1.5 py-0.5 rounded bg-pink-500/20 border border-pink-400/30 text-pink-100 hover:bg-pink-500/30 text-xs sm:text-sm max-w-[48%] sm:max-w-none overflow-hidden text-ellipsis align-middle"
+              onClick={() => startEdit(member.id, member.role)}
+              title="Edit role"
+            >
               {member.role}
             </button>
           ) : (
@@ -299,7 +303,7 @@ export default function CrewManifestPanel({
             </span>
           )}
         </div>
-        <span className="text-xs text-pink-300 border border-pink-400/30 rounded px-1.5 py-0.5">{member.department}</span>
+        <span className="text-xs text-pink-300 border border-pink-400/30 rounded px-1.5 py-0.5 whitespace-nowrap">{member.department}</span>
         <button
           className={`ml-1 px-2 py-0.5 rounded border text-xs ${member.locked ? 'bg-pink-500 text-black border-pink-400' : 'bg-pink-500/10 text-pink-200 border-pink-400/40 hover:bg-pink-500/20'}`}
           onClick={() => {
@@ -318,7 +322,7 @@ export default function CrewManifestPanel({
   }
 
   return (
-    <div className="mt-4 rounded-2xl border border-pink-400/40 bg-pink-500/10 p-4 shadow-md relative">
+  <div className="mt-4 rounded-2xl border border-pink-400/40 bg-pink-500/10 p-4 shadow-md relative">
       {onClose && (
         <button
           type="button"
@@ -333,8 +337,19 @@ export default function CrewManifestPanel({
       <h3 className="text-lg font-bold mb-2 text-pink-300">Crew Manifest ({crew.length})</h3>
 
       {/* Toolbar: Filters + Search + Actions */}
-      <div className="mb-3 flex flex-col gap-2">
-        <div className="text-pink-200 text-xs">Filter by department:</div>
+  <div className="mb-3 flex flex-col gap-2 crew-toolbar">
+        <div className="text-pink-200 text-xs flex items-center gap-1">
+          <span>Filter by department:</span>
+          <button
+            className="ml-auto px-1.5 py-0.5 rounded bg-pink-500/20 border border-pink-400/30 text-[10px] text-pink-200"
+            title="About crew size controls"
+            onClick={()=>{
+              // Fire a custom event the App listens to, to open Help at crew-size
+              window.dispatchEvent(new CustomEvent('wcr-open-help', { detail: { section: 'crew-size' } }));
+            }}
+            aria-label="Crew size help"
+          >i</button>
+        </div>
         <div className="flex flex-wrap gap-1">
           <button className={`px-2 py-1 text-xs rounded border ${selectedDepts.size === 0 ? 'bg-pink-500 text-black border-pink-400' : 'bg-pink-500/10 text-pink-200 border-pink-400/40 hover:bg-pink-500/20'}`} onClick={clearFilters} title="Show all departments">All</button>
           {DEPTS.map(d => (
@@ -348,7 +363,7 @@ export default function CrewManifestPanel({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <div className="flex items-center gap-2 px-2 py-1 rounded bg-slate-800/60 border border-pink-400/30 text-pink-200">
+          <div className="flex items-center gap-1 px-2 py-1 rounded bg-slate-800/60 border border-pink-400/30 text-pink-200 w-full sm:w-auto">
             <label className="text-xs" htmlFor="crew-size">Crew size</label>
             <input
               id="crew-size"
@@ -357,7 +372,7 @@ export default function CrewManifestPanel({
               max={20}
               value={targetSize}
               onChange={(e)=> setTargetSize(Number(e.target.value))}
-              className="w-16 px-2 py-1 rounded bg-slate-900/60 border border-pink-400/40 text-slate-100"
+              className="w-14 px-2 py-1 rounded bg-slate-900/60 border border-pink-400/40 text-slate-100"
               title="Set desired crew size; locked members are preserved"
             />
             <button
@@ -365,16 +380,18 @@ export default function CrewManifestPanel({
               onClick={applyResize}
               title="Apply crew size"
             >Apply</button>
-            <span className="text-[11px] opacity-80">Locked: {crew.filter(c=>c.locked).length}</span>
+            <span className="text-[11px] opacity-80 whitespace-nowrap">Locked: {crew.filter(c=>c.locked).length}</span>
           </div>
           {targetSize < crew.filter(c=>c.locked).length && (
-            <div className="text-[11px] text-amber-300 -mt-1">
+            <div className="text-[11px] text-amber-300 -mt-1 w-full">
               Target is below locked count; will clamp to {crew.filter(c=>c.locked).length}.
             </div>
           )}
-          <button className="px-3 py-1.5 rounded-md bg-pink-500 hover:bg-pink-400 text-black border border-pink-400 font-bold text-sm" onClick={shuffleCrew}>Shuffle</button>
-          <button className="px-3 py-1.5 rounded-md bg-pink-500/20 hover:bg-pink-500/30 text-pink-100 border border-pink-400/60 font-bold text-sm" onClick={handleRegenerateClick}>Regenerate</button>
-          <button className="px-3 py-1.5 rounded-md bg-slate-700/70 hover:bg-slate-700 text-pink-200 border border-pink-400/40 font-bold text-sm" onClick={handleResetCrew} title="Reset crew to a fresh random set and clear edits">Reset</button>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <button className="px-3 py-1.5 rounded-md bg-pink-500 hover:bg-pink-400 text-black border border-pink-400 font-bold text-sm flex-1 sm:flex-none" onClick={shuffleCrew}>Shuffle</button>
+            <button className="px-3 py-1.5 rounded-md bg-pink-500/20 hover:bg-pink-500/30 text-pink-100 border border-pink-400/60 font-bold text-sm flex-1 sm:flex-none" onClick={handleRegenerateClick}>Regenerate</button>
+            <button className="px-3 py-1.5 rounded-md bg-slate-700/70 hover:bg-slate-700 text-pink-200 border border-pink-400/40 font-bold text-sm flex-1 sm:flex-none" onClick={handleResetCrew} title="Reset crew to a fresh random set and clear edits">Reset</button>
+          </div>
         </div>
       </div>
 
