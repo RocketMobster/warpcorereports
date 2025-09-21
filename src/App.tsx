@@ -58,6 +58,8 @@ export default function App() {
   // Toast notification state
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [toastIsError, setToastIsError] = useState(false);
+  const errorDetailRef = React.useRef<string>("");
   // Simple error toast throttle
   const [lastErrorAt, setLastErrorAt] = useState<number>(0);
   // Help panel state
@@ -79,6 +81,9 @@ export default function App() {
       const now = Date.now();
       if (now - lastErrorAt < 2000) return; // throttle
       setLastErrorAt(now);
+      const detail = `Error: ${event.message || 'Unknown error'}\nSource: ${event.filename}:${event.lineno}:${event.colno}`;
+      errorDetailRef.current = detail;
+      setToastIsError(true);
       setToastMessage(`Error: ${event.message?.slice(0, 120) || 'Unknown error'}`);
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
@@ -88,6 +93,9 @@ export default function App() {
       const now = Date.now();
       if (now - lastErrorAt < 2000) return; // throttle
       setLastErrorAt(now);
+      const detail = `Unhandled Rejection: ${String(reason)}`;
+      errorDetailRef.current = detail;
+      setToastIsError(true);
       setToastMessage(`Error: ${String(reason).slice(0, 120)}`);
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
@@ -818,12 +826,19 @@ export default function App() {
         
         {/* Toast Notification */}
         {showToast && (
-          <div className="fixed bottom-4 right-4 bg-purple-900 text-white px-6 py-3 rounded-lg shadow-lg animate-fadeIn z-50 flex items-center gap-2">
+          <div className="fixed bottom-4 right-4 bg-purple-900 text-white px-6 py-3 rounded-lg shadow-lg animate-fadeIn z-50 flex items-center gap-3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
               <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
               <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
             </svg>
             {toastMessage}
+            {toastIsError && (
+              <button
+                onClick={async()=>{ try { await navigator.clipboard.writeText(errorDetailRef.current || toastMessage); setToastIsError(false);} catch {} }}
+                className="ml-2 px-2 py-1 rounded bg-amber-500 text-black border border-amber-400 text-xs"
+                title="Copy error details"
+              >Copy</button>
+            )}
           </div>
         )}
         {/* Mobile overlays (touch devices or small screens) */}
