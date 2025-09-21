@@ -66,6 +66,7 @@ export default function App() {
   const [lastErrorAt, setLastErrorAt] = useState<number>(0);
   const [lastReportAt, setLastReportAt] = useState<number>(0);
   const [reportDisabled, setReportDisabled] = useState<boolean>(false);
+  const [reportCooldownSec, setReportCooldownSec] = useState<number>(0);
   // Help panel state
   const [showHelp, setShowHelp] = useState(false);
   const [persistZoom, setPersistZoom] = useState<boolean>(() => {
@@ -864,12 +865,29 @@ export default function App() {
                   }
                   setLastReportAt(now);
                   setReportDisabled(true);
-                  setTimeout(()=>setReportDisabled(false), 5000);
+                  setReportCooldownSec(5);
+                  const interval = setInterval(()=>{
+                    setReportCooldownSec(prev => {
+                      const next = Math.max(0, prev - 1);
+                      if (next === 0) {
+                        clearInterval(interval);
+                        setReportDisabled(false);
+                      }
+                      return next;
+                    });
+                  }, 1000);
                 }}
-                className={`ml-1 px-2 py-1 rounded border text-xs ${reportDisabled ? 'bg-blue-900 text-blue-300 border-blue-700 cursor-not-allowed' : 'bg-blue-500 text-white border-blue-400'}`}
+                className={`ml-1 px-2 py-1 rounded border text-xs relative ${reportDisabled ? 'bg-blue-900 text-blue-300 border-blue-700 cursor-not-allowed' : 'bg-blue-500 text-white border-blue-400'}`}
                 aria-disabled={reportDisabled}
-                title={reportDisabled ? 'Please wait a moment…' : 'Report this bug via email'}
-              >Report</a>
+                title={reportDisabled ? `Please wait ${reportCooldownSec || ''}s…` : 'Report this bug via email'}
+              >
+                Report
+                {reportDisabled && (
+                  <span className="ml-1 inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-800 text-blue-200 text-[10px] border border-blue-600 align-middle">
+                    {reportCooldownSec || ''}
+                  </span>
+                )}
+              </a>
             )}
           </div>
         )}
