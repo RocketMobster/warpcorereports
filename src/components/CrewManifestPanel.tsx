@@ -152,9 +152,20 @@ export default function CrewManifestPanel({
   useEffect(() => {
     const persisted = loadCrew();
     if (persisted && persisted.length) {
-      const adjusted = ensureDepartmentCoverage(persisted.map(c => ({ ...c, department: roleToDepartment(c.role) })));
+      let changed = false;
+      const normalized = persisted.map(c => {
+        const constrained = enforceRoleRankConstraints(c.role, c.rank);
+        if (constrained.rank !== c.rank || constrained.role !== c.role) changed = true;
+        return { ...c, role: constrained.role, rank: constrained.rank, department: roleToDepartment(constrained.role) };
+      });
+      const adjusted = ensureDepartmentCoverage(normalized);
       setCrew(adjusted);
       onCrewChange?.(adjusted);
+      if (changed) {
+        saveCrew(adjusted);
+        setConstraintMsg('Some crew ranks were adjusted to meet role constraints.');
+        setTimeout(()=>setConstraintMsg(''), 2500);
+      }
     } else {
       const generated = ensureDepartmentCoverage(augment(generateCrewManifest(count)));
       setCrew(generated);
