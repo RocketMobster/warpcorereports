@@ -72,7 +72,7 @@ export default function App() {
   const [persistZoom, setPersistZoom] = useState<boolean>(() => {
     try { return localStorage.getItem('wcr_zoom_persist_enabled') === '0' ? false : true; } catch { return true; }
   });
-  const [helpTarget, setHelpTarget] = useState<"templates"|"figure-bias"|"presets"|"produce-reroll"|"references"|undefined>(undefined);
+  const [helpTarget, setHelpTarget] = useState<"templates"|"figure-bias"|"presets"|"produce-reroll"|"references"|"crew-size"|"crew-panel"|undefined>(undefined);
   
   
   // Initialize sound system

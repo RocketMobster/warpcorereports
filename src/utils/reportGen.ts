@@ -208,11 +208,39 @@ function makeFigure(i:number, anchorId:string, sys:string, bias:FigureBias, rnd:
   return { id, index:i, title, type, data, caption, sectionAnchor: anchorId, ...(labels ? { labels } : {}) };
 }
 
+// Enforce role–rank constraints
+function enforceRoleRankConstraints(role: string, rank: string, rnd:()=>number): { role: string; rank: string } {
+  const officerRanks = [
+    "Ensign",
+    "Lieutenant Junior Grade",
+    "Lieutenant",
+    "Lieutenant Commander",
+    "Commander"
+  ];
+  const seniorForCaptain = ["Lieutenant Commander", "Commander", "Captain"];
+
+  const rLower = role.toLowerCase();
+  // Ship's Captain constraint
+  if (rLower.includes("ship's captain") || rLower === "captain" || rLower.includes(" captain") && rLower.includes("ship")) {
+    if (!seniorForCaptain.includes(rank)) {
+      rank = seniorForCaptain[Math.floor(rnd()*seniorForCaptain.length)];
+    }
+  }
+  // Roles containing 'officer' should be officer ranks
+  if (rLower.includes("officer")) {
+    if (!officerRanks.includes(rank)) {
+      rank = officerRanks[Math.floor(rnd()*officerRanks.length)];
+    }
+  }
+  return { role, rank };
+}
+
 function makeCrew(rnd:()=>number): CrewMember {
   // Use pickCrewName to avoid duplicate first/last names
   const name = pickCrewName(rnd);
-  const rank = pick(POOLS.crewRanks, rnd);
-  const role = pick(POOLS.crewRoles, rnd);
+  let rank = pick(POOLS.crewRanks, rnd);
+  let role = pick(POOLS.crewRoles, rnd);
+  ({ role, rank } = enforceRoleRankConstraints(role, rank, rnd));
   return { name, rank, role };
 }
 
@@ -481,17 +509,28 @@ export function generateReport(cfg: GeneratorConfig & { crewManifest?: CrewMembe
         const techDetails = `${jargon} experiencing a ${variance} phase variance`;
         sentences.push(`Detected anomaly in the ${sys.toLowerCase()} ${techDetails}. ${crewNames} performed diagnostic protocol and implemented corrective measures according to Starfleet regulation ${randint(1000, 9999, rnd)}-${String.fromCharCode(65 + Math.floor(rnd() * 26))}.`);
       } else {
-        // Add plausible Star Trek flavor sentences, no repeats
-        let humorPhrase;
-        let humorText;
-        let attempts = 0;
-        do {
-          humorPhrase = humorPool[Math.floor(rnd() * humorPool.length)];
-          humorText = typeof humorPhrase === 'function' ? humorPhrase() : humorPhrase;
-          attempts++;
-        } while (usedHumor.has(humorText) && attempts < humorPool.length);
-        usedHumor.add(humorText);
-        sentences.push(humorText);
+        // Follow-up sentences respect humor level
+        if (humor <= 2) {
+          const followUps = [
+            `Post-repair diagnostics indicate nominal operation across monitored parameters. Continued observation scheduled for ${randint(2,6,rnd)} duty cycles.`,
+            `Calibration values stabilized within Starfleet tolerances. No further action required at this time.`,
+            `Thermal and power profiles returned to baseline with no residual transients detected.`,
+            `Subsystem checks completed; control loop responses within expected bands.`
+          ];
+          sentences.push(pick(followUps, rnd));
+        } else {
+          // Add plausible Star Trek flavor/humor sentences, no repeats
+          let humorPhrase;
+          let humorText;
+          let attempts = 0;
+          do {
+            humorPhrase = humorPool[Math.floor(rnd() * humorPool.length)];
+            humorText = typeof humorPhrase === 'function' ? humorPhrase() : humorPhrase;
+            attempts++;
+          } while (usedHumor.has(humorText) && attempts < humorPool.length);
+          usedHumor.add(humorText);
+          sentences.push(humorText);
+        }
       }
     }
     let summary = sentences.join(' ');

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 
-export default function HelpPanel({ onClose, target }: { onClose: () => void, target?: "templates"|"figure-bias"|"presets"|"produce-reroll"|"references"|"crew-size" }) {
+export default function HelpPanel({ onClose, target }: { onClose: () => void, target?: "templates"|"figure-bias"|"presets"|"produce-reroll"|"references"|"crew-size"|"crew-panel" }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const sectionRefs = {
@@ -9,7 +9,8 @@ export default function HelpPanel({ onClose, target }: { onClose: () => void, ta
     'templates': useRef<HTMLDivElement>(null),
     'figure-bias': useRef<HTMLDivElement>(null),
     'references': useRef<HTMLDivElement>(null),
-    'crew-size': useRef<HTMLDivElement>(null)
+    'crew-size': useRef<HTMLDivElement>(null),
+    'crew-panel': useRef<HTMLDivElement>(null)
   } as const;
 
   useEffect(() => {
@@ -89,6 +90,17 @@ export default function HelpPanel({ onClose, target }: { onClose: () => void, ta
               <li><strong>Coverage Enforcement</strong>: The panel ensures at least one of Command, Operations, Medical, Security, and Science is present where possible (unlocked members only).</li>
               <li><strong>Regenerate vs Apply</strong>: Apply changes the list size. Regenerate re-fills only unlocked slots without changing the target size.</li>
               <li><strong>Persistence</strong>: Your crew and locks are saved locally so they stick around between sessions.</li>
+            </ul>
+          </div>
+          <div ref={sectionRefs['crew-panel']}>
+            <div className="lcars-label">Crew Panel</div>
+            <ul className="list-disc pl-6 text-sm space-y-1">
+              <li><strong>Reorder</strong>: Drag the handle (≡) to reorder. Order influences mention order in problems and the manifest export.</li>
+              <li><strong>Edit Roles</strong>: Click a role to edit. Roles suggest departments and affect which problems members get assigned to.</li>
+              <li><strong>Locks</strong>: Toggle Lock to preserve a member during Regenerate/Shrink. Locked count sets the minimum shrink size.</li>
+              <li><strong>Departments</strong>: Department chips update automatically from the role; filters show subsets for quick review.</li>
+              <li><strong>Constraints</strong>: Ship’s Captain requires a senior rank (Lt. Cmdr., Commander, Captain). Roles with “officer” use officer ranks.</li>
+              <li><strong>Reset</strong>: Clears all edits and generates a fresh manifest; use with caution.</li>
             </ul>
           </div>
           <div ref={sectionRefs['references']}>

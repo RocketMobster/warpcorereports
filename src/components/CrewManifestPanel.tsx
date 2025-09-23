@@ -70,6 +70,26 @@ export default function CrewManifestPanel({
   const augment = (list: CrewMember[]): UICrewMember[] =>
     list.map(cm => ({ ...cm, id: uid(), department: roleToDepartment(cm.role), locked: false }));
 
+  // Local role–rank constraints for UI operations
+  const enforceRoleRankConstraints = (role: string, rank: string): { role: string; rank: string } => {
+    const officerRanks = [
+      "Ensign",
+      "Lieutenant Junior Grade",
+      "Lieutenant",
+      "Lieutenant Commander",
+      "Commander"
+    ];
+    const seniorForCaptain = ["Lieutenant Commander", "Commander", "Captain"];
+    const rLower = role.toLowerCase();
+    if (rLower.includes("ship's captain") || rLower === "captain" || (rLower.includes(" captain") && rLower.includes("ship"))) {
+      if (!seniorForCaptain.includes(rank)) rank = seniorForCaptain[0];
+    }
+    if (rLower.includes("officer")) {
+      if (!officerRanks.includes(rank)) rank = officerRanks[0];
+    }
+    return { role, rank };
+  };
+
   const saveCrew = (list: UICrewMember[]) => {
     try {
       const toSave = list.map(({ id, department, locked, ...rest }) => ({ id, department, locked: !!locked, ...rest }));
@@ -106,7 +126,13 @@ export default function CrewManifestPanel({
         const idx = next.findIndex(c => !c.locked && (c.department === "Engineering" || c.department === "Other"));
         if (idx !== -1) {
           const role = suggestions[dept][0];
-          next[idx] = { ...next[idx], role, department: dept };
+          const before = next[idx].rank;
+          const constrained = enforceRoleRankConstraints(role, next[idx].rank);
+          next[idx] = { ...next[idx], role: constrained.role, rank: constrained.rank, department: dept };
+          if (constrained.rank !== before) {
+            setConstraintMsg(`Adjusted rank to ${constrained.rank} for role “${constrained.role}”.`);
+            setTimeout(() => setConstraintMsg(""), 2000);
+          }
         }
       }
     }
@@ -120,6 +146,7 @@ export default function CrewManifestPanel({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftRole, setDraftRole] = useState<string>("");
   const [targetSize, setTargetSize] = useState<number>(count);
+  const [constraintMsg, setConstraintMsg] = useState<string>("");
 
   // Initialize crew (prefer persisted)
   useEffect(() => {
@@ -208,7 +235,16 @@ export default function CrewManifestPanel({
     if (!editingId) return;
     const value = draftRole.trim();
     if (!value) { cancelEdit(); return; }
-    const updated = crew.map(c => c.id === editingId ? { ...c, role: value, department: roleToDepartment(value) } : c);
+    const updated = crew.map(c => {
+      if (c.id !== editingId) return c;
+      const before = c.rank;
+      const constrained = enforceRoleRankConstraints(value, c.rank);
+      if (constrained.rank !== before) {
+        setConstraintMsg(`Adjusted rank to ${constrained.rank} for role “${constrained.role}”.`);
+        setTimeout(() => setConstraintMsg(""), 2000);
+      }
+      return { ...c, role: constrained.role, rank: constrained.rank, department: roleToDepartment(constrained.role) };
+    });
     setCrew(updated);
     onCrewChange?.(updated);
     saveCrew(updated);
@@ -340,19 +376,24 @@ export default function CrewManifestPanel({
         </button>
       )}
       <h3 className="text-lg font-bold mb-2 text-pink-300">Crew Manifest ({crew.length})</h3>
+      {constraintMsg && (
+        <div className="mb-2 text-[12px] text-amber-300 bg-slate-900/50 border border-amber-400/40 rounded px-2 py-1">
+          {constraintMsg}
+        </div>
+      )}
 
       {/* Toolbar: Filters + Search + Actions */}
   <div className="mb-3 flex flex-col gap-2 crew-toolbar">
         <div className="text-pink-200 text-xs flex items-center gap-1">
           <span>Filter by department:</span>
           <button
-            className="ml-auto px-1.5 py-0.5 rounded bg-pink-500/20 border border-pink-400/30 text-[10px] text-pink-200"
-            title="About crew size controls"
+            className="ml-auto inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-black border border-blue-300 hover:bg-blue-400"
+            title="About the Crew Panel"
             onClick={()=>{
-              // Fire a custom event the App listens to, to open Help at crew-size
-              window.dispatchEvent(new CustomEvent('wcr-open-help', { detail: { section: 'crew-size' } }));
+              // Open Help at the Crew Panel section
+              window.dispatchEvent(new CustomEvent('wcr-open-help', { detail: { section: 'crew-panel' } }));
             }}
-            aria-label="Crew size help"
+            aria-label="Crew panel help"
           >i</button>
         </div>
         <div className="flex flex-wrap gap-1">

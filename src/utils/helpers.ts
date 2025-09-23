@@ -19,7 +19,7 @@ export function xorshift32(seed:number){ let x=seed||2463534242; return ()=>{ x^
 export const POOLS = { 
   crewRanks: [
     "Chief Petty Officer", "Senior Chief Petty Officer", "Master Chief Petty Officer",
-    "Ensign", "Lieutenant Junior Grade", "Lieutenant", "Lieutenant Commander", "Commander"
+    "Ensign", "Lieutenant Junior Grade", "Lieutenant", "Lieutenant Commander", "Commander", "Captain"
   ],
   crewRoles: [
     "Diagnostic Specialist", "Warp Systems Tech", "EPS Conduit Tech", "Field Modulation Analyst",
