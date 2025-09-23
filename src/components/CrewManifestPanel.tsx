@@ -398,14 +398,14 @@ export default function CrewManifestPanel({
         <div className="text-pink-200 text-xs flex items-center gap-1">
           <span>Filter by department:</span>
           <button
-            className="ml-auto inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-black border border-blue-300 hover:bg-blue-400"
+            type="button"
+            className="ml-auto lcars-btn"
             title="About the Crew Panel"
             onClick={()=>{
-              // Open Help at the Crew Panel section
               window.dispatchEvent(new CustomEvent('wcr-open-help', { detail: { section: 'crew-panel' } }));
             }}
             aria-label="Crew panel help"
-          >i</button>
+          >ℹ️</button>
         </div>
         <div className="flex flex-wrap gap-1">
           <button className={`px-2 py-1 text-xs rounded border ${selectedDepts.size === 0 ? 'bg-pink-500 text-black border-pink-400' : 'bg-pink-500/10 text-pink-200 border-pink-400/40 hover:bg-pink-500/20'}`} onClick={clearFilters} title="Show all departments">All</button>

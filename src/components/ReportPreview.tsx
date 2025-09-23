@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Report, Figure } from "../types";
 import FigureView from "./FigureView";
+import { randomRecipient } from "../utils/reportGen";
 
 interface ReportPreviewProps {
   report: Report;
@@ -160,8 +161,40 @@ export default function ReportPreview({ report, onReportUpdate, editEnabled = fa
             <span className="text-xs px-2 py-1 rounded-md border border-amber-500 text-amber-300 bg-[#1a1f33]">Template: {missionTemplate === 'incident' ? 'Incident' : 'Survey'}</span>
           )}
         </div>
-        <div className="text-base font-semibold text-amber-400 mb-1">To: {currentReport.header.toRecipient}</div>
-        <div className="text-base font-semibold text-amber-300 mb-2">CC: {currentReport.header.ccRecipient}</div>
+        <div className="text-base font-semibold text-amber-400 mb-1 flex items-center gap-2">
+          <span>To: {currentReport.header.toRecipient}</span>
+          {onReportUpdate && (
+            <button
+              type="button"
+              className="text-xs px-1.5 py-0.5 rounded-md border border-amber-500 text-amber-300 hover:bg-[#1a1f33]"
+              title="Regenerate To recipient"
+              aria-label="Regenerate To recipient"
+              onClick={() => {
+                const nextTo = randomRecipient('to', missionTemplate);
+                const updated = { ...currentReport, header: { ...currentReport.header, toRecipient: nextTo } } as Report;
+                setCurrentReport(updated);
+                onReportUpdate?.(updated);
+              }}
+            >🎲</button>
+          )}
+        </div>
+        <div className="text-base font-semibold text-amber-300 mb-2 flex items-center gap-2">
+          <span>CC: {currentReport.header.ccRecipient}</span>
+          {onReportUpdate && (
+            <button
+              type="button"
+              className="text-xs px-1.5 py-0.5 rounded-md border border-amber-500 text-amber-300 hover:bg-[#1a1f33]"
+              title="Regenerate CC recipient"
+              aria-label="Regenerate CC recipient"
+              onClick={() => {
+                const nextCc = randomRecipient('cc', missionTemplate);
+                const updated = { ...currentReport, header: { ...currentReport.header, ccRecipient: nextCc } } as Report;
+                setCurrentReport(updated);
+                onReportUpdate?.(updated);
+              }}
+            >🎲</button>
+          )}
+        </div>
         <div className="text-sm">Prepared By: {currentReport.header.preparedBy.rank} {currentReport.header.preparedBy.name}, Engineering</div>
         {/* Zoom & chart size controls (inverse scaled) */}
         <div className="controls-no-zoom mt-3 select-none" style={{ paddingRight: Math.max(0, safeZonePx + 4) }}>

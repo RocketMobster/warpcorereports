@@ -5,6 +5,79 @@ import { pick, randint, POOLS, humorousAside, xorshift32, seedFromConfig, pickCr
 
 type FigType = "line" | "bar" | "scatter" | "gauge" | "pie" | "area" | "radar" | "heatmap" | "step" | "boxplot";
 
+// Public utility: generate a single recipient, optionally biased by mission template and kind
+export function randomRecipient(
+  kind: 'to' | 'cc' | 'submittedTo' = 'to',
+  missionTemplate?: MissionTemplate,
+  seed?: string | number
+): string {
+  const seeded = seed ?? Math.floor(Math.random() * 1e9).toString(36);
+  const rnd = xorshift32(seedFromConfig(seeded));
+  const TEMPLATE_RECIPIENTS_TOP: Record<Exclude<MissionTemplate, "none">, { to: string[]; cc: string[]; submittedTo?: string[] }> = {
+    incident: {
+      to: [
+        "Chief of Starfleet Operations",
+        "Starfleet Corps of Engineers",
+        "Sector Operations Command",
+        "Ship's Captain",
+        "Chief Security Officer"
+      ],
+      cc: [
+        "Chief Engineer",
+        "First Officer",
+        "Tactical Officer",
+        "Damage Control Team Lead",
+        "Bridge Operations"
+      ],
+      submittedTo: [
+        "Starfleet Corps of Engineers",
+        "Operations Command",
+        "Fleet Readiness Board"
+      ]
+    },
+    survey: {
+      to: [
+        "Chief Science Officer",
+        "Astrometrics Department",
+        "Federation Science Council",
+        "Exploration Mission Command"
+      ],
+      cc: [
+        "Sensor Analysis Team",
+        "Subspace Communications",
+        "Stellar Cartography",
+        "Science Division",
+        "Bridge Operations"
+      ],
+      submittedTo: [
+        "Federation Science Council",
+        "Starfleet Science and Research",
+        "Astrometrics Directorate"
+      ]
+    }
+  } as const;
+  // Recreate local helpers minimally to avoid dependency on function order
+  const seniorRanks = ["Lieutenant Commander", "Commander", "Captain", "Commodore", "Rear Admiral", "Vice Admiral", "Admiral"];
+  const seniorRoles = [
+    "Senior Science Officer", "Chief Engineer", "Ship's Captain", "Director of Starfleet Engineering", "Associate Director, Starfleet R&D",
+    "Department Head, Warp Systems", "Department Head, Structural Integrity", "Senior Operations Officer", "Head of Starfleet Technical Review",
+    "Director of Starfleet Materials Science", "Senior Systems Analyst", "Chief of Starfleet Operations", "Director of Starbase Engineering"
+  ];
+  const makeFallback = () => {
+    const rank = seniorRanks[Math.floor(rnd() * seniorRanks.length)];
+    const role = seniorRoles[Math.floor(rnd() * seniorRoles.length)];
+    const first = pick(POOLS.crewFirst, rnd);
+    const last = pick(POOLS.crewLast, rnd);
+    return `${rank} ${first} ${last}, ${role}`;
+  };
+  if (missionTemplate && missionTemplate !== 'none') {
+    const bank = TEMPLATE_RECIPIENTS_TOP[missionTemplate as Exclude<MissionTemplate,'none'>];
+    const list = kind === 'cc' ? bank.cc : (kind === 'submittedTo' ? (bank.submittedTo || ["Starfleet Corps of Engineers"]) : bank.to);
+    return pick(list, rnd);
+  }
+  return makeFallback();
+}
+
 function preferredTypesFor(system: string, bias: FigureBias, missionTemplate?: MissionTemplate): FigType[] {
   // Template-level nudges first
   if (missionTemplate && missionTemplate !== "none") {
@@ -373,6 +446,7 @@ export function generateReport(cfg: GeneratorConfig & { crewManifest?: CrewMembe
       ]
     }
   } as const;
+
   // Helper to get vessel years
   function getVesselYears(vessel: string) {
     const found = STARFLEET_VESSELS.find(v => v.name === vessel);
