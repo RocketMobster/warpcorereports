@@ -180,7 +180,7 @@ export default function CrewManifestPanel({
 
   // Drag and drop
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor)
   );
   const handleDragEnd = (event: DragEndEvent) => {
@@ -273,25 +273,25 @@ export default function CrewManifestPanel({
     const style: React.CSSProperties = { transform: CSS.Transform.toString(transform), transition };
     const isEditing = editingId === member.id;
     return (
-  <li ref={setNodeRef} style={style} className="flex items-center gap-2 px-2 py-1 rounded-md bg-pink-500/5 border border-pink-400/20">
-        <button aria-label="Drag handle" title="Drag to reorder" className="cursor-grab active:cursor-grabbing text-pink-300 hover:text-pink-200" {...attributes} {...listeners}>
+      <li ref={setNodeRef} style={style} className="flex items-center gap-2 px-2 py-1 rounded-md bg-pink-500/5 border border-pink-400/20">
+        <button aria-label="Drag handle" title="Drag to reorder" className="cursor-grab active:cursor-grabbing text-pink-300 hover:text-pink-200 touch-none select-none" {...attributes} {...listeners}>
           ≡
         </button>
         <div className="flex-1 text-slate-100 min-w-0">
-          <span className="font-medium whitespace-nowrap overflow-hidden text-ellipsis inline-block align-middle max-w-[50%] sm:max-w-none">{member.rank} {member.name}</span>
-          <span className="mx-2 text-pink-400 hidden xs:inline">–</span>
+          <span className="font-medium whitespace-nowrap truncate inline-block align-middle max-w-[60%] sm:max-w-none">{member.rank} {member.name}</span>
+          <span className="mx-2 text-pink-400 hidden sm:inline">–</span>
           {!isEditing ? (
             <button
-              className="crew-role-btn px-1.5 py-0.5 rounded bg-pink-500/20 border border-pink-400/30 text-pink-100 hover:bg-pink-500/30 text-xs sm:text-sm max-w-[48%] sm:max-w-none overflow-hidden text-ellipsis align-middle"
+              className="crew-role-btn px-1.5 py-0.5 rounded bg-pink-500/20 border border-pink-400/30 text-pink-100 hover:bg-pink-500/30 text-xs sm:text-sm max-w-[38%] sm:max-w-none overflow-hidden text-ellipsis truncate align-middle"
               onClick={() => startEdit(member.id, member.role)}
               title="Edit role"
             >
               {member.role}
             </button>
           ) : (
-            <span className="inline-flex items-center gap-2">
+            <span className="inline-flex items-center gap-2 relative z-10">
               <input
-                className="px-2 py-1 rounded bg-slate-800/70 border border-pink-400/40 text-slate-100 outline-none focus:ring-2 focus:ring-pink-400"
+                className="px-2 py-1 rounded bg-slate-800 border border-pink-400/40 text-slate-100 outline-none focus:ring-2 focus:ring-pink-400"
                 list="roles-list"
                 value={draftRole}
                 onChange={(e) => setDraftRole(e.target.value)}
@@ -299,7 +299,7 @@ export default function CrewManifestPanel({
                 autoFocus
               />
               <button className="px-2 py-1 rounded bg-pink-500 text-black border border-pink-400 font-bold text-xs" onClick={commitEdit}>Save</button>
-              <button className="px-2 py-1 rounded bg-slate-700/70 text-pink-200 border border-pink-400/40 text-xs" onClick={cancelEdit}>Cancel</button>
+              <button className="px-2 py-1 rounded bg-slate-700 text-pink-200 border border-pink-400/40 text-xs" onClick={cancelEdit}>Cancel</button>
             </span>
           )}
         </div>
@@ -403,7 +403,7 @@ export default function CrewManifestPanel({
       {/* Reorderable list */}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={visibleCrew.map(c => c.id)} strategy={verticalListSortingStrategy}>
-          <ul className="text-[15px] text-slate-100 space-y-1 mb-3">
+          <ul className="text-[15px] text-slate-100 space-y-1 mb-3 overscroll-contain">
             {visibleCrew.map((member) => (
               <SortableRow key={member.id} member={member} />
             ))}
