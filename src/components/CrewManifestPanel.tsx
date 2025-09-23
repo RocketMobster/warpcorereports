@@ -273,16 +273,21 @@ export default function CrewManifestPanel({
     const style: React.CSSProperties = { transform: CSS.Transform.toString(transform), transition };
     const isEditing = editingId === member.id;
     return (
-      <li ref={setNodeRef} style={style} className="flex items-center gap-2 px-2 py-1 rounded-md bg-pink-500/5 border border-pink-400/20">
+  <li ref={setNodeRef} style={style} className="flex items-start gap-2 px-2 py-1 rounded-md bg-pink-500/5 border border-pink-400/20">
         <button aria-label="Drag handle" title="Drag to reorder" className="cursor-grab active:cursor-grabbing text-pink-300 hover:text-pink-200 touch-none select-none" {...attributes} {...listeners}>
           ≡
         </button>
         <div className="flex-1 text-slate-100 min-w-0">
-          <span className="font-medium whitespace-nowrap truncate inline-block align-middle max-w-[60%] sm:max-w-none">{member.rank} {member.name}</span>
+          <span
+            className="font-medium inline-block align-middle whitespace-normal break-words sm:whitespace-nowrap sm:truncate sm:max-w-[60%]"
+            title={`${member.rank} ${member.name}`}
+          >
+            {member.rank} {member.name}
+          </span>
           <span className="mx-2 text-pink-400 hidden sm:inline">–</span>
           {!isEditing ? (
             <button
-              className="crew-role-btn px-1.5 py-0.5 rounded bg-pink-500/20 border border-pink-400/30 text-pink-100 hover:bg-pink-500/30 text-xs sm:text-sm max-w-[38%] sm:max-w-none overflow-hidden text-ellipsis truncate align-middle"
+              className="crew-role-btn px-1.5 py-0.5 rounded bg-pink-500/20 border border-pink-400/30 text-pink-100 hover:bg-pink-500/30 text-xs sm:text-sm w-full sm:w-auto sm:max-w-none overflow-hidden text-ellipsis align-middle mt-1 sm:mt-0"
               onClick={() => startEdit(member.id, member.role)}
               title="Edit role"
             >
