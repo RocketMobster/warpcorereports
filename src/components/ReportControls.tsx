@@ -373,7 +373,10 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
                   <button onClick={handleRandomProblemsCount} className="lcars-btn" title="Randomize number of problems" aria-label="Randomize number of problems">🎲</button>
                 </div>
                 <input type="range" min={1} max={5} value={problemsCount} onChange={(e)=>setProblemsCount(parseInt(e.target.value) as any)} />
-                <div className="lcars-small">{problemsCount}</div>
+                <div className="lcars-small flex items-center gap-2">
+                  <span>{problemsCount}</span>
+                  <span>Problems per report</span>
+                </div>
               </div>
               <div>
                 <div className="flex items-center justify-between">
@@ -480,6 +483,10 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
                   <button onClick={handleRandomHumor} className="lcars-btn" title="Randomize humor level" aria-label="Randomize humor level">🎲</button>
                 </div>
                 <input type="range" min={0} max={10} value={humor} onChange={e=>setHumor(parseInt(e.target.value))} />
+                <div className="lcars-small flex items-center gap-2">
+                  <span>{humor}</span>
+                  <span>Humor Level</span>
+                </div>
               </div>
               <div>
                 <label className="lcars-label">Seed</label>
@@ -508,7 +515,7 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
                 </div>
               </div>
               {/* Action buttons inside Generation Options (compact, single row when possible) */}
-              <div className="mt-2 flex gap-2 flex-wrap md:flex-nowrap">
+              <div className="mt-4 flex gap-2 flex-wrap md:flex-nowrap">
                 <button onClick={resetToDefaults} className="px-2 py-1 rounded-md bg-blue-600 text-white border border-blue-500 hover:bg-blue-500 text-[11px] uppercase tracking-wide" title="Reset controls to defaults" aria-label="Reset controls to defaults">Reset</button>
                 <button onClick={handleRandomizeAll} className="px-2 py-1 rounded-md bg-amber-500 text-black border border-amber-400 hover:bg-amber-400 text-[11px] uppercase tracking-wide" title="Randomize all controls" aria-label="Randomize all controls">Randomize All 🎲</button>
                 <button onClick={copySettingsLink} className="px-2 py-1 rounded-md bg-slate-800 text-slate-100 border border-slate-600 hover:bg-slate-700 text-[11px] uppercase tracking-wide" title="Copy a shareable link for current settings" aria-label="Copy shareable settings link">Copy Settings Link</button>
@@ -566,7 +573,7 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
             <button onClick={handleRandomProblemsCount} className="lcars-btn" title="Randomize number of problems" aria-label="Randomize number of problems">🎲</button>
           </div>
           <input type="range" min={1} max={5} value={problemsCount} onChange={(e)=>setProblemsCount(parseInt(e.target.value) as any)} />
-          <div className="lcars-small">{problemsCount}</div>
+          <div className="lcars-small flex items-center gap-2"><span>{problemsCount}</span><span>Problems per report</span></div>
           <div className="flex items-center justify-between mt-2">
             <label className="lcars-label">Problem Detail Level</label>
             <button onClick={handleRandomProblemDetail} className="lcars-btn" title="Randomize problem detail level" aria-label="Randomize problem detail level">🎲</button>
@@ -762,6 +769,7 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
               <button onClick={handleRandomHumor} className="lcars-btn" title="Randomize humor level" aria-label="Randomize humor level">🎲</button>
             </div>
           <input type="range" min={0} max={10} value={humor} onChange={e=>setHumor(parseInt(e.target.value))} />
+          <div className="lcars-small flex items-center gap-2"><span>{humor}</span><span>Humor Level</span></div>
         </div>
       </div>
 

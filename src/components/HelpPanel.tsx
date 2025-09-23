@@ -106,7 +106,7 @@ export default function HelpPanel({ onClose, target }: { onClose: () => void, ta
           <div ref={sectionRefs['references']}>
             <div className="lcars-label">References & Canon Names</div>
             <ul className="list-disc pl-6 text-sm space-y-1">
-              <li><strong>Signatory</strong>: Enable “Add Name to References” to guarantee a signing engineer entry.</li>
+              <li><strong>Signature</strong>: Enable “Add Name to References” to add this specific name to the References section of the report.</li>
               <li><strong>Canon names</strong>: Toggle “Allow Canon Names in References” to occasionally include famous Star Trek names — curated for plausible ranks/titles.</li>
               <li><strong>Era filter</strong>: Enable “Filter Canon Names by Era” to only include canon names active during the vessel’s timeframe.</li>
               <li><strong>Frequency</strong>: Use “Famous Author Frequency” to choose Off / Rare / Occasional / Frequent appearance rates. Humor and template can nudge frequency slightly.</li>
