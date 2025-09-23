@@ -485,7 +485,13 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
                 <input type="range" min={0} max={10} value={humor} onChange={e=>setHumor(parseInt(e.target.value))} />
                 <div className="lcars-small flex items-center gap-2">
                   <span>{humor}</span>
-                  <span>Humor Level</span>
+                  {humor === 0 ? (
+                    <span>No humor</span>
+                  ) : humor === 5 ? (
+                    <span>Moderate humor</span>
+                  ) : humor === 10 ? (
+                    <span>Max Humor</span>
+                  ) : null}
                 </div>
               </div>
               <div>
@@ -769,7 +775,16 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
               <button onClick={handleRandomHumor} className="lcars-btn" title="Randomize humor level" aria-label="Randomize humor level">🎲</button>
             </div>
           <input type="range" min={0} max={10} value={humor} onChange={e=>setHumor(parseInt(e.target.value))} />
-          <div className="lcars-small flex items-center gap-2"><span>{humor}</span><span>Humor Level</span></div>
+          <div className="lcars-small flex items-center gap-2">
+            <span>{humor}</span>
+            {humor === 0 ? (
+              <span>No humor</span>
+            ) : humor === 5 ? (
+              <span>Moderate humor</span>
+            ) : humor === 10 ? (
+              <span>Max Humor</span>
+            ) : null}
+          </div>
         </div>
       </div>
 
