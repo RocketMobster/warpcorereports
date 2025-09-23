@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.8] - 2025-09-23
+
+### Added
+- Crew Manifest panel core: filters, search, Shuffle, drag-to-reorder (pointer, touch, keyboard), inline role editing via datalist, per-member Lock toggle, Reset, and localStorage persistence.
+- Department coverage and role–rank constraints enforced across generator and UI edits (with safe auto-corrections).
+- Change Size controls with clamp warning when size < locked count; preserves order where possible.
+- Global error toast with Copy and Report (mailto) actions, throttled submissions, and a visible cooldown countdown.
+- Help modal: new “Crew Size Controls” and “Crew Panel” sections; standardized info icon; inline triggers that jump to the relevant sections.
+- UID fallback for devices missing `crypto.randomUUID`.
+- Persisted crew normalization on load with a brief banner when auto-corrections are applied.
+- Humor gating: problem follow-up sentences switch to neutral technical tone at low humor levels.
+
+### Changed
+- Mobile polish: tighter toolbar spacing, smaller role buttons under compact density, two-line names with tooltips, solid edit input backgrounds.
+- Touch DnD refinements: activation distance, `touch-action: none`, and overscroll containment for stability.
+- CI/Docs: consolidated to a single GitHub Pages workflow on Node 20; README badges and Live Demo link.
+
+### Fixed
+- Locked crew members are preserved on regenerate; removed unintended child→parent regenerate linkage.
+- Help modal body scrolling restored and section targeting made reliable.
+
 ## [0.2.7] - 2025-09-20
 
 ### Changed
