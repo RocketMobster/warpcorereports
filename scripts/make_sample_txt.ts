@@ -1,23 +1,13 @@
-import fs from "fs";import fs from 'fs';
+import fs from 'fs';
 
-
-
-function makeSampleTxt(outPath: string) {function makeSampleTxt(outPath: string) {
-
-  const content = `USS Enterprise NCC-1701-D Engineering Report\n\nStardate: 48041.1\nVessel: USS Enterprise NCC-1701-D\nPrepared By: Lt. Cmdr. Engineer, Test, Engineering\nSubmitted To: Starfleet Corps of Engineers\n\nAbstract\nThis sample demonstrates the TXT layout: headings and paragraphs. Charts are omitted in the sample.\n\nProblem 1: Warp Core Containment\nDetected anomaly in the warp core containment field. Diagnostics executed and corrective measures applied.\n\nConclusion\nAll identified issues have been resolved. Systems operating within normal parameters.\n\nReferences\n[1] Engineering Log: Shipboard Diagnostics\n[2] Warp Core Diagnostics — Starfleet Technical Orders\n`;  const lines: string[] = [];
-
-  fs.writeFileSync(outPath, content, "utf8");  lines.push("USS Enterprise NCC-1701-D Engineering Report");
-
-  console.log(`Wrote sample TXT: ${outPath}`);  lines.push("");
-
-}  lines.push("Stardate: 48041.1");
-
+function makeSampleTxt(outPath: string) {
+  const lines: string[] = [];
+  lines.push("USS Enterprise NCC-1701-D Engineering Report");
+  lines.push("");
+  lines.push("Stardate: 48041.1");
   lines.push("Vessel: USS Enterprise NCC-1701-D");
-
-const out = process.argv[2] || "Sample_Engineering_Report.txt";  lines.push("Prepared By: Lt. Cmdr. Engineer, Test, Engineering");
-
-makeSampleTxt(out);  lines.push("Submitted To: Starfleet Corps of Engineers");
-
+  lines.push("Prepared By: Lt. Cmdr. Engineer, Test, Engineering");
+  lines.push("Submitted To: Starfleet Corps of Engineers");
   lines.push("");
   lines.push("Abstract");
   lines.push("This sample demonstrates the TXT layout: headings, paragraph flow, and references numbering. Charts are omitted in the sample.");
