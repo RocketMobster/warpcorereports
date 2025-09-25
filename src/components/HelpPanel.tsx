@@ -13,15 +13,48 @@ export default function HelpPanel({ onClose, target }: { onClose: () => void, ta
     'crew-panel': useRef<HTMLDivElement>(null)
   } as const;
 
+  const openerRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
+    openerRef.current = document.activeElement as HTMLElement | null;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') { e.preventDefault(); onClose(); }
     };
     window.addEventListener('keydown', onKey);
-    // Focus the close button for accessibility
-    setTimeout(() => closeBtnRef.current?.focus(), 0);
-    return () => window.removeEventListener('keydown', onKey);
+    setTimeout(() => {
+      closeBtnRef.current?.focus();
+      try { window.dispatchEvent(new CustomEvent('wcr-live', { detail: 'Help panel opened' })); } catch {}
+    }, 0);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      if (openerRef.current) {
+        try { window.dispatchEvent(new CustomEvent('wcr-live', { detail: 'Help panel closed' })); } catch {}
+        openerRef.current.focus();
+      }
+    };
   }, [onClose]);
+
+  // Basic focus trap within the panel
+  useEffect(() => {
+    const panel = containerRef.current;
+    if (!panel) return;
+    const getFocusable = () => Array.from(panel.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    )).filter(el => !el.hasAttribute('disabled') && !el.getAttribute('aria-hidden'));
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+      const focusables = getFocusable();
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    };
+    panel.addEventListener('keydown', onKeyDown);
+    return () => panel.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   const onBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === containerRef.current) onClose();

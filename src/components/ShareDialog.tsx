@@ -113,6 +113,7 @@ export default function ShareDialog({ report, isOpen, onClose }: ShareDialogProp
 
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const firstFocusableRef = useRef<HTMLButtonElement | null>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
 
   // Close on Escape
   useEffect(() => {
@@ -125,10 +126,39 @@ export default function ShareDialog({ report, isOpen, onClose }: ShareDialogProp
   // Focus first actionable control when opened
   useEffect(() => {
     if (isOpen) {
+      openerRef.current = document.activeElement as HTMLElement | null;
       setTimeout(() => {
         firstFocusableRef.current?.focus();
+        try { window.dispatchEvent(new CustomEvent('wcr-live', { detail: 'Share dialog opened' })); } catch {}
       }, 0);
+    } else if (!isOpen && openerRef.current) {
+      try { window.dispatchEvent(new CustomEvent('wcr-live', { detail: 'Share dialog closed' })); } catch {}
+      openerRef.current.focus();
     }
+  }, [isOpen]);
+
+  // Focus trap
+  useEffect(() => {
+    if (!isOpen) return;
+    const node = dialogRef.current;
+    if (!node) return;
+    const getFocusable = () => Array.from(node.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    )).filter(el => !el.hasAttribute('disabled') && !el.getAttribute('aria-hidden'));
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+      const focusables = getFocusable();
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    };
+    node.addEventListener('keydown', handler);
+    return () => node.removeEventListener('keydown', handler);
   }, [isOpen]);
 
   if (!isOpen) return null;

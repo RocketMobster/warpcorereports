@@ -374,6 +374,16 @@ export default function CrewManifestPanel({
     );
   }
 
+  const openerRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    openerRef.current = document.activeElement as HTMLElement | null;
+    try { window.dispatchEvent(new CustomEvent('wcr-live', { detail: 'Crew manifest panel opened' })); } catch {}
+    return () => {
+      try { window.dispatchEvent(new CustomEvent('wcr-live', { detail: 'Crew manifest panel closed' })); } catch {}
+      openerRef.current?.focus();
+    };
+  }, []);
+
   return (
   <div className="mt-4 rounded-2xl border border-pink-400/40 bg-pink-500/10 p-4 shadow-md relative">
       {onClose && (

@@ -61,6 +61,20 @@ export default function App() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastIsError, setToastIsError] = useState(false);
+  // Live region message for structural announcements (panels/dialogs)
+  const [liveStructuralMsg, setLiveStructuralMsg] = useState<string>("");
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (typeof detail === 'string') {
+        setLiveStructuralMsg(detail);
+        // Clear after a short delay to avoid repetition stacking
+        setTimeout(()=> setLiveStructuralMsg(""), 2500);
+      }
+    };
+    window.addEventListener('wcr-live', handler as EventListener);
+    return () => window.removeEventListener('wcr-live', handler as EventListener);
+  }, []);
   const errorDetailRef = React.useRef<string>("");
   // Simple error toast throttle
   const [lastErrorAt, setLastErrorAt] = useState<number>(0);
@@ -949,6 +963,10 @@ export default function App() {
         {/* Off-screen polite live region to announce toast updates (non-error) */}
         <div aria-live="polite" aria-atomic="true" className="sr-only" style={{position:'absolute',left:-9999,top:'auto',width:1,height:1,overflow:'hidden'}}>
           {showToast && !toastIsError ? toastMessage : ''}
+        </div>
+        {/* Off-screen structural announcements (panel/dialog open/close) */}
+        <div aria-live="polite" aria-atomic="true" className="sr-only" style={{position:'absolute',left:-9999,top:'auto',width:1,height:1,overflow:'hidden'}}>
+          {liveStructuralMsg}
         </div>
         {/* Mobile overlays (touch devices or small screens) */}
         {showMobileUI && (
