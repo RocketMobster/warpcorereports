@@ -350,9 +350,17 @@ export default function App() {
     }
   };
 
+  // Helper to present a short-lived toast (non-error)
+  const showTempToast = (msg: string, duration: number = 1800) => {
+    setToastIsError(false);
+    setToastMessage(msg);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), duration);
+  };
+
   const exportTxt = () => {
-    if (!report) return;
     buttonClickSound();
+    if (!report) { showTempToast('No report to export as TXT yet. Produce a report first.'); return; }
     const txt = reportToTxt(report);
     const blob = new Blob([txt], { type: "text/plain" });
     saveAs(blob, "engineering_report.txt");
@@ -360,8 +368,8 @@ export default function App() {
   };
 
   const exportPdf = async () => {
-    if (!report) return;
     buttonClickSound();
+    if (!report) { showTempToast('No report to export as PDF yet. Produce a report first.'); return; }
     const doc = new jsPDF({ unit: "pt", format: "letter" });
     const pageHeight = (doc as any).internal?.pageSize?.getHeight
       ? (doc as any).internal.pageSize.getHeight()
@@ -523,8 +531,8 @@ export default function App() {
   };
 
   const exportDocx = async () => {
-    if (!report) return;
     buttonClickSound();
+    if (!report) { showTempToast('No report to export as DOCX yet. Produce a report first.'); return; }
     const doc = buildDocx(report);
     const blob = await doc;
     saveAs(blob, "engineering_report.docx");
@@ -532,9 +540,8 @@ export default function App() {
   };
 
   const handlePrint = () => {
-    if (!report) return;
-    
     buttonClickSound();
+    if (!report) { showTempToast('No report to print yet. Produce a report first.'); return; }
     
     // We need to wait for all SVG charts to render properly
     setTimeout(() => {
@@ -544,6 +551,7 @@ export default function App() {
   
   const handleShare = () => {
     buttonClickSound();
+    if (!report) { showTempToast('No report to share yet. Produce a report first.'); return; }
     setIsShareDialogOpen(true);
   };
 
@@ -841,9 +849,9 @@ export default function App() {
           />
         )}
         
-        {/* Toast Notification */}
+        {/* Toast Notification (visual) */}
         {showToast && (
-          <div className="fixed bottom-4 right-4 bg-purple-900 text-white px-6 py-3 rounded-lg shadow-lg animate-fadeIn z-50 flex items-center gap-3">
+          <div className="fixed bottom-4 right-4 bg-purple-900 text-white px-6 py-3 rounded-lg shadow-lg animate-fadeIn z-50 flex items-center gap-3" role="alert" aria-live="assertive">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
               <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
               <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
@@ -903,6 +911,10 @@ export default function App() {
             )}
           </div>
         )}
+        {/* Off-screen polite live region to announce toast updates (non-error) */}
+        <div aria-live="polite" aria-atomic="true" className="sr-only" style={{position:'absolute',left:-9999,top:'auto',width:1,height:1,overflow:'hidden'}}>
+          {showToast && !toastIsError ? toastMessage : ''}
+        </div>
         {/* Mobile overlays (touch devices or small screens) */}
         {showMobileUI && (
           <>
