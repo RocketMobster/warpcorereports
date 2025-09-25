@@ -372,8 +372,15 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
                   <label className="lcars-label">Problems</label>
                   <button onClick={handleRandomProblemsCount} className="lcars-btn" title="Randomize number of problems" aria-label="Randomize number of problems">🎲</button>
                 </div>
-                <input type="range" min={1} max={5} value={problemsCount} onChange={(e)=>setProblemsCount(parseInt(e.target.value) as any)} />
-                <div className="lcars-small flex items-center gap-2">
+                <input
+                  type="range"
+                  min={1}
+                  max={5}
+                  value={problemsCount}
+                  onChange={(e)=>setProblemsCount(parseInt(e.target.value) as any)}
+                  aria-describedby="problems-help-m"
+                />
+                <div id="problems-help-m" className="lcars-small flex items-center gap-2">
                   <span>{problemsCount}</span>
                   <span>Problems per report</span>
                 </div>
@@ -383,8 +390,15 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
                   <label className="lcars-label">Problem Detail Level</label>
                   <button onClick={handleRandomProblemDetail} className="lcars-btn" title="Randomize problem detail level" aria-label="Randomize problem detail level">🎲</button>
                 </div>
-                <input type="range" min={1} max={6} value={problemDetailLevel} onChange={e=>setProblemDetailLevel(parseInt(e.target.value))} />
-                <div className="lcars-small">{problemDetailLevel} sentence{problemDetailLevel > 1 ? 's' : ''} per problem</div>
+                <input
+                  type="range"
+                  min={1}
+                  max={6}
+                  value={problemDetailLevel}
+                  onChange={e=>setProblemDetailLevel(parseInt(e.target.value))}
+                  aria-describedby="detail-help-m"
+                />
+                <div id="detail-help-m" className="lcars-small">{problemDetailLevel} sentence{problemDetailLevel > 1 ? 's' : ''} per problem</div>
               </div>
               <div>
                 <div className="flex items-center justify-between">
@@ -401,8 +415,15 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
                       <label className="lcars-label">How many (1–10)</label>
                       <button onClick={handleRandomGraphsCount} className="lcars-btn" title="Randomize graph count" aria-label="Randomize graph count">🎲</button>
                     </div>
-                    <input type="range" min={1} max={10} value={graphsCount} onChange={(e)=>setGraphsCount(parseInt(e.target.value))} />
-                    <div className="lcars-small">{graphsCount}</div>
+                    <input
+                      type="range"
+                      min={1}
+                      max={10}
+                      value={graphsCount}
+                      onChange={(e)=>setGraphsCount(parseInt(e.target.value))}
+                      aria-describedby="graphs-help-m"
+                    />
+                    <div id="graphs-help-m" className="lcars-small">{graphsCount} graphs</div>
                   </div>
                 )}
               </div>
@@ -439,8 +460,16 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
                   <label className="lcars-label">Famous Rotation Memory</label>
                   <span className="lcars-small">(0–20, default 6)</span>
                 </div>
-                <input type="range" min={0} max={20} value={famousRecentMemory} onChange={e=>setFamousRecentMemory(parseInt(e.target.value))} disabled={!allowCanonNames} />
-                <div className="lcars-small">{famousRecentMemory}</div>
+                <input
+                  type="range"
+                  min={0}
+                  max={20}
+                  value={famousRecentMemory}
+                  onChange={e=>setFamousRecentMemory(parseInt(e.target.value))}
+                  disabled={!allowCanonNames}
+                  aria-describedby="famous-mem-help-m"
+                />
+                <div id="famous-mem-help-m" className="lcars-small">Memory window: {famousRecentMemory}</div>
               </div>
             </div>
           </AccordionSection>
@@ -482,8 +511,15 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
                   <label className="lcars-label">Humor Level</label>
                   <button onClick={handleRandomHumor} className="lcars-btn" title="Randomize humor level" aria-label="Randomize humor level">🎲</button>
                 </div>
-                <input type="range" min={0} max={10} value={humor} onChange={e=>setHumor(parseInt(e.target.value))} />
-                <div className="lcars-small flex items-center gap-2">
+                <input
+                  type="range"
+                  min={0}
+                  max={10}
+                  value={humor}
+                  onChange={e=>setHumor(parseInt(e.target.value))}
+                  aria-describedby="humor-help-m"
+                />
+                <div id="humor-help-m" className="lcars-small flex items-center gap-2">
                   <span>{humor}</span>
                   {humor === 0 ? (
                     <span>No humor</span>
@@ -491,7 +527,9 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
                     <span>Moderate humor</span>
                   ) : humor === 10 ? (
                     <span>Max Humor</span>
-                  ) : null}
+                  ) : (
+                    <span className="sr-only">Humor level</span>
+                  )}
                 </div>
               </div>
               <div>
@@ -578,14 +616,28 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
             <label className="lcars-label">Problems</label>
             <button onClick={handleRandomProblemsCount} className="lcars-btn" title="Randomize number of problems" aria-label="Randomize number of problems">🎲</button>
           </div>
-          <input type="range" min={1} max={5} value={problemsCount} onChange={(e)=>setProblemsCount(parseInt(e.target.value) as any)} />
-          <div className="lcars-small flex items-center gap-2"><span>{problemsCount}</span><span>Problems per report</span></div>
+          <input
+            type="range"
+            min={1}
+            max={5}
+            value={problemsCount}
+            onChange={(e)=>setProblemsCount(parseInt(e.target.value) as any)}
+            aria-describedby="problems-help"
+          />
+          <div id="problems-help" className="lcars-small flex items-center gap-2"><span>{problemsCount}</span><span>Problems per report</span></div>
           <div className="flex items-center justify-between mt-2">
             <label className="lcars-label">Problem Detail Level</label>
             <button onClick={handleRandomProblemDetail} className="lcars-btn" title="Randomize problem detail level" aria-label="Randomize problem detail level">🎲</button>
           </div>
-          <input type="range" min={1} max={6} value={problemDetailLevel} onChange={e=>setProblemDetailLevel(parseInt(e.target.value))} />
-          <div className="lcars-small">{problemDetailLevel} sentence{problemDetailLevel > 1 ? "s" : ""} per problem</div>
+          <input
+            type="range"
+            min={1}
+            max={6}
+            value={problemDetailLevel}
+            onChange={e=>setProblemDetailLevel(parseInt(e.target.value))}
+            aria-describedby="detail-help"
+          />
+          <div id="detail-help" className="lcars-small">{problemDetailLevel} sentence{problemDetailLevel > 1 ? "s" : ""} per problem</div>
         </div>
       </div>
 
@@ -605,8 +657,15 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
               <label className="lcars-label">How many (1–10)</label>
               <button onClick={handleRandomGraphsCount} className="lcars-btn" title="Randomize graph count" aria-label="Randomize graph count">🎲</button>
             </div>
-            <input type="range" min={1} max={10} value={graphsCount} onChange={(e)=>setGraphsCount(parseInt(e.target.value))} />
-            <div className="lcars-small">{graphsCount}</div>
+            <input
+              type="range"
+              min={1}
+              max={10}
+              value={graphsCount}
+              onChange={(e)=>setGraphsCount(parseInt(e.target.value))}
+              aria-describedby="graphs-help"
+            />
+            <div id="graphs-help" className="lcars-small">{graphsCount} graphs</div>
           </>}
         </div>
       </div>
@@ -702,6 +761,7 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
               <span className="lcars-small">(0–20, default 6)</span>
             </div>
             <input
+              aria-describedby="famous-mem-help"
               type="range"
               min={0}
               max={20}
@@ -711,7 +771,7 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
               aria-label="Famous rotation memory"
               title="How many recently-used famous authors are avoided"
             />
-            <div className="lcars-small">{famousRecentMemory}</div>
+            <div id="famous-mem-help" className="lcars-small">Memory window: {famousRecentMemory}</div>
           </div>
           <label className="lcars-label">Rank</label>
           <div className="flex gap-2 items-center">
@@ -774,8 +834,15 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
               <label className="lcars-label">Humor Level</label>
               <button onClick={handleRandomHumor} className="lcars-btn" title="Randomize humor level" aria-label="Randomize humor level">🎲</button>
             </div>
-          <input type="range" min={0} max={10} value={humor} onChange={e=>setHumor(parseInt(e.target.value))} />
-          <div className="lcars-small flex items-center gap-2">
+          <input
+            type="range"
+            min={0}
+            max={10}
+            value={humor}
+            onChange={e=>setHumor(parseInt(e.target.value))}
+            aria-describedby="humor-help"
+          />
+          <div id="humor-help" className="lcars-small flex items-center gap-2">
             <span>{humor}</span>
             {humor === 0 ? (
               <span>No humor</span>
@@ -783,7 +850,9 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
               <span>Moderate humor</span>
             ) : humor === 10 ? (
               <span>Max Humor</span>
-            ) : null}
+            ) : (
+              <span className="sr-only">Humor level</span>
+            )}
           </div>
         </div>
       </div>
