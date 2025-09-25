@@ -772,7 +772,16 @@ export default function App() {
             aria-describedby={!report ? 'export-hint' : undefined}
             className={`px-3 py-2 rounded-xl border transition-all duration-200 ${!report ? 'bg-slate-800/50 border-slate-700/50 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700 hover:bg-slate-700'}`}
           >Download TXT</button>
-          <button onClick={async()=>{ if(!report){ setToastMessage('No report to copy.'); setShowToast(true); setTimeout(()=>setShowToast(false),1500); return;} await copyToClipboard(reportToTxt(report), 'Full report copied as TXT.'); }} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all duration-200" title="Copy full report as plain text" aria-label="Copy full report as plain text">Copy Full Report (TXT)</button>
+          <button
+            onClick={async()=>{ if(!report) return; await copyToClipboard(reportToTxt(report), 'Full report copied as TXT.'); }}
+            aria-disabled={!report}
+            aria-describedby={!report ? 'export-hint' : undefined}
+            title="Copy full report as plain text"
+            aria-label="Copy full report as plain text"
+            className={`px-3 py-2 rounded-xl border transition-all duration-200 ${!report ? 'bg-slate-800/50 border-slate-700/50 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700 hover:bg-slate-700'}`}
+          >
+            Copy Full Report (TXT)
+          </button>
           <button
             onClick={exportPdf}
             aria-disabled={!report}
@@ -982,7 +991,14 @@ export default function App() {
                 )}
                 <div className="grid grid-cols-2 gap-2">
                   <button onClick={exportTxt} aria-disabled={!report} aria-describedby={!report ? 'export-hint-mobile' : undefined} className={`px-2 py-2 rounded border ${!report ? 'bg-slate-800/40 border-slate-700/40 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700'}`}>Download TXT</button>
-                  <button onClick={async()=>{ if(!report){ setToastMessage('No report to copy.'); setShowToast(true); setTimeout(()=>setShowToast(false),1500); return;} await copyToClipboard(reportToTxt(report), 'Full report copied as TXT.'); }} className="px-2 py-2 rounded bg-slate-800 border border-slate-700">Copy Full (TXT)</button>
+                  <button
+                    onClick={async()=>{ if(!report) return; await copyToClipboard(reportToTxt(report), 'Full report copied as TXT.'); }}
+                    aria-disabled={!report}
+                    aria-describedby={!report ? 'export-hint-mobile' : undefined}
+                    className={`px-2 py-2 rounded border ${!report ? 'bg-slate-800/40 border-slate-700/40 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700'}`}
+                  >
+                    Copy Full (TXT)
+                  </button>
                   <button onClick={exportPdf} aria-disabled={!report} aria-describedby={!report ? 'export-hint-mobile' : undefined} className={`px-2 py-2 rounded border ${!report ? 'bg-slate-800/40 border-slate-700/40 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700'}`}>Download PDF</button>
                   <button onClick={exportDocx} aria-disabled={!report} aria-describedby={!report ? 'export-hint-mobile' : undefined} className={`px-2 py-2 rounded border ${!report ? 'bg-slate-800/40 border-slate-700/40 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700'}`}>Download DOCX</button>
                   <button onClick={handlePrint} aria-disabled={!report} aria-describedby={!report ? 'export-hint-mobile' : undefined} className={`px-2 py-2 rounded border font-semibold ${!report ? 'bg-amber-600/40 border-amber-500/40 text-amber-300/60 cursor-not-allowed' : 'bg-amber-600 text-black border-amber-500'}`}>Print</button>
