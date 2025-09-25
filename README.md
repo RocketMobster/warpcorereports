@@ -346,3 +346,57 @@ Upcoming features and improvements planned for future versions:
 
 "Live long and prosper! 🖖"
 
+## Accessibility Summary (Public Overview)
+
+This project actively invests in accessibility so keyboard and assistive tech users can fully generate, review, and export reports. Below is a concise, user‑facing snapshot (see `A11Y_NOTES.md` for deep technical details and future exploration ideas).
+
+### Implemented Highlights
+- Keyboard friendly: All interactive elements reachable by Tab with a consistent high‑contrast focus ring (`:focus-visible`).
+- Dialogs & panels: Share dialog, Help panel, Crew Manifest panel, and all drawers support Escape to close, initial focus placement, focus trapping, and focus return to the triggering control.
+- Structural announcements: A polite live region announces when major UI surfaces open or close (e.g., “Share dialog opened”).
+- Toast messaging: Dedicated assertive + polite live regions provide status feedback (errors / exports / actions) without overwhelming screen readers.
+- Slider context: All sliders expose helper context via `aria-describedby` so ranges, units, and dynamic labels (e.g., humor qualitative states) are announced.
+- Randomize (dice) buttons: Each has an aria‑label that describes both the action and the current value it will randomize.
+- Accessible disabled pattern: Export / Share / Print / Copy Full actions remain focusable with `aria-disabled` and a shared descriptive hint instead of silently disabling.
+- Crew manifest: Lock toggles announce locked/unlocked state; panel open/close is announced and returns focus properly.
+- Consistent labeling: All icon buttons have aligned `title` + `aria-label` values.
+
+### Checklist (Done vs Planned)
+Implemented items are checked; unchecked are on the near/medium‑term backlog.
+
+- [x] Global visible focus indicator
+- [x] Escape close + focus return for dialogs, drawers, and panels
+- [x] Focus trap for modal/dialog surfaces (drawers, help, share)
+- [x] Dual live regions (assertive + polite) for toasts/status
+- [x] Structural open/close announcements
+- [x] `aria-describedby` wiring for all sliders (desktop + mobile)
+- [x] Dynamic aria labels for per-control randomize buttons
+- [x] Accessible disabled pattern for gated export/share actions
+- [x] Crew lock toggle announces current state
+- [x] Initial focus placement in dialogs/drawers
+- [x] Consistent icon button labeling (title + aria-label)
+- [ ] `aria-valuetext` on Humor slider for intermediate semantic states
+- [ ] Skip to “Main Content” link
+- [ ] Drag & drop (crew reorder) live announcements (old → new index, department shifts)
+- [ ] Live announcement for auto rank adjustments
+- [ ] Debounce duplicate structural announcements
+- [ ] Optional background inerting (`inert` / `aria-hidden`) while modals are open
+- [ ] Contrast audit of secondary text and subtle borders
+- [ ] Reduced motion refinements for remaining transitions
+- [ ] Consolidated single status region (evaluate merging toast + structural if noise stays low)
+
+### Philosophy
+We favor progressive enhancement: ship a small, verifiable improvement, document it, then iterate. Internal notes (`A11Y_NOTES.md`) keep implementation rationale and future ideas so the public README stays concise.
+
+### Contributing to A11Y
+If you notice an accessibility gap, open an issue with the label `a11y` describing:
+1. What you attempted (e.g., “Tabbing from Humor slider to Export button skips...”).
+2. Expected vs actual behavior.
+3. Browser / OS / assistive tech (if relevant).
+
+That makes triage faster and helps us maintain momentum on inclusive features.
+
+For the full, evolving technical log see: `A11Y_NOTES.md`.
+
+---
+
