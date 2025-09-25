@@ -360,7 +360,7 @@ export default function App() {
 
   const exportTxt = () => {
     buttonClickSound();
-    if (!report) { showTempToast('No report to export as TXT yet. Produce a report first.'); return; }
+    if (!report) return; // Accessible disabled pattern handles messaging
     const txt = reportToTxt(report);
     const blob = new Blob([txt], { type: "text/plain" });
     saveAs(blob, "engineering_report.txt");
@@ -369,7 +369,7 @@ export default function App() {
 
   const exportPdf = async () => {
     buttonClickSound();
-    if (!report) { showTempToast('No report to export as PDF yet. Produce a report first.'); return; }
+    if (!report) return;
     const doc = new jsPDF({ unit: "pt", format: "letter" });
     const pageHeight = (doc as any).internal?.pageSize?.getHeight
       ? (doc as any).internal.pageSize.getHeight()
@@ -532,7 +532,7 @@ export default function App() {
 
   const exportDocx = async () => {
     buttonClickSound();
-    if (!report) { showTempToast('No report to export as DOCX yet. Produce a report first.'); return; }
+    if (!report) return;
     const doc = buildDocx(report);
     const blob = await doc;
     saveAs(blob, "engineering_report.docx");
@@ -541,7 +541,7 @@ export default function App() {
 
   const handlePrint = () => {
     buttonClickSound();
-    if (!report) { showTempToast('No report to print yet. Produce a report first.'); return; }
+    if (!report) return;
     
     // We need to wait for all SVG charts to render properly
     setTimeout(() => {
@@ -551,7 +551,7 @@ export default function App() {
   
   const handleShare = () => {
     buttonClickSound();
-    if (!report) { showTempToast('No report to share yet. Produce a report first.'); return; }
+    if (!report) return;
     setIsShareDialogOpen(true);
   };
 
@@ -760,16 +760,42 @@ export default function App() {
 
         {/* Stardate controls moved into the Stardate accordion in mobile controls */}
         {showDesktopControls && (
-        <div id="button-bar" className="flex flex-wrap gap-3 mb-6 sticky top-4 z-10 bg-[#0b0d16] p-3 rounded-xl border border-slate-700 shadow-lg transition-all duration-300">
-          <button onClick={exportTxt} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all duration-200">Download TXT</button>
+        <div id="button-bar" className="flex flex-wrap gap-3 mb-6 sticky top-4 z-10 bg-[#0b0d16] p-3 rounded-xl border border-slate-700 shadow-lg transition-all duration-300" aria-describedby={!report ? 'export-hint' : undefined}>
+          {!report && (
+            <p id="export-hint" className="w-full text-[11px] text-amber-300 bg-slate-800/60 border border-slate-700 rounded px-3 py-2 mb-1" aria-live="polite">
+              Produce a report to enable export, print, and share actions.
+            </p>
+          )}
+          <button
+            onClick={exportTxt}
+            aria-disabled={!report}
+            aria-describedby={!report ? 'export-hint' : undefined}
+            className={`px-3 py-2 rounded-xl border transition-all duration-200 ${!report ? 'bg-slate-800/50 border-slate-700/50 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700 hover:bg-slate-700'}`}
+          >Download TXT</button>
           <button onClick={async()=>{ if(!report){ setToastMessage('No report to copy.'); setShowToast(true); setTimeout(()=>setShowToast(false),1500); return;} await copyToClipboard(reportToTxt(report), 'Full report copied as TXT.'); }} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all duration-200" title="Copy full report as plain text" aria-label="Copy full report as plain text">Copy Full Report (TXT)</button>
-          <button onClick={exportPdf} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all duration-200">Download PDF</button>
-          <button onClick={exportDocx} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all duration-200">Download DOCX</button>
-          <button onClick={handlePrint} className="px-3 py-2 rounded-xl bg-amber-600 text-black font-bold border border-amber-500 hover:bg-amber-500 transition-all duration-200">Print Report</button>
+          <button
+            onClick={exportPdf}
+            aria-disabled={!report}
+            aria-describedby={!report ? 'export-hint' : undefined}
+            className={`px-3 py-2 rounded-xl border transition-all duration-200 ${!report ? 'bg-slate-800/50 border-slate-700/50 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700 hover:bg-slate-700'}`}
+          >Download PDF</button>
+          <button
+            onClick={exportDocx}
+            aria-disabled={!report}
+            aria-describedby={!report ? 'export-hint' : undefined}
+            className={`px-3 py-2 rounded-xl border transition-all duration-200 ${!report ? 'bg-slate-800/50 border-slate-700/50 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700 hover:bg-slate-700'}`}
+          >Download DOCX</button>
+          <button
+            onClick={handlePrint}
+            aria-disabled={!report}
+            aria-describedby={!report ? 'export-hint' : undefined}
+            className={`px-3 py-2 rounded-xl font-bold border transition-all duration-200 ${!report ? 'bg-amber-600/40 border-amber-500/40 text-amber-300/60 cursor-not-allowed' : 'bg-amber-600 text-black border-amber-500 hover:bg-amber-500'}`}
+          >Print Report</button>
           <button 
-            onClick={handleShare} 
-            className="px-3 py-2 rounded-xl bg-blue-600 text-white font-bold border border-blue-500 hover:bg-blue-500 transition-all duration-200"
-            disabled={!report}
+            onClick={handleShare}
+            aria-disabled={!report}
+            aria-describedby={!report ? 'export-hint' : undefined}
+            className={`px-3 py-2 rounded-xl font-bold border transition-all duration-200 ${!report ? 'bg-blue-600/40 border-blue-500/40 text-blue-300/70 cursor-not-allowed' : 'bg-blue-600 text-white border-blue-500 hover:bg-blue-500'}`}
           >
             Share Report
           </button>
@@ -948,14 +974,19 @@ export default function App() {
               />
             </Drawer>
             <Drawer open={mobileExportOpen} onClose={()=>setMobileExportOpen(false)} title="Export">
-              <div className="space-y-3 text-sm">
+              <div className="space-y-3 text-sm" aria-describedby={!report ? 'export-hint-mobile' : undefined}>
+                {!report && (
+                  <p id="export-hint-mobile" className="text-[11px] text-amber-300 bg-slate-800/60 border border-slate-700 rounded p-2">
+                    Produce a report to enable export, print, and share actions.
+                  </p>
+                )}
                 <div className="grid grid-cols-2 gap-2">
-                  <button onClick={exportTxt} className="px-2 py-2 rounded bg-slate-800 border border-slate-700">Download TXT</button>
+                  <button onClick={exportTxt} aria-disabled={!report} aria-describedby={!report ? 'export-hint-mobile' : undefined} className={`px-2 py-2 rounded border ${!report ? 'bg-slate-800/40 border-slate-700/40 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700'}`}>Download TXT</button>
                   <button onClick={async()=>{ if(!report){ setToastMessage('No report to copy.'); setShowToast(true); setTimeout(()=>setShowToast(false),1500); return;} await copyToClipboard(reportToTxt(report), 'Full report copied as TXT.'); }} className="px-2 py-2 rounded bg-slate-800 border border-slate-700">Copy Full (TXT)</button>
-                  <button onClick={exportPdf} className="px-2 py-2 rounded bg-slate-800 border border-slate-700">Download PDF</button>
-                  <button onClick={exportDocx} className="px-2 py-2 rounded bg-slate-800 border border-slate-700">Download DOCX</button>
-                  <button onClick={handlePrint} className="px-2 py-2 rounded bg-amber-600 text-black border border-amber-500">Print</button>
-                  <button onClick={handleShare} className="px-2 py-2 rounded bg-blue-600 text-white border border-blue-500" disabled={!report}>Share</button>
+                  <button onClick={exportPdf} aria-disabled={!report} aria-describedby={!report ? 'export-hint-mobile' : undefined} className={`px-2 py-2 rounded border ${!report ? 'bg-slate-800/40 border-slate-700/40 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700'}`}>Download PDF</button>
+                  <button onClick={exportDocx} aria-disabled={!report} aria-describedby={!report ? 'export-hint-mobile' : undefined} className={`px-2 py-2 rounded border ${!report ? 'bg-slate-800/40 border-slate-700/40 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700'}`}>Download DOCX</button>
+                  <button onClick={handlePrint} aria-disabled={!report} aria-describedby={!report ? 'export-hint-mobile' : undefined} className={`px-2 py-2 rounded border font-semibold ${!report ? 'bg-amber-600/40 border-amber-500/40 text-amber-300/60 cursor-not-allowed' : 'bg-amber-600 text-black border-amber-500'}`}>Print</button>
+                  <button onClick={handleShare} aria-disabled={!report} aria-describedby={!report ? 'export-hint-mobile' : undefined} className={`px-2 py-2 rounded border font-semibold ${!report ? 'bg-blue-600/40 border-blue-500/40 text-blue-300/70 cursor-not-allowed' : 'bg-blue-600 text-white border-blue-500'}`}>Share</button>
                 </div>
               </div>
             </Drawer>
