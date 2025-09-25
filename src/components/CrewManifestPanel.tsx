@@ -365,6 +365,7 @@ export default function CrewManifestPanel({
             saveCrew(updated);
           }}
           title={member.locked ? 'Unlock (allow regenerate)' : 'Lock (preserve on regenerate)'}
+          aria-label={member.locked ? 'Unlock crew member (allow regenerate)' : 'Lock crew member (preserve on regenerate)'}
           aria-pressed={!!member.locked}
         >
           {member.locked ? 'Locked' : 'Lock'}
@@ -379,12 +380,10 @@ export default function CrewManifestPanel({
         <button
           type="button"
           className="absolute top-2 right-2 text-pink-300 hover:text-pink-200"
-          aria-label="Close"
-          title="Close"
+          aria-label="Close crew manifest panel"
+          title="Close crew manifest panel"
           onClick={onClose}
-        >
-          ×
-        </button>
+        >×</button>
       )}
       <h3 className="text-lg font-bold mb-2 text-pink-300">Crew Manifest ({crew.length})</h3>
       {constraintMsg && (

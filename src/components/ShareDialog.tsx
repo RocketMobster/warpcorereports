@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Report } from "../types";
 import { shareReport, ShareOptions } from "../utils/shareReport";
 
@@ -111,27 +111,64 @@ export default function ShareDialog({ report, isOpen, onClose }: ShareDialogProp
     }
   };
 
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const firstFocusableRef = useRef<HTMLButtonElement | null>(null);
+
+  // Close on Escape
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.preventDefault(); onClose(); } };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isOpen, onClose]);
+
+  // Focus first actionable control when opened
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => {
+        firstFocusableRef.current?.focus();
+      }, 0);
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-auto">
-      <div className="bg-[#12182c] rounded-2xl border border-amber-500 p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <h2 className="text-xl font-bold text-amber-400 mb-4">Share Report</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-auto" role="presentation" aria-hidden={!isOpen}>
+      <div
+        ref={dialogRef}
+        className="bg-[#12182c] rounded-2xl border border-amber-500 p-6 max-w-md w-full max-h-[90vh] overflow-y-auto outline-none"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="share-dialog-title"
+      >
+        <div className="flex items-start justify-between mb-4">
+          <h2 id="share-dialog-title" className="text-xl font-bold text-amber-400">Share Report</h2>
+          <button
+            onClick={onClose}
+            className="px-2 py-1 text-xs rounded bg-slate-700 hover:bg-slate-600 border border-slate-500"
+            aria-label="Close share dialog"
+            title="Close"
+          >×</button>
+        </div>
         
         <div className="mb-4">
           <label className="block text-amber-300 mb-2">Share Method</label>
           <div className="flex gap-4">
-            <button 
+            <button
+              ref={firstFocusableRef}
               className={`px-4 py-2 rounded-lg ${shareMethod === "link" ? "bg-amber-500 text-black font-bold" : "bg-slate-700 text-white"}`}
               onClick={() => setShareMethod("link")}
               disabled={isSharing}
-            >
-              Generate Link
-            </button>
+              aria-pressed={shareMethod === 'link'}
+              aria-label="Use link sharing method"
+            >Generate Link</button>
             <button 
               className={`px-4 py-2 rounded-lg ${shareMethod === "email" ? "bg-amber-500 text-black font-bold" : "bg-slate-700 text-white"}`}
               onClick={() => setShareMethod("email")}
               disabled={isSharing}
+              aria-pressed={shareMethod === 'email'}
+              aria-label="Use email sharing method"
             >
               Email Report
             </button>
@@ -141,17 +178,19 @@ export default function ShareDialog({ report, isOpen, onClose }: ShareDialogProp
         <div className="mb-4">
           <label className="block text-amber-300 mb-2">Include Format (Optional)</label>
           <div className="flex gap-2">
-            <button 
+            <button
               className={`px-3 py-1 rounded-lg ${includeFormat === "pdf" ? "bg-amber-500 text-black font-bold" : "bg-slate-700 text-white"}`}
               onClick={() => setIncludeFormat(includeFormat === "pdf" ? null : "pdf")}
               disabled={isSharing}
-            >
-              PDF
-            </button>
+              aria-pressed={includeFormat === 'pdf'}
+              aria-label="Toggle PDF attachment"
+            >PDF</button>
             <button 
               className={`px-3 py-1 rounded-lg ${includeFormat === "docx" ? "bg-amber-500 text-black font-bold" : "bg-slate-700 text-white"}`}
               onClick={() => setIncludeFormat(includeFormat === "docx" ? null : "docx")}
               disabled={isSharing}
+              aria-pressed={includeFormat === 'docx'}
+              aria-label="Toggle DOCX attachment"
             >
               DOCX
             </button>
@@ -159,6 +198,8 @@ export default function ShareDialog({ report, isOpen, onClose }: ShareDialogProp
               className={`px-3 py-1 rounded-lg ${includeFormat === "txt" ? "bg-amber-500 text-black font-bold" : "bg-slate-700 text-white"}`}
               onClick={() => setIncludeFormat(includeFormat === "txt" ? null : "txt")}
               disabled={isSharing}
+              aria-pressed={includeFormat === 'txt'}
+              aria-label="Toggle plain text attachment"
             >
               TXT
             </button>
