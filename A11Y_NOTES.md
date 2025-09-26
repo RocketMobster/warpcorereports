@@ -60,7 +60,7 @@ This section mirrors the concise checklist in `README.md` and maps it to the mor
 ✅ Debounce duplicate structural announcements (spam prevention)
 ⏳ Optional background inerting (`inert` / `aria-hidden` layering) while modals are open
 ⏳ Contrast audit of secondary text & borders (WCAG AA validation)
-⏳ Reduced motion refinements (respect prefers-reduced-motion fully)
+✅ Reduced motion refinements (respect prefers-reduced-motion fully)
 ⏳ Consolidated single status region (evaluate merging toast + structural)
 ✅ ARIA description for Seed lock toggle (clarify Produce vs Reroll nuance)
 

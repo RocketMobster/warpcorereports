@@ -139,6 +139,18 @@ input[type="range"]:active::-moz-range-thumb { background: #ff6699; }
 
 @media (prefers-reduced-motion: reduce) { .report-zoom { transition: none; } }
 
+/* Broader reduced motion support: neutralize common utility transitions & custom animations */
+@media (prefers-reduced-motion: reduce) {
+	.transition, .transition-all, .transition-colors, .duration-200, .duration-300, .duration-500, .animate-fadeIn, .animate-pulse-border {
+		transition: none !important;
+		animation: none !important;
+	}
+	/* Drawer & overlay transforms become instant */
+	.translate-y-full, .translate-y-0 { transition: none !important; }
+	/* Skip link keeps visibility but no motion */
+	.skip-link { transition: none !important; }
+}
+
 @media print {
 	.report-zoom { transform: none !important; width: 100% !important; }
 	.chart-no-zoom { transform: none !important; width: 100% !important; }

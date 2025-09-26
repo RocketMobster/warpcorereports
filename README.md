@@ -383,6 +383,7 @@ Implemented items are checked; unchecked are on the near/medium‑term backlog.
 - [ ] Optional background inerting (`inert` / `aria-hidden`) while modals are open
 - [ ] Contrast audit of secondary text and subtle borders
 - [ ] Reduced motion refinements for remaining transitions
+- [x] Reduced motion refinements for remaining transitions
 - [ ] Consolidated single status region (evaluate merging toast + structural if noise stays low)
 - [x] ARIA description for Seed lock toggle (Produce vs Reroll behavior)
 
