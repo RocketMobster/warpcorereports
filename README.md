@@ -377,7 +377,7 @@ Implemented items are checked; unchecked are on the near/medium‑term backlog.
 - [x] Consistent icon button labeling (title + aria-label)
 - [x] `aria-valuetext` on Humor slider for intermediate semantic states
 - [x] Skip to “Main Content” link
-- [ ] Drag & drop (crew reorder) live announcements (old → new index, department shifts)
+- [x] Drag & drop (crew reorder) live announcements (grab / move / drop scaffolding)
 - [ ] Live announcement for auto rank adjustments
 - [x] Debounce duplicate structural announcements
 - [ ] Optional background inerting (`inert` / `aria-hidden`) while modals are open

@@ -8,7 +8,9 @@ import {
   KeyboardSensor,
   useSensor,
   useSensors,
-  DragEndEvent
+  DragEndEvent,
+  DragStartEvent,
+  DragOverEvent
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -221,9 +223,47 @@ export default function CrewManifestPanel({
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor)
   );
+  // DnD live announcement scaffolding
+  const [dndMsg, setDndMsg] = useState("");
+  const lastAnnounceRef = useRef<{ msg: string; ts: number }>({ msg: "", ts: 0 });
+  const announce = (msg: string, minGap = 160) => {
+    const now = Date.now();
+    if (msg === lastAnnounceRef.current.msg && now - lastAnnounceRef.current.ts < 800) return; // avoid exact duplicates
+    if (now - lastAnnounceRef.current.ts < minGap) return; // throttle rapid move spam
+    lastAnnounceRef.current = { msg, ts: now };
+    setDndMsg(msg);
+    // Clear after a short delay so SR re-reads on next update
+    setTimeout(() => { setDndMsg(prev => prev === msg ? "" : prev); }, 2200);
+  };
+
+  const getVisibleIndex = (id: string) => visibleCrew.findIndex(c => c.id === id);
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    const idx = getVisibleIndex(String(active.id));
+    if (idx !== -1) {
+      const member = visibleCrew[idx];
+      announce(`Reordering ${member.role || 'item'}: current position ${idx + 1} of ${visibleCrew.length}.`, 0);
+    }
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+    if (active.id === over.id) return;
+    const overIndex = getVisibleIndex(String(over.id));
+    if (overIndex !== -1) {
+      announce(`Move target position ${overIndex + 1} of ${visibleCrew.length}.`);
+    }
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    if (!over || active.id === over.id) return;
+    if (!over || active.id === over.id) {
+      // Even if not moved, announce cancellation for clarity
+      announce('Reorder cancelled.');
+      return;
+    }
     const oldIndex = crew.findIndex(c => c.id === active.id);
     const newIndex = crew.findIndex(c => c.id === over.id);
     if (oldIndex === -1 || newIndex === -1) return;
@@ -231,6 +271,8 @@ export default function CrewManifestPanel({
     setCrew(reordered);
     onCrewChange?.(reordered);
     saveCrew(reordered);
+    const member = reordered[newIndex];
+    announce(`Dropped ${member.role || 'item'} at position ${newIndex + 1} of ${reordered.length}.` , 0);
   };
 
   // Inline role editing
@@ -467,7 +509,13 @@ export default function CrewManifestPanel({
       </datalist>
 
       {/* Reorderable list */}
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+      >
         <SortableContext items={visibleCrew.map(c => c.id)} strategy={verticalListSortingStrategy}>
           <ul className="text-[15px] text-slate-100 space-y-1 mb-3 overscroll-contain">
             {visibleCrew.map((member) => (
@@ -476,6 +524,10 @@ export default function CrewManifestPanel({
           </ul>
         </SortableContext>
       </DndContext>
+      {/* Local polite live region for drag & drop announcements (scaffolding) */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only" style={{position:'absolute', left:-9999, width:1, height:1, overflow:'hidden'}}>
+        {dndMsg}
+      </div>
     </div>
   );
 }

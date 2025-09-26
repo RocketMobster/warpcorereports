@@ -55,7 +55,7 @@ This section mirrors the concise checklist in `README.md` and maps it to the mor
 ✅ Consistent icon button labeling (title + aria-label parity)
 ✅ `aria-valuetext` on Humor slider (semantic mid-values)
 ✅ Skip to “Main Content” link (keyboard efficiency)
-⏳ Drag & drop live announcements (crew reordering feedback)
+✅ Drag & drop live announcements (initial grab / move / drop scaffolding)
 ⏳ Live announcement for auto rank adjustments (constraint enforcement)
 ✅ Debounce duplicate structural announcements (spam prevention)
 ⏳ Optional background inerting (`inert` / `aria-hidden` layering) while modals are open
