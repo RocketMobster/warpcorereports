@@ -31,6 +31,7 @@ Future opportunities:
 // Completed: Added aria-live feedback when crew constraints auto-adjust rank (now announces normalization during load, inline edits, and department coverage adjustments)
 - ARIA description for Seed lock toggle clarifying Produce vs Reroll behavior.
 - Provide a single consolidated "Status" live region (merge toast + structural if verbosity remains low).
+- Verbosity toggle for automatic rank adjustment announcements (allow muting or summary-only mode for users who find frequent normalization messages noisy).
 
 ---
 
@@ -66,6 +67,7 @@ This section mirrors the concise checklist in `README.md` and maps it to the mor
 ✅ Reduced motion refinements (respect prefers-reduced-motion fully)
 ✅ Consolidated single status region (merged structural + light status; assertive toast channel retained)
 ✅ ARIA description for Seed lock toggle (clarify Produce vs Reroll nuance)
+⏳ Verbosity toggle for automatic rank adjustment announcements (mute or summarize messages)
 
 ### Update Procedure
 1. Implement feature.
