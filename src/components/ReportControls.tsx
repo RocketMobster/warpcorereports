@@ -555,8 +555,18 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
                 <div className="flex gap-2 mt-1">
                   <input type="text" value={seed} onChange={e=>setSeed(e.target.value)} className="lcars-input flex-1" placeholder="optional" aria-label="Seed (optional)" />
                   <button onClick={handleRandomSeed} className="lcars-btn" title="Generate random seed" aria-label="Generate random seed">🎲</button>
-                  <button onClick={toggleSeedLock} className={"lcars-btn "+(seedLocked?"lcars-btn-locked":"")} title="Lock or unlock seed" aria-label="Lock or unlock seed">{seedLocked ? '🔒' : '🔓'}</button>
+                  <button
+                    onClick={toggleSeedLock}
+                    className={"lcars-btn "+(seedLocked?"lcars-btn-locked":"")}
+                    title={seedLocked ? "Unlock seed" : "Lock seed"}
+                    aria-label={seedLocked ? "Unlock seed" : "Lock seed"}
+                    aria-pressed={seedLocked}
+                    aria-describedby="seed-lock-help"
+                  >{seedLocked ? '🔒' : '🔓'}</button>
                 </div>
+                <p id="seed-lock-help" className="lcars-small mt-1">
+                  {seedLocked ? 'Seed locked: Produce Report reuses this seed; Reroll always generates a fresh one.' : 'Lock to reuse this seed on Produce Report. Reroll always creates a new seed.'}
+                </p>
               </div>
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
@@ -803,8 +813,18 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
           <div className="flex gap-2">
             <input type="text" value={seed} onChange={e=>setSeed(e.target.value)} className="lcars-input flex-1" placeholder="optional" aria-label="Seed (optional)" />
             <button onClick={handleRandomSeed} className="lcars-btn" title="Generate random seed" aria-label="Generate random seed">🎲</button>
-            <button onClick={toggleSeedLock} className={"lcars-btn " + (seedLocked ? "lcars-btn-locked" : "")} title="Lock or unlock seed" aria-label="Lock or unlock seed">{seedLocked ? "🔒" : "🔓"}</button>
+            <button
+              onClick={toggleSeedLock}
+              className={"lcars-btn " + (seedLocked ? "lcars-btn-locked" : "")}
+              title={seedLocked ? "Unlock seed" : "Lock seed"}
+              aria-label={seedLocked ? "Unlock seed" : "Lock seed"}
+              aria-pressed={seedLocked}
+              aria-describedby="seed-lock-help-mobile"
+            >{seedLocked ? "🔒" : "🔓"}</button>
           </div>
+          <p id="seed-lock-help-mobile" className="lcars-small mt-1">
+            {seedLocked ? 'Seed locked: Produce reuses; Reroll always fresh.' : 'Lock to reuse seed on Produce; Reroll always fresh.'}
+          </p>
 
           <div className="flex items-center justify-between">
             <label className="lcars-label">Figure Bias</label>

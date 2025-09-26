@@ -62,7 +62,7 @@ This section mirrors the concise checklist in `README.md` and maps it to the mor
 ⏳ Contrast audit of secondary text & borders (WCAG AA validation)
 ⏳ Reduced motion refinements (respect prefers-reduced-motion fully)
 ⏳ Consolidated single status region (evaluate merging toast + structural)
-⏳ ARIA description for Seed lock toggle (clarify Produce vs Reroll nuance)
+✅ ARIA description for Seed lock toggle (clarify Produce vs Reroll nuance)
 
 ### Update Procedure
 1. Implement feature.

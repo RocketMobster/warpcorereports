@@ -384,6 +384,7 @@ Implemented items are checked; unchecked are on the near/medium‑term backlog.
 - [ ] Contrast audit of secondary text and subtle borders
 - [ ] Reduced motion refinements for remaining transitions
 - [ ] Consolidated single status region (evaluate merging toast + structural if noise stays low)
+- [x] ARIA description for Seed lock toggle (Produce vs Reroll behavior)
 
 ### Philosophy
 We favor progressive enhancement: ship a small, verifiable improvement, document it, then iterate. Internal notes (`A11Y_NOTES.md`) keep implementation rationale and future ideas so the public README stays concise.
