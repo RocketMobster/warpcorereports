@@ -91,6 +91,20 @@ export default function App() {
   const [persistZoom, setPersistZoom] = useState<boolean>(() => {
     try { return localStorage.getItem('wcr_zoom_persist_enabled') === '0' ? false : true; } catch { return true; }
   });
+  const [highContrast, setHighContrast] = useState<boolean>(() => {
+    try { return localStorage.getItem('wcr_high_contrast') === '1'; } catch { return false; }
+  });
+  useEffect(()=>{
+    try { localStorage.setItem('wcr_high_contrast', highContrast ? '1' : '0'); } catch {}
+    const body = document.body;
+    if (highContrast) {
+      body.classList.add('wcr-contrast-high');
+      try { window.dispatchEvent(new CustomEvent('wcr-live', { detail: 'High contrast mode enabled' })); } catch {}
+    } else {
+      body.classList.remove('wcr-contrast-high');
+      try { window.dispatchEvent(new CustomEvent('wcr-live', { detail: 'High contrast mode disabled' })); } catch {}
+    }
+  }, [highContrast]);
   const [helpTarget, setHelpTarget] = useState<"templates"|"figure-bias"|"presets"|"produce-reroll"|"references"|"crew-size"|"crew-panel"|undefined>(undefined);
   
   
@@ -707,11 +721,17 @@ export default function App() {
     await copyToClipboard(lines.join('\n'), 'Figures copied to clipboard.');
   };
 
+  const anyModalOpen = showHelp || isShareDialogOpen || manifestPanelOpen || mobileCrewOpen || mobileExportOpen || mobileHelpOpen || mobileSettingsOpen;
   return (
     <div className={`min-h-screen bg-[#0b0d16] text-slate-100 p-6 ${densityCompact ? 'density-compact' : ''}`}>   
       {/* Skip to main content link (appears on keyboard focus) */}
       <a href="#main-content" className="skip-link" aria-label="Skip to main content">Skip to main content</a>
-      <div className="max-w-6xl mx-auto" id="main-content">
+      <div 
+        className="max-w-6xl mx-auto" 
+        id="main-content"
+        {...(anyModalOpen ? { inert: '', 'aria-hidden': 'true' } : {})}
+        data-inert-applied={anyModalOpen ? 'true' : 'false'}
+      >
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-extrabold">Starfleet Engineering Report Generator</h1>
           {/* Settings gear moved to header */}
@@ -1051,6 +1071,11 @@ export default function App() {
                   <label htmlFor="forceMobile" className="text-xs uppercase tracking-wider opacity-80">Force Mobile Controls</label>
                 </div>
                 <p className="text-[10px] text-slate-400 leading-snug">Enable if your device shows the desktop controls.</p>
+                <div className="flex items-center gap-2 pt-2 border-t border-slate-700">
+                  <input id="highContrast" type="checkbox" checked={highContrast} onChange={e=> setHighContrast(e.target.checked)} aria-describedby="highContrastDesc" />
+                  <label htmlFor="highContrast" className="text-xs uppercase tracking-wider opacity-80">High Contrast</label>
+                </div>
+                <p id="highContrastDesc" className="text-[10px] text-slate-400 leading-snug">Boosts border & secondary text contrast and focus ring visibility. Persists locally.</p>
               </div>
             </Drawer>
           </>

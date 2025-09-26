@@ -134,6 +134,8 @@ export default function CrewManifestPanel({
           if (constrained.rank !== before) {
             setConstraintMsg(`Adjusted rank to ${constrained.rank} for role “${constrained.role}”.`);
             setTimeout(() => setConstraintMsg(""), 2000);
+            // Live announce automatic rank adjustment triggered by department coverage enforcement
+            try { window.dispatchEvent(new CustomEvent('wcr-live', { detail: `Adjusted rank to ${constrained.rank} for role ${constrained.role}.` })); } catch {}
           }
         }
       }
@@ -167,6 +169,8 @@ export default function CrewManifestPanel({
         saveCrew(adjusted);
         setConstraintMsg('Some crew ranks were adjusted to meet role constraints.');
         setTimeout(()=>setConstraintMsg(''), 2500);
+        // Live announce that persisted crew required automatic normalization
+        try { window.dispatchEvent(new CustomEvent('wcr-live', { detail: 'Some crew ranks were adjusted to meet role constraints.' })); } catch {}
       }
     } else {
       const generated = ensureDepartmentCoverage(augment(generateCrewManifest(count)));
@@ -226,6 +230,7 @@ export default function CrewManifestPanel({
   // DnD live announcement scaffolding
   const [dndMsg, setDndMsg] = useState("");
   const lastAnnounceRef = useRef<{ msg: string; ts: number }>({ msg: "", ts: 0 });
+  const keyboardHintShownRef = useRef<boolean>(false); // ensure we only output keyboard help once per session
   const announce = (msg: string, minGap = 160) => {
     const now = Date.now();
     if (msg === lastAnnounceRef.current.msg && now - lastAnnounceRef.current.ts < 800) return; // avoid exact duplicates
@@ -239,11 +244,19 @@ export default function CrewManifestPanel({
   const getVisibleIndex = (id: string) => visibleCrew.findIndex(c => c.id === id);
 
   const handleDragStart = (event: DragStartEvent) => {
-    const { active } = event;
+    const { active, activatorEvent } = event as any;
     const idx = getVisibleIndex(String(active.id));
     if (idx !== -1) {
       const member = visibleCrew[idx];
-      announce(`Reordering ${member.role || 'item'}: current position ${idx + 1} of ${visibleCrew.length}.`, 0);
+      const isKeyboard = activatorEvent instanceof KeyboardEvent;
+      let msg = `Reordering ${member.role || 'item'}: current position ${idx + 1} of ${visibleCrew.length}`;
+      if (member.locked) msg += ` (locked)`; // clarify locked status (affects regenerate, not reorder)
+      msg += '.';
+      if (isKeyboard && !keyboardHintShownRef.current) {
+        keyboardHintShownRef.current = true;
+        msg += ' Use arrow keys to change position, space to drop, escape to cancel.';
+      }
+      announce(msg, 0);
     }
   };
 
@@ -260,7 +273,6 @@ export default function CrewManifestPanel({
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) {
-      // Even if not moved, announce cancellation for clarity
       announce('Reorder cancelled.');
       return;
     }
@@ -272,7 +284,7 @@ export default function CrewManifestPanel({
     onCrewChange?.(reordered);
     saveCrew(reordered);
     const member = reordered[newIndex];
-    announce(`Dropped ${member.role || 'item'} at position ${newIndex + 1} of ${reordered.length}.` , 0);
+    announce(`Dropped ${member.role || 'item'} at position ${newIndex + 1} of ${reordered.length}.`, 0);
   };
 
   // Inline role editing
@@ -284,23 +296,36 @@ export default function CrewManifestPanel({
     setEditingId(null);
     setDraftRole("");
   };
+  type DeptChange = { from: Department; to: Department; name: string; role: string };
   const commitEdit = () => {
     if (!editingId) return;
     const value = draftRole.trim();
     if (!value) { cancelEdit(); return; }
+  let deptChange: DeptChange | null = null;
     const updated = crew.map(c => {
       if (c.id !== editingId) return c;
-      const before = c.rank;
+      const beforeRank = c.rank;
+      const beforeDept = c.department;
       const constrained = enforceRoleRankConstraints(value, c.rank);
-      if (constrained.rank !== before) {
+      if (constrained.rank !== beforeRank) {
         setConstraintMsg(`Adjusted rank to ${constrained.rank} for role “${constrained.role}”.`);
         setTimeout(() => setConstraintMsg(""), 2000);
+        // Live announce inline edit auto rank normalization
+        try { window.dispatchEvent(new CustomEvent('wcr-live', { detail: `Adjusted rank to ${constrained.rank} for role ${constrained.role}.` })); } catch {}
       }
-      return { ...c, role: constrained.role, rank: constrained.rank, department: roleToDepartment(constrained.role) };
+      const newDept = roleToDepartment(constrained.role);
+      if (newDept !== beforeDept) {
+        deptChange = { from: beforeDept, to: newDept, name: c.name, role: constrained.role };
+      }
+      return { ...c, role: constrained.role, rank: constrained.rank, department: newDept };
     });
     setCrew(updated);
     onCrewChange?.(updated);
     saveCrew(updated);
+    if (deptChange) {
+      const dc = deptChange as DeptChange; // explicit assertion for safety
+      try { window.dispatchEvent(new CustomEvent('wcr-live', { detail: `${dc.name} reassigned from ${dc.from} to ${dc.to} (${dc.role}).` })); } catch {}
+    }
     cancelEdit();
   };
 
@@ -318,6 +343,7 @@ export default function CrewManifestPanel({
     setCrew(adjusted);
     onCrewChange?.(adjusted);
     saveCrew(adjusted);
+    try { window.dispatchEvent(new CustomEvent('wcr-live', { detail: `Crew regenerated. ${adjusted.length} members; ${lockedCount} locked preserved.` })); } catch {}
   };
 
   const handleResetCrew = () => {
@@ -326,6 +352,8 @@ export default function CrewManifestPanel({
     setCrew(generated);
     onCrewChange?.(generated);
     saveCrew(generated);
+    const lockedCount = generated.filter(c=>c.locked).length;
+    try { window.dispatchEvent(new CustomEvent('wcr-live', { detail: `Crew reset to fresh set of ${generated.length} members${lockedCount?`, ${lockedCount} locked`:''}.` })); } catch {}
   };
 
   const applyResize = () => {
@@ -341,6 +369,7 @@ export default function CrewManifestPanel({
       setCrew(next);
       onCrewChange?.(next);
       saveCrew(next);
+      try { window.dispatchEvent(new CustomEvent('wcr-live', { detail: `Crew expanded to ${next.length} members (locked ${locked.length}).` })); } catch {}
       return;
     }
     // desired < crew.length, remove from unlocked (end-first)
@@ -355,6 +384,7 @@ export default function CrewManifestPanel({
     setCrew(adjusted);
     onCrewChange?.(adjusted);
     saveCrew(adjusted);
+    try { window.dispatchEvent(new CustomEvent('wcr-live', { detail: `Crew reduced to ${adjusted.length} members (locked ${locked.length}).` })); } catch {}
   };
 
   function SortableRow({ member }: { member: UICrewMember }) {
@@ -362,7 +392,7 @@ export default function CrewManifestPanel({
     const style: React.CSSProperties = { transform: CSS.Transform.toString(transform), transition };
     const isEditing = editingId === member.id;
     return (
-  <li ref={setNodeRef} style={style} className="flex items-start gap-2 px-2 py-1 rounded-md bg-pink-500/5 border border-pink-400/20">
+  <li ref={setNodeRef} style={style} className="flex items-start gap-2 px-2 py-1 rounded-md bg-pink-500/10 border border-pink-400/40">
         <button aria-label="Drag handle" title="Drag to reorder" className="cursor-grab active:cursor-grabbing text-pink-300 hover:text-pink-200 touch-none select-none" {...attributes} {...listeners}>
           ≡
         </button>

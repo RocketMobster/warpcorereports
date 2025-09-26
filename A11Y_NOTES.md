@@ -9,7 +9,7 @@ Enhancements implemented:
 - HelpPanel: focus trap and Escape close support.
 - Added dynamic aria-label for crew lock toggle reflecting state (Locked vs Unlock).
 - Consistent title + aria-label alignment across action buttons.
-- Added dual aria-live regions for toast messages: assertive (onscreen) and polite (off-screen) to balance immediacy and verbosity.
+- Unified polite status region: merged prior structural + light status areas; assertive (onscreen) region retained for urgent toasts (errors / key confirmations) to balance immediacy and verbosity while reducing duplication.
 - Added aria-describedby connections for all sliders (mobile + desktop) linking helper text (counts, units, conditional humor labels, memory window) so screen readers announce context.
 - Hybrid accessible-disabled pattern for export / share / print buttons (focusable, aria-disabled, shared descriptive hint, consistent visual state).
 - Copy Full (TXT) buttons aligned with disabled styling pattern (desktop + mobile).
@@ -27,8 +27,8 @@ Future opportunities:
 - Add reduced motion preference handling for any remaining animated transitions.
 - De-duplicate repeated structural announcements (debounce identical messages within a short window).
 - Optionally add inert / aria-hidden to background content while dialogs/drawers are open for stricter SR isolation.
-- Provide live announcements for drag-and-drop (describe original index, new index, and department changes when reordering crew).
-- Add aria-live feedback when crew constraints auto-adjust rank (currently only visual text for 2s).
+// Provide live announcements for drag-and-drop (describe original index, new index, and department changes when reordering crew). (Completed: Phase 1 + Phase 2 including locked status callout, keyboard guidance, department reassignment, crew size change events.)
+// Completed: Added aria-live feedback when crew constraints auto-adjust rank (now announces normalization during load, inline edits, and department coverage adjustments)
 - ARIA description for Seed lock toggle clarifying Produce vs Reroll behavior.
 - Provide a single consolidated "Status" live region (merge toast + structural if verbosity remains low).
 
@@ -55,13 +55,16 @@ This section mirrors the concise checklist in `README.md` and maps it to the mor
 ✅ Consistent icon button labeling (title + aria-label parity)
 ✅ `aria-valuetext` on Humor slider (semantic mid-values)
 ✅ Skip to “Main Content” link (keyboard efficiency)
-✅ Drag & drop live announcements (initial grab / move / drop scaffolding)
-⏳ Live announcement for auto rank adjustments (constraint enforcement)
+✅ Drag & drop announcements & enhancements (grab / move / drop, locked status, one-time keyboard guidance, department reassignment, crew size change events)
+✅ Live announcement for auto rank adjustments (constraint enforcement)
 ✅ Debounce duplicate structural announcements (spam prevention)
-⏳ Optional background inerting (`inert` / `aria-hidden` layering) while modals are open
-⏳ Contrast audit of secondary text & borders (WCAG AA validation)
+✅ Background inerting (`inert` + `aria-hidden` layering) while modals are open (main content container disabled when any modal/drawer active)
+✅ Contrast audit of secondary text & borders (WCAG AA): strengthened low-opacity borders (pink list items 5%→10% bg & 20%→40% border), elevated generic interactive borders to slate-400 (slate-700 <3:1 on slate-800), added prefers-contrast escalation.
+✅ High contrast mode toggle (local persistence, announces enable/disable via wcr-live) elevates token set (borders → slate-300, secondary text → slate-300, focus ring → white)
+✅ CSS design tokens introduced (root custom properties for bg, surface, text primary/secondary, borders, focus colors) to reduce future divergence
+✅ Focus ring contrast enhancement on amber backgrounds (alt white outline + dark halo to maintain 3:1 boundary distinction)
 ✅ Reduced motion refinements (respect prefers-reduced-motion fully)
-⏳ Consolidated single status region (evaluate merging toast + structural)
+✅ Consolidated single status region (merged structural + light status; assertive toast channel retained)
 ✅ ARIA description for Seed lock toggle (clarify Produce vs Reroll nuance)
 
 ### Update Procedure

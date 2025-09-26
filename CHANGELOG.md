@@ -2,6 +2,47 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.10] - 2025-09-26
+
+### Added
+- High contrast mode toggle with persistence (`wcr_high_contrast`) announcing enable/disable state via unified polite live region.
+- CSS design tokens (`--wcr-bg`, `--wcr-surface`, text, border, focus variables) to centralize color/contrast semantics and ease future theming.
+- Unified polite status region (merged prior structural + lightweight status channels) while retaining assertive toast region for urgent feedback.
+- Live announcements for all automatic crew rank adjustments (initial load normalization, inline role edits, department coverage enforcement).
+
+### Changed
+- Elevated low-opacity pink list item backgrounds and borders (5%→10% bg, 20%→40% border) and strengthened generic interactive borders (slate-700→slate-400) to meet WCAG 2.1 non-text contrast (≥3:1) without drastic palette shift.
+- Focus ring styling enhanced on amber surfaces (added white outline + dark halo) to preserve ring discernibility across themes.
+- Reduced duplication between structural and status messaging by consolidating to one polite region; debouncing logic still applies to avoid SR spam.
+
+### Fixed / Housekeeping
+- Documentation sync: `README.md` and `A11Y_NOTES.md` updated to mark high contrast mode, design tokens, unified status region, and auto rank announcements as complete.
+- Removed stale backlog lines referencing these items; clarified scope of auto rank announcements (covers load, edit, coverage adjustment).
+
+### Notes
+- Future A11Y candidate items: optional verbosity tuning (user toggle to silence auto rank messages), potential theming presets leveraging new token layer, and per-user announcement history inspection for QA.
+
+## [0.2.9] - 2025-09-26
+
+### Added
+- Skip to Main Content link (improves keyboard efficiency; visually appears on focus, fully styled, hidden otherwise).
+- `aria-valuetext` for Humor slider (desktop + mobile) with semantic labels for intermediate values.
+- ARIA description & `aria-pressed` semantics for Seed Lock toggle clarifying Produce vs Reroll behavior.
+- Drag & Drop accessibility (Phase 1 + Phase 2): live announcements for grab, move target position, drop, cancel; locked status callout on grab; one-time keyboard usage guidance (arrows/space/escape); department reassignment announcement when role edit changes inferred department; crew size change announcements on regenerate, reset, and resize.
+- Polite local live region dedicated to DnD messaging (distinct from structural/toast regions).
+
+### Changed
+- Debounced structural live region announcements to prevent duplicate SR spam (time and message gating).
+- Expanded reduced motion handling: globally neutralized remaining transitions/animations under `prefers-reduced-motion` (including subtle pulses/hover transitions previously exempt).
+- README and `A11Y_NOTES.md` updated: consolidated DnD enhancements entry, removed duplicate reduced-motion backlog line, and marked newly completed accessibility items.
+
+### Fixed / Housekeeping
+- Removed duplicate Reduced Motion checklist line in README (now single authoritative entry).
+- Harmonized internal vs public accessibility checklist phrasing for DnD and seed lock semantics to avoid drift.
+
+### Notes
+- Next A11Y focus candidates: live announcement for auto rank adjustments, background inerting (`inert` / `aria-hidden`) during modal states, contrast audit, and potential consolidation of status vs structural live regions.
+
 ## [0.2.8] - 2025-09-23
 
 ### Added

@@ -2,8 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { color-scheme: dark; }
-body { @apply bg-[#0b0d16] text-slate-100; }
+:root {
+	color-scheme: dark;
+	/* Design tokens (initial contrast audit foundation) */
+	--wcr-color-bg: #0b0d16;
+	--wcr-color-surface: #101425;
+	--wcr-text-primary: #f1f5f9; /* slate-100 */
+	--wcr-text-secondary: #94a3b8; /* slate-400 */
+	--wcr-border-interactive: #94a3b8; /* slate-400 */
+	--wcr-border-interactive-contrast: #cbd5e1; /* slate-300 for high contrast */
+	--wcr-focus-ring: #ffcc66; /* LCARS amber */
+	--wcr-focus-ring-alt: #ffffff; /* used on amber / high contrast surfaces */
+}
+body { color: #f1f5f9; background: var(--wcr-color-bg); }
+body.wcr-contrast-high {
+	--wcr-border-interactive: var(--wcr-border-interactive-contrast);
+	--wcr-text-secondary: #cbd5e1;
+	--wcr-focus-ring: var(--wcr-focus-ring-alt);
+}
 
 /* --- Skip Link (a11y) --- */
 .skip-link {
@@ -30,8 +46,16 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-	outline: 2px solid #ffcc66; /* LCARS amber */
+	outline: 2px solid var(--wcr-focus-ring);
 	outline-offset: 2px;
+}
+/* Ensure focus ring remains distinct on amber backgrounds */
+button.bg-amber-600:focus-visible,
+button.bg-amber-500:focus-visible,
+.lcars-cta:focus-visible,
+button[class*="bg-amber-"]:focus-visible {
+	outline-color: var(--wcr-focus-ring-alt);
+	box-shadow: 0 0 0 2px rgba(0,0,0,0.55); /* dark halo for contrast */
 }
 
 /* Higher contrast fallback for very dark backgrounds */
@@ -45,17 +69,19 @@ textarea:focus-visible {
 }
 
 /* --- LCARS helpers --- */
-.lcars-card { @apply rounded-2xl p-0 border border-slate-700 bg-[#101425] overflow-hidden relative; }
+.lcars-card { border-radius:1rem; padding:0; border:1px solid var(--wcr-border-interactive); overflow:hidden; position:relative; background:var(--wcr-color-surface); }
 .lcars-rail { position:absolute; left:0; top:0; bottom:0; width:10px; background:#ff9966; }
 .lcars-rail-alt { background:#66ccff; }
 .lcars-rail-accent { background:#ff6699; }
-.lcars-body { @apply pl-4 md:pl-6 pr-4 py-4; margin-left:10px; }
-.lcars-label { @apply block text-xs uppercase tracking-widest text-slate-400 mb-1; }
-.lcars-small { @apply text-xs text-slate-300; }
-.lcars-input { @apply bg-slate-900 rounded-md px-3 py-2 text-sm border border-slate-700; }
-.lcars-btn { @apply px-2 py-1 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm; }
-.lcars-btn-locked { @apply bg-amber-600 hover:bg-amber-500; }
-.lcars-cta { @apply bg-amber-500 hover:bg-amber-400 text-black font-semibold px-3 py-2 rounded-xl; }
+.lcars-body { padding-left:1rem; padding-right:1rem; padding-top:1rem; padding-bottom:1rem; margin-left:10px; }
+@media (min-width:768px){ .lcars-body { padding-left:1.5rem; } }
+.lcars-label { display:block; font-size:0.75rem; line-height:1rem; text-transform:uppercase; letter-spacing:0.2em; margin-bottom:0.25rem; color: var(--wcr-text-secondary); }
+.lcars-small { font-size:0.75rem; line-height:1rem; color: var(--wcr-text-secondary); }
+.lcars-input { border-radius:0.375rem; padding:0.5rem 0.75rem; font-size:0.875rem; line-height:1.25rem; background:#0f1626; border:1px solid var(--wcr-border-interactive); color: var(--wcr-text-primary); }
+.lcars-btn { padding:0.25rem 0.5rem; border-radius:0.375rem; font-size:0.875rem; line-height:1.25rem; background:#1e293b; border:1px solid var(--wcr-border-interactive); }
+.lcars-btn-locked { background:#d97706; }
+.lcars-btn-locked:hover { background:#f59e0b; }
+.lcars-cta { font-weight:600; padding:0.5rem 0.75rem; border-radius:0.75rem; color:#000; background:#ffcc66; }
 
 /* --- LCARS control accents (checkboxes, toggles, sliders) --- */
 /* Use accessible, bright LCARS palette instead of red */
@@ -182,3 +208,27 @@ input[type="range"]:active::-moz-range-thumb { background: #ff6699; }
 /* Improve touch DnD behavior on mobile lists */
 .overscroll-contain { overscroll-behavior: contain; }
 .touch-none { touch-action: none; }
+
+/* --- Contrast Adjustments (WCAG 2.1 AA Non-Text Contrast) --- */
+/* Rationale: Original subtle borders (e.g., slate-700 on slate-800 backgrounds, pink-400 at 20% opacity on 5% fill) fell below the 3:1 requirement for component boundaries.
+	 Strategy: Elevate border lightness for interactive surfaces & list rows without dramatically altering brand palette. */
+/* Elevate generic interactive borders */
+button.border-slate-700, button.border-slate-600,
+button.border-slate-700:hover, button.border-slate-600:hover,
+input.border-slate-700, input.border-slate-600,
+select.border-slate-700, select.border-slate-600,
+.lcars-btn.border-slate-700, .lcars-btn.border-slate-600,
+.lcars-input.border-slate-700, .lcars-input.border-slate-600 {
+	border-color: #94a3b8 !important; /* Tailwind slate-400 */
+}
+/* Zoom / small control buttons inherit stronger border */
+#button-bar button.border-slate-600, #button-bar button.border-slate-700 { border-color:#94a3b8 !important; }
+/* Strengthen generic slate outline variants when semi-transparent disabled states are used */
+button[aria-disabled="true"] { border-color:#64748b !important; }
+/* High contrast user preference (where supported) – push borders one step brighter */
+@media (prefers-contrast: more) {
+	button.border-slate-700, button.border-slate-600,
+	input.border-slate-700, input.border-slate-600,
+	select.border-slate-700, select.border-slate-600 { border-color:#cbd5e1 !important; /* slate-300 */ }
+}
+

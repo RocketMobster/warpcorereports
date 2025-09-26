@@ -377,14 +377,16 @@ Implemented items are checked; unchecked are on the near/medium‑term backlog.
 - [x] Consistent icon button labeling (title + aria-label)
 - [x] `aria-valuetext` on Humor slider for intermediate semantic states
 - [x] Skip to “Main Content” link
-- [x] Drag & drop (crew reorder) live announcements (grab / move / drop scaffolding)
-- [ ] Live announcement for auto rank adjustments
+- [x] Drag & drop (crew reorder) announcements & enhancements (grab / move / drop, locked status, one-time keyboard guidance, department reassignment, crew size change events)
+- [x] Live announcement for auto rank adjustments (load normalization, inline edits, coverage enforcement)
 - [x] Debounce duplicate structural announcements
-- [ ] Optional background inerting (`inert` / `aria-hidden`) while modals are open
-- [ ] Contrast audit of secondary text and subtle borders
-- [ ] Reduced motion refinements for remaining transitions
+- [x] Background inerting (`inert` + `aria-hidden`) applied to main content while modals/drawers are open
+- [x] High contrast mode toggle (elevated border + secondary text tokens, alternate focus ring) with persistence
+- [x] Design tokens (CSS custom properties) for colors (facilitates future theming / contrast adjustments)
+- [x] Enhanced focus ring differentiation on amber surfaces (white ring + dark halo)
+- [x] Contrast audit of secondary text & subtle borders (elevated low-opacity pink borders; strengthened slate border tokens for interactive controls)
 - [x] Reduced motion refinements for remaining transitions
-- [ ] Consolidated single status region (evaluate merging toast + structural if noise stays low)
+- [x] Consolidated single status region (merged structural + light status announcements; assertive channel retained for urgent toasts)
 - [x] ARIA description for Seed lock toggle (Produce vs Reroll behavior)
 
 ### Philosophy
