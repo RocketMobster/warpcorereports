@@ -375,7 +375,7 @@ Implemented items are checked; unchecked are on the near/medium‑term backlog.
 - [x] Crew lock toggle announces current state
 - [x] Initial focus placement in dialogs/drawers
 - [x] Consistent icon button labeling (title + aria-label)
-- [ ] `aria-valuetext` on Humor slider for intermediate semantic states
+- [x] `aria-valuetext` on Humor slider for intermediate semantic states
 - [ ] Skip to “Main Content” link
 - [ ] Drag & drop (crew reorder) live announcements (old → new index, department shifts)
 - [ ] Live announcement for auto rank adjustments

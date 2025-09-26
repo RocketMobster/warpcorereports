@@ -21,7 +21,7 @@ Enhancements implemented:
 - Drawer initial automatic focus (first focusable or close button) for keyboard efficiency.
 
 Future opportunities:
-- Add aria-valuetext on Humor slider to announce semantic states (e.g., "No humor", "Moderate", "Maximum humor") even when not at 0/5/10.
+// Completed: aria-valuetext on Humor slider implemented (see Mirrored Public Checklist)
 - Provide a global Skip to Main Content link for faster keyboard navigation.
 - Evaluate color contrast of secondary text (e.g., slate-300 on dark backgrounds) against WCAG AA.
 - Add reduced motion preference handling for any remaining animated transitions.
@@ -53,7 +53,7 @@ This section mirrors the concise checklist in `README.md` and maps it to the mor
 ✅ Crew lock toggle announces current state (dynamic aria-label)
 ✅ Initial focus placement in dialogs/drawers (deterministic first-focus rule)
 ✅ Consistent icon button labeling (title + aria-label parity)
-⏳ `aria-valuetext` on Humor slider (semantic mid-values)
+✅ `aria-valuetext` on Humor slider (semantic mid-values)
 ⏳ Skip to “Main Content” link (keyboard efficiency)
 ⏳ Drag & drop live announcements (crew reordering feedback)
 ⏳ Live announcement for auto rank adjustments (constraint enforcement)

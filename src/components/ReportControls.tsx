@@ -41,6 +41,23 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
   useStardateOverride?: boolean,
   onUseStardateToggle?: (v: boolean) => void
 }) {
+  // Semantic text for humor level for screen readers (aria-valuetext)
+  const humorValueText = (v: number): string => {
+    switch (v) {
+      case 0: return 'No humor';
+      case 1: return 'Trace humor';
+      case 2: return 'Light humor';
+      case 3: return 'Subtle humor';
+      case 4: return 'Mild humor';
+      case 5: return 'Moderate humor';
+      case 6: return 'Elevated humor';
+      case 7: return 'Playful humor';
+      case 8: return 'High humor';
+      case 9: return 'Near maximum humor';
+      case 10: return 'Maximum humor';
+      default: return 'Humor level';
+    }
+  };
   const DEFAULTS = useMemo(() => ({
     problemsCount: 3 as 1|2|3|4|5,
     problemDetailLevel: 2,
@@ -518,6 +535,7 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
                   value={humor}
                   onChange={e=>setHumor(parseInt(e.target.value))}
                   aria-describedby="humor-help-m"
+                  aria-valuetext={humorValueText(humor)}
                 />
                 <div id="humor-help-m" className="lcars-small flex items-center gap-2">
                   <span>{humor}</span>
@@ -841,6 +859,7 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
             value={humor}
             onChange={e=>setHumor(parseInt(e.target.value))}
             aria-describedby="humor-help"
+            aria-valuetext={humorValueText(humor)}
           />
           <div id="humor-help" className="lcars-small flex items-center gap-2">
             <span>{humor}</span>
