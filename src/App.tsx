@@ -704,7 +704,9 @@ export default function App() {
 
   return (
     <div className={`min-h-screen bg-[#0b0d16] text-slate-100 p-6 ${densityCompact ? 'density-compact' : ''}`}>   
-      <div className="max-w-6xl mx-auto">
+      {/* Skip to main content link (appears on keyboard focus) */}
+      <a href="#main-content" className="skip-link" aria-label="Skip to main content">Skip to main content</a>
+      <div className="max-w-6xl mx-auto" id="main-content">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-extrabold">Starfleet Engineering Report Generator</h1>
           {/* Settings gear moved to header */}

@@ -54,7 +54,7 @@ This section mirrors the concise checklist in `README.md` and maps it to the mor
 ✅ Initial focus placement in dialogs/drawers (deterministic first-focus rule)
 ✅ Consistent icon button labeling (title + aria-label parity)
 ✅ `aria-valuetext` on Humor slider (semantic mid-values)
-⏳ Skip to “Main Content” link (keyboard efficiency)
+✅ Skip to “Main Content” link (keyboard efficiency)
 ⏳ Drag & drop live announcements (crew reordering feedback)
 ⏳ Live announcement for auto rank adjustments (constraint enforcement)
 ⏳ Debounce duplicate structural announcements (spam prevention)

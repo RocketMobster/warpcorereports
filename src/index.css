@@ -5,6 +5,24 @@
 :root { color-scheme: dark; }
 body { @apply bg-[#0b0d16] text-slate-100; }
 
+/* --- Skip Link (a11y) --- */
+.skip-link {
+	position: absolute;
+	top: 0.25rem;
+	left: 0.5rem;
+	padding: 0.5rem 0.75rem;
+	background: #ffcc66;
+	color: #000;
+	border-radius: 0.5rem;
+	font-weight: 600;
+	text-decoration: none;
+	transform: translateY(-140%);
+	transition: transform 0.18s ease, box-shadow 0.18s ease;
+	z-index: 1000;
+}
+.skip-link:focus-visible { transform: translateY(0); box-shadow: 0 0 0 3px #1f2937, 0 0 0 5px #ffcc66; }
+.skip-link:focus { outline: none; }
+
 /* --- Global Focus Visibility (a11y) --- */
 button:focus-visible,
 .lcars-btn:focus-visible,

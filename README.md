@@ -376,7 +376,7 @@ Implemented items are checked; unchecked are on the near/medium‑term backlog.
 - [x] Initial focus placement in dialogs/drawers
 - [x] Consistent icon button labeling (title + aria-label)
 - [x] `aria-valuetext` on Humor slider for intermediate semantic states
-- [ ] Skip to “Main Content” link
+- [x] Skip to “Main Content” link
 - [ ] Drag & drop (crew reorder) live announcements (old → new index, department shifts)
 - [ ] Live announcement for auto rank adjustments
 - [ ] Debounce duplicate structural announcements
