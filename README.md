@@ -379,7 +379,7 @@ Implemented items are checked; unchecked are on the near/medium‑term backlog.
 - [x] Skip to “Main Content” link
 - [ ] Drag & drop (crew reorder) live announcements (old → new index, department shifts)
 - [ ] Live announcement for auto rank adjustments
-- [ ] Debounce duplicate structural announcements
+- [x] Debounce duplicate structural announcements
 - [ ] Optional background inerting (`inert` / `aria-hidden`) while modals are open
 - [ ] Contrast audit of secondary text and subtle borders
 - [ ] Reduced motion refinements for remaining transitions

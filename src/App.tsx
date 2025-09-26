@@ -64,13 +64,18 @@ export default function App() {
   // Live region message for structural announcements (panels/dialogs)
   const [liveStructuralMsg, setLiveStructuralMsg] = useState<string>("");
   useEffect(() => {
+    const lastRef = { detail: '', ts: 0 } as { detail: string; ts: number };
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail;
-      if (typeof detail === 'string') {
-        setLiveStructuralMsg(detail);
-        // Clear after a short delay to avoid repetition stacking
-        setTimeout(()=> setLiveStructuralMsg(""), 2500);
-      }
+      if (typeof detail !== 'string') return;
+      const now = Date.now();
+      // Debounce identical structural messages fired within 900ms
+      if (detail === lastRef.detail && now - lastRef.ts < 900) return;
+      lastRef.detail = detail;
+      lastRef.ts = now;
+      setLiveStructuralMsg(detail);
+      // Clear after a short delay to avoid verbosity build-up in SR queues
+      setTimeout(()=> setLiveStructuralMsg(""), 2500);
     };
     window.addEventListener('wcr-live', handler as EventListener);
     return () => window.removeEventListener('wcr-live', handler as EventListener);

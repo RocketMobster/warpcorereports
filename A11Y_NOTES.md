@@ -57,7 +57,7 @@ This section mirrors the concise checklist in `README.md` and maps it to the mor
 ✅ Skip to “Main Content” link (keyboard efficiency)
 ⏳ Drag & drop live announcements (crew reordering feedback)
 ⏳ Live announcement for auto rank adjustments (constraint enforcement)
-⏳ Debounce duplicate structural announcements (spam prevention)
+✅ Debounce duplicate structural announcements (spam prevention)
 ⏳ Optional background inerting (`inert` / `aria-hidden` layering) while modals are open
 ⏳ Contrast audit of secondary text & borders (WCAG AA validation)
 ⏳ Reduced motion refinements (respect prefers-reduced-motion fully)
