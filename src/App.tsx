@@ -865,9 +865,7 @@ export default function App() {
           >Help</button>
         </div>
         )}
-        {showHelp && (
-          <HelpPanel onClose={() => setShowHelp(false)} target={helpTarget} />
-        )}
+        {/* HelpPanel moved below outside inert region */}
         
         {report ? (
           <>
@@ -917,171 +915,182 @@ export default function App() {
           <div>No report yet.</div>
         )}
         
-        {report && (
-          <ShareDialog 
-            report={report} 
-            isOpen={isShareDialogOpen} 
-            onClose={() => setIsShareDialogOpen(false)} 
-          />
-        )}
+        {/* ShareDialog moved below outside inert region */}
         
         {/* Toast Notification (visual) */}
-        {showToast && (
-          <div className="fixed bottom-4 right-4 bg-purple-900 text-white px-6 py-3 rounded-lg shadow-lg animate-fadeIn z-50 flex items-center gap-3" role="alert" aria-live="assertive">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-              <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
-            </svg>
-            {toastMessage}
-            {toastIsError && (
-              <button
-                onClick={async()=>{ try { await navigator.clipboard.writeText(errorDetailRef.current || toastMessage); setToastIsError(false);} catch {} }}
-                className="ml-2 px-2 py-1 rounded bg-amber-500 text-black border border-amber-400 text-xs"
-                title="Copy error details"
-              >Copy</button>
-            )}
-            {toastIsError && (
-              <a
-                href={reportDisabled ? undefined : `mailto:rocketmobster+warpcorereports@gmail.com?subject=${encodeURIComponent('WarpCoreReports Error ' + (pkg?.version || ''))}&body=${encodeURIComponent(
-                  [
-                    `App Version: ${pkg?.version || ''}`,
-                    `URL: ${window.location.href}`,
-                    `Time: ${new Date().toISOString()}`,
-                    `User Agent: ${navigator.userAgent}`,
-                    '',
-                    'Details:',
-                    (errorDetailRef.current || toastMessage)
-                  ].join('\n')
-                )}`}
-                onClick={(e)=>{
-                  const now = Date.now();
-                  if (now - lastReportAt < 5000) { // 5s cooldown
-                    e.preventDefault();
-                    return;
-                  }
-                  setLastReportAt(now);
-                  setReportDisabled(true);
-                  setReportCooldownSec(5);
-                  const interval = setInterval(()=>{
-                    setReportCooldownSec(prev => {
-                      const next = Math.max(0, prev - 1);
-                      if (next === 0) {
-                        clearInterval(interval);
-                        setReportDisabled(false);
-                      }
-                      return next;
-                    });
-                  }, 1000);
-                }}
-                className={`ml-1 px-2 py-1 rounded border text-xs relative ${reportDisabled ? 'bg-blue-900 text-blue-300 border-blue-700 cursor-not-allowed' : 'bg-blue-500 text-white border-blue-400'}`}
-                aria-disabled={reportDisabled}
-                title={reportDisabled ? `Please wait ${reportCooldownSec || ''}s…` : 'Report this bug via email'}
-              >
-                Report
-                {reportDisabled && (
-                  <span className="ml-1 inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-800 text-blue-200 text-[10px] border border-blue-600 align-middle">
-                    {reportCooldownSec || ''}
-                  </span>
-                )}
-              </a>
-            )}
-          </div>
-        )}
+        {/* Toast moved below outside inert region */}
         {/* Off-screen polite live region to announce toast updates (non-error) */}
-        <div aria-live="polite" aria-atomic="true" className="sr-only" style={{position:'absolute',left:-9999,top:'auto',width:1,height:1,overflow:'hidden'}}>
-          {showToast && !toastIsError ? toastMessage : ''}
-        </div>
+        {/* Polite live region moved below outside inert region */}
         {/* Off-screen structural announcements (panel/dialog open/close) */}
-        <div aria-live="polite" aria-atomic="true" className="sr-only" style={{position:'absolute',left:-9999,top:'auto',width:1,height:1,overflow:'hidden'}}>
-          {liveStructuralMsg}
-        </div>
+        {/* Structural live region moved below outside inert region */}
         {/* Mobile overlays (touch devices or small screens) */}
-        {showMobileUI && (
-          <>
-            <MobileActionBar
-              onOpenControls={()=>{
-                const btn = document.getElementById('produce-button') as HTMLButtonElement | null;
-                if (btn) { btn.click(); }
-                else {
-                  const el = document.getElementById('mobile-controls');
-                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-              }}
-              onOpenCrew={()=>{ if (report) { regenerateReport(); } else { /* no-op if no report */ } }}
-              onEditCharts={()=>{ if (report) { toggleChartEditing(); } else { setToastMessage('No report to edit yet.'); setShowToast(true); setTimeout(()=>setShowToast(false),1500); } }}
-              onOpenStardate={()=>setMobileExportOpen(true)}
-              onOpenHelp={()=>setMobileHelpOpen(true)}
-            />
-            <Drawer
-              open={mobileCrewOpen}
-              onClose={()=>setMobileCrewOpen(false)}
-              title="Crew Manifest"
-              accentClass="bg-pink-500"
-              titleClass="font-semibold text-sm tracking-wide text-pink-300"
-              panelClassName="bg-pink-500/10"
-              headerClassName="border-pink-400/40"
-            >
-              <CrewManifestPanel
-                count={currentCrewCount}
-                onCrewChange={handleCrewChange}
-                onClose={()=>setMobileCrewOpen(false)}
-              />
-            </Drawer>
-            <Drawer open={mobileExportOpen} onClose={()=>setMobileExportOpen(false)} title="Export">
-              <div className="space-y-3 text-sm" aria-describedby={!report ? 'export-hint-mobile' : undefined}>
-                {!report && (
-                  <p id="export-hint-mobile" className="text-[11px] text-amber-300 bg-slate-800/60 border border-slate-700 rounded p-2">
-                    Produce a report to enable export, print, and share actions.
-                  </p>
-                )}
-                <div className="grid grid-cols-2 gap-2">
-                  <button onClick={exportTxt} aria-disabled={!report} aria-describedby={!report ? 'export-hint-mobile' : undefined} className={`px-2 py-2 rounded border ${!report ? 'bg-slate-800/40 border-slate-700/40 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700'}`}>Download TXT</button>
-                  <button
-                    onClick={async()=>{ if(!report) return; await copyToClipboard(reportToTxt(report), 'Full report copied as TXT.'); }}
-                    aria-disabled={!report}
-                    aria-describedby={!report ? 'export-hint-mobile' : undefined}
-                    className={`px-2 py-2 rounded border ${!report ? 'bg-slate-800/40 border-slate-700/40 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700'}`}
-                  >
-                    Copy Full (TXT)
-                  </button>
-                  <button onClick={exportPdf} aria-disabled={!report} aria-describedby={!report ? 'export-hint-mobile' : undefined} className={`px-2 py-2 rounded border ${!report ? 'bg-slate-800/40 border-slate-700/40 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700'}`}>Download PDF</button>
-                  <button onClick={exportDocx} aria-disabled={!report} aria-describedby={!report ? 'export-hint-mobile' : undefined} className={`px-2 py-2 rounded border ${!report ? 'bg-slate-800/40 border-slate-700/40 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700'}`}>Download DOCX</button>
-                  <button onClick={handlePrint} aria-disabled={!report} aria-describedby={!report ? 'export-hint-mobile' : undefined} className={`px-2 py-2 rounded border font-semibold ${!report ? 'bg-amber-600/40 border-amber-500/40 text-amber-300/60 cursor-not-allowed' : 'bg-amber-600 text-black border-amber-500'}`}>Print</button>
-                  <button onClick={handleShare} aria-disabled={!report} aria-describedby={!report ? 'export-hint-mobile' : undefined} className={`px-2 py-2 rounded border font-semibold ${!report ? 'bg-blue-600/40 border-blue-500/40 text-blue-300/70 cursor-not-allowed' : 'bg-blue-600 text-white border-blue-500'}`}>Share</button>
-                </div>
-              </div>
-            </Drawer>
-            {mobileHelpOpen && (
-              <HelpPanel onClose={()=>setMobileHelpOpen(false)} target={helpTarget} />
-            )}
-            <Drawer open={mobileSettingsOpen} onClose={()=>setMobileSettingsOpen(false)} title="Settings">
-              <div className="space-y-4 text-sm">
-                <SoundControls />
-                <div className="flex items-center gap-2">
-                  <input id="densityCompactMobile" type="checkbox" checked={densityCompact} onChange={e=>setDensityCompact(e.target.checked)} />
-                  <label htmlFor="densityCompactMobile" className="text-xs uppercase tracking-wider opacity-80">Compact Density</label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input id="persistZoomMobile" type="checkbox" checked={persistZoom} onChange={e=>{ const v=e.target.checked; try { localStorage.setItem('wcr_zoom_persist_enabled', v? '1':'0'); if(!v) localStorage.removeItem('previewZoom'); } catch {}; setPersistZoom(v); window.dispatchEvent(new Event('wcr-zoom-persist-changed')); }} />
-                  <label htmlFor="persistZoomMobile" className="text-xs uppercase tracking-wider opacity-80">Persist Zoom</label>
-                </div>
-                <p className="text-[10px] text-slate-400 leading-snug">When disabled, report zoom always resets to 100% on load.</p>
-                <div className="flex items-center gap-2 pt-2 border-t border-slate-700">
-                  <input id="forceMobile" type="checkbox" checked={forceMobile} onChange={e=>setForceMobile(e.target.checked)} />
-                  <label htmlFor="forceMobile" className="text-xs uppercase tracking-wider opacity-80">Force Mobile Controls</label>
-                </div>
-                <p className="text-[10px] text-slate-400 leading-snug">Enable if your device shows the desktop controls.</p>
-                <div className="flex items-center gap-2 pt-2 border-t border-slate-700">
-                  <input id="highContrast" type="checkbox" checked={highContrast} onChange={e=> setHighContrast(e.target.checked)} aria-describedby="highContrastDesc" />
-                  <label htmlFor="highContrast" className="text-xs uppercase tracking-wider opacity-80">High Contrast</label>
-                </div>
-                <p id="highContrastDesc" className="text-[10px] text-slate-400 leading-snug">Boosts border & secondary text contrast and focus ring visibility. Persists locally.</p>
-              </div>
-            </Drawer>
-          </>
-        )}
+        {/* Mobile overlays moved below outside inert region */}
         <Footer />
       </div>
+      {/* Overlays rendered outside inert main-content so they remain interactive */}
+      {showHelp && (
+        <HelpPanel onClose={() => setShowHelp(false)} target={helpTarget} />
+      )}
+      {report && (
+        <ShareDialog 
+          report={report} 
+          isOpen={isShareDialogOpen} 
+          onClose={() => setIsShareDialogOpen(false)} 
+        />
+      )}
+      {showToast && (
+        <div className="fixed bottom-4 right-4 bg-purple-900 text-white px-6 py-3 rounded-lg shadow-lg animate-fadeIn z-50 flex items-center gap-3" role="alert" aria-live="assertive">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+            <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+          </svg>
+          {toastMessage}
+          {toastIsError && (
+            <button
+              onClick={async()=>{ try { await navigator.clipboard.writeText(errorDetailRef.current || toastMessage); setToastIsError(false);} catch {} }}
+              className="ml-2 px-2 py-1 rounded bg-amber-500 text-black border border-amber-400 text-xs"
+              title="Copy error details"
+            >Copy</button>
+          )}
+          {toastIsError && (
+            <a
+              href={reportDisabled ? undefined : `mailto:rocketmobster+warpcorereports@gmail.com?subject=${encodeURIComponent('WarpCoreReports Error ' + (pkg?.version || ''))}&body=${encodeURIComponent(
+                [
+                  `App Version: ${pkg?.version || ''}`,
+                  `URL: ${window.location.href}`,
+                  `Time: ${new Date().toISOString()}`,
+                  `User Agent: ${navigator.userAgent}`,
+                  '',
+                  'Details:',
+                  (errorDetailRef.current || toastMessage)
+                ].join('\n')
+              )}`}
+              onClick={(e)=>{
+                const now = Date.now();
+                if (now - lastReportAt < 5000) { // 5s cooldown
+                  e.preventDefault();
+                  return;
+                }
+                setLastReportAt(now);
+                setReportDisabled(true);
+                setReportCooldownSec(5);
+                const interval = setInterval(()=>{
+                  setReportCooldownSec(prev => {
+                    const next = Math.max(0, prev - 1);
+                    if (next === 0) {
+                      clearInterval(interval);
+                      setReportDisabled(false);
+                    }
+                    return next;
+                  });
+                }, 1000);
+              }}
+              className={`ml-1 px-2 py-1 rounded border text-xs relative ${reportDisabled ? 'bg-blue-900 text-blue-300 border-blue-700 cursor-not-allowed' : 'bg-blue-500 text-white border-blue-400'}`}
+              aria-disabled={reportDisabled}
+              title={reportDisabled ? `Please wait ${reportCooldownSec || ''}s…` : 'Report this bug via email'}
+            >
+              Report
+              {reportDisabled && (
+                <span className="ml-1 inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-800 text-blue-200 text-[10px] border border-blue-600 align-middle">
+                  {reportCooldownSec || ''}
+                </span>
+              )}
+            </a>
+          )}
+        </div>
+      )}
+      {/* Off-screen polite live region to announce toast updates (non-error) */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only" style={{position:'absolute',left:-9999,top:'auto',width:1,height:1,overflow:'hidden'}}>
+        {showToast && !toastIsError ? toastMessage : ''}
+      </div>
+      {/* Off-screen structural announcements (panel/dialog open/close) */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only" style={{position:'absolute',left:-9999,top:'auto',width:1,height:1,overflow:'hidden'}}>
+        {liveStructuralMsg}
+      </div>
+      {showMobileUI && (
+        <>
+          <MobileActionBar
+            onOpenControls={()=>{
+              const btn = document.getElementById('produce-button') as HTMLButtonElement | null;
+              if (btn) { btn.click(); }
+              else {
+                const el = document.getElementById('mobile-controls');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            }}
+            onOpenCrew={()=>{ if (report) { regenerateReport(); } else { /* no-op if no report */ } }}
+            onEditCharts={()=>{ if (report) { toggleChartEditing(); } else { setToastMessage('No report to edit yet.'); setShowToast(true); setTimeout(()=>setShowToast(false),1500); } }}
+            onOpenStardate={()=>setMobileExportOpen(true)}
+            onOpenHelp={()=>setMobileHelpOpen(true)}
+          />
+          <Drawer
+            open={mobileCrewOpen}
+            onClose={()=>setMobileCrewOpen(false)}
+            title="Crew Manifest"
+            accentClass="bg-pink-500"
+            titleClass="font-semibold text-sm tracking-wide text-pink-300"
+            panelClassName="bg-pink-500/10"
+            headerClassName="border-pink-400/40"
+          >
+            <CrewManifestPanel
+              count={currentCrewCount}
+              onCrewChange={handleCrewChange}
+              onClose={()=>setMobileCrewOpen(false)}
+            />
+          </Drawer>
+          <Drawer open={mobileExportOpen} onClose={()=>setMobileExportOpen(false)} title="Export">
+            <div className="space-y-3 text-sm" aria-describedby={!report ? 'export-hint-mobile' : undefined}>
+              {!report && (
+                <p id="export-hint-mobile" className="text-[11px] text-amber-300 bg-slate-800/60 border border-slate-700 rounded p-2">
+                  Produce a report to enable export, print, and share actions.
+                </p>
+              )}
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={exportTxt} aria-disabled={!report} aria-describedby={!report ? 'export-hint-mobile' : undefined} className={`px-2 py-2 rounded border ${!report ? 'bg-slate-800/40 border-slate-700/40 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700'}`}>Download TXT</button>
+                <button
+                  onClick={async()=>{ if(!report) return; await copyToClipboard(reportToTxt(report), 'Full report copied as TXT.'); }}
+                  aria-disabled={!report}
+                  aria-describedby={!report ? 'export-hint-mobile' : undefined}
+                  className={`px-2 py-2 rounded border ${!report ? 'bg-slate-800/40 border-slate-700/40 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700'}`}
+                >
+                  Copy Full (TXT)
+                </button>
+                <button onClick={exportPdf} aria-disabled={!report} aria-describedby={!report ? 'export-hint-mobile' : undefined} className={`px-2 py-2 rounded border ${!report ? 'bg-slate-800/40 border-slate-700/40 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700'}`}>Download PDF</button>
+                <button onClick={exportDocx} aria-disabled={!report} aria-describedby={!report ? 'export-hint-mobile' : undefined} className={`px-2 py-2 rounded border ${!report ? 'bg-slate-800/40 border-slate-700/40 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700'}`}>Download DOCX</button>
+                <button onClick={handlePrint} aria-disabled={!report} aria-describedby={!report ? 'export-hint-mobile' : undefined} className={`px-2 py-2 rounded border font-semibold ${!report ? 'bg-amber-600/40 border-amber-500/40 text-amber-300/60 cursor-not-allowed' : 'bg-amber-600 text-black border-amber-500'}`}>Print</button>
+                <button onClick={handleShare} aria-disabled={!report} aria-describedby={!report ? 'export-hint-mobile' : undefined} className={`px-2 py-2 rounded border font-semibold ${!report ? 'bg-blue-600/40 border-blue-500/40 text-blue-300/70 cursor-not-allowed' : 'bg-blue-600 text-white border-blue-500'}`}>Share</button>
+              </div>
+            </div>
+          </Drawer>
+          {mobileHelpOpen && (
+            <HelpPanel onClose={()=>setMobileHelpOpen(false)} target={helpTarget} />
+          )}
+          <Drawer open={mobileSettingsOpen} onClose={()=>setMobileSettingsOpen(false)} title="Settings">
+            <div className="space-y-4 text-sm">
+              <SoundControls />
+              <div className="flex items-center gap-2">
+                <input id="densityCompactMobile" type="checkbox" checked={densityCompact} onChange={e=>setDensityCompact(e.target.checked)} />
+                <label htmlFor="densityCompactMobile" className="text-xs uppercase tracking-wider opacity-80">Compact Density</label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input id="persistZoomMobile" type="checkbox" checked={persistZoom} onChange={e=>{ const v=e.target.checked; try { localStorage.setItem('wcr_zoom_persist_enabled', v? '1':'0'); if(!v) localStorage.removeItem('previewZoom'); } catch {}; setPersistZoom(v); window.dispatchEvent(new Event('wcr-zoom-persist-changed')); }} />
+                <label htmlFor="persistZoomMobile" className="text-xs uppercase tracking-wider opacity-80">Persist Zoom</label>
+              </div>
+              <p className="text-[10px] text-slate-400 leading-snug">When disabled, report zoom always resets to 100% on load.</p>
+              <div className="flex items-center gap-2 pt-2 border-t border-slate-700">
+                <input id="forceMobile" type="checkbox" checked={forceMobile} onChange={e=>setForceMobile(e.target.checked)} />
+                <label htmlFor="forceMobile" className="text-xs uppercase tracking-wider opacity-80">Force Mobile Controls</label>
+              </div>
+              <p className="text-[10px] text-slate-400 leading-snug">Enable if your device shows the desktop controls.</p>
+              <div className="flex items-center gap-2 pt-2 border-t border-slate-700">
+                <input id="highContrast" type="checkbox" checked={highContrast} onChange={e=> setHighContrast(e.target.checked)} aria-describedby="highContrastDesc" />
+                <label htmlFor="highContrast" className="text-xs uppercase tracking-wider opacity-80">High Contrast</label>
+              </div>
+              <p id="highContrastDesc" className="text-[10px] text-slate-400 leading-snug">Boosts border & secondary text contrast and focus ring visibility. Persists locally.</p>
+            </div>
+          </Drawer>
+        </>
+      )}
     </div>
   );
 }
