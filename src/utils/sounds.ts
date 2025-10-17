@@ -1,19 +1,26 @@
 // LCARS Sound Effect Utility
 // Manages loading and playing LCARS UI sound effects
 
-// Sound effect URLs - these are placeholder URLs and should be replaced with actual sound files
+// Resolve asset base to work in both dev ('/') and GitHub Pages ('/warpcorereports/')
+// Vite injects import.meta.env.BASE_URL at build time.
+const BASE = (typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.BASE_URL) ? (import.meta as any).env.BASE_URL : '/';
+
+// Helper to prefix paths with the correct base; avoid double slashes
+const withBase = (p: string) => `${BASE}${p.replace(/^\//, '')}`;
+
+// Sound effect URLs (served from public/sounds)
 const soundFiles = {
-  buttonClick: '/sounds/lcars_beep1.mp3',
-  buttonHover: '/sounds/lcars_hover.mp3',
-  alert: '/sounds/lcars_alert.mp3',
-  success: '/sounds/lcars_success.mp3',
-  negative: '/sounds/lcars_negative.mp3',
-  processing: '/sounds/lcars_processing.mp3',
-  chartEdit: '/sounds/lcars_edit.mp3',
-  notification: '/sounds/lcars_notification.mp3',
-  shareReport: '/sounds/lcars_share.mp3',
-  toggleOn: '/sounds/lcars_toggle_on.mp3',
-  toggleOff: '/sounds/lcars_toggle_off.mp3',
+  buttonClick: withBase('sounds/lcars_beep1.mp3'),
+  buttonHover: withBase('sounds/lcars_hover.mp3'),
+  alert: withBase('sounds/lcars_alert.mp3'),
+  success: withBase('sounds/lcars_success.mp3'),
+  negative: withBase('sounds/lcars_negative.mp3'),
+  processing: withBase('sounds/lcars_processing.mp3'),
+  chartEdit: withBase('sounds/lcars_edit.mp3'),
+  notification: withBase('sounds/lcars_notification.mp3'),
+  shareReport: withBase('sounds/lcars_share.mp3'),
+  toggleOn: withBase('sounds/lcars_toggle_on.mp3'),
+  toggleOff: withBase('sounds/lcars_toggle_off.mp3'),
 };
 
 // Global settings
