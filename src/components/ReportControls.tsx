@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { hapticMedium } from "../utils/haptics";
+import Collapsible from "./Collapsible";
 import { GeneratorConfig, Rank, STARFLEET_VESSELS, FigureBias, MissionTemplate, FamousAuthorFrequency } from "../types";
 import { pick, hashCode, xorshift32, POOLS, pickCrewName } from "../utils/helpers";
 
@@ -7,12 +9,14 @@ const ranks: Rank[] = [
   "Ensign","Lieutenant Junior Grade","Lieutenant","Lieutenant Commander","Commander"
 ];
 
-export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate, manifestPanelOpen, onOpenHelp }: {
+export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate, manifestPanelOpen, onOpenHelp, mobile, onConfigChange }: {
   onGenerate: (cfg: GeneratorConfig) => void,
   onPreviewCrew: (count?:number, seed?:string)=>void,
   onRegenerate?: () => void,
   manifestPanelOpen?: boolean,
-  onOpenHelp?: (section?: "templates" | "figure-bias" | "presets" | "produce-reroll" | "references") => void
+  onOpenHelp?: (section?: "templates" | "figure-bias" | "presets" | "produce-reroll" | "references") => void,
+  mobile?: boolean,
+  onConfigChange?: (cfg: GeneratorConfig) => void
 }) {
   const DEFAULTS = useMemo(() => ({
     problemsCount: 3 as 1|2|3|4|5,
@@ -271,6 +275,7 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
   }, [problemsCount, problemDetailLevel, graphsEnabled, graphsCount, signatoryName, signatoryRank, vessel, seed, humor, signatoryReference, figureBias]);
 
   const generate = () => {
+    hapticMedium();
     const cfg: GeneratorConfig = {
       problemsCount,
       graphsEnabled,
@@ -298,6 +303,221 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
     // Use onPreviewCrew callback with no fixed count to let App.tsx handle the random sizing
     onPreviewCrew(undefined, seed);
   };
+
+  // Emit current config to parent (for mobile action bar Produce)
+  useEffect(() => {
+    const cfg: GeneratorConfig = {
+      problemsCount,
+      graphsEnabled,
+      graphsCount: graphsEnabled ? graphsCount : undefined,
+      signatoryName,
+      signatoryRank,
+      vessel,
+      seed: seed || undefined,
+      humorLevel: humor,
+      signatoryReference,
+      problemDetailLevel,
+      figureBias,
+      missionTemplate,
+      allowCanonNames,
+      filterCanonByEra,
+      famousAuthorFrequency,
+      famousRecentMemory,
+      stardate: ""
+    };
+    onConfigChange?.(cfg);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [problemsCount, problemDetailLevel, graphsEnabled, graphsCount, signatoryName, signatoryRank, vessel, seed, humor, signatoryReference, figureBias, missionTemplate, allowCanonNames, filterCanonByEra, famousAuthorFrequency, famousRecentMemory]);
+
+  if (mobile) {
+    return (
+      <div className="space-y-4 mb-6">
+        <Collapsible id="c-problems" title="Problems & Graphs" persistKey="wcr_c_problems" defaultOpen>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="lcars-label">Problems</label>
+              <input type="range" min={1} max={5} value={problemsCount} onChange={(e)=>setProblemsCount(parseInt(e.target.value) as any)} />
+              <div className="lcars-small">{problemsCount}</div>
+              <div className="mt-3 flex items-center justify-between">
+                <label className="lcars-label">Detail</label>
+                <button onClick={handleRandomProblemDetail} className="lcars-btn text-xs" aria-label="Randomize problem detail">🎲</button>
+              </div>
+              <input type="range" min={1} max={6} value={problemDetailLevel} onChange={e=>setProblemDetailLevel(parseInt(e.target.value))} />
+              <div className="lcars-small mt-1 mb-2">{problemDetailLevel} sentence{problemDetailLevel > 1 ? 's' : ''} per problem</div>
+            </div>
+            <div>
+              <div className="flex items-center justify-between">
+                <label className="lcars-label">Graphs</label>
+                <button onClick={handleRandomGraphsToggleAndCount} className="lcars-btn text-xs" aria-label="Randomize graphs">🎲</button>
+              </div>
+              <div className="flex items-center gap-2 mt-1">
+                <input type="checkbox" checked={graphsEnabled} onChange={e=>setGraphsEnabled(e.target.checked)} id="mobGraphsOn" />
+                <label htmlFor="mobGraphsOn" className="lcars-small">Enable</label>
+              </div>
+              {graphsEnabled && (
+                <>
+                  <input className="mt-2" type="range" min={1} max={10} value={graphsCount} onChange={(e)=>setGraphsCount(parseInt(e.target.value))} />
+                  <div className="lcars-small mb-1">{graphsCount}</div>
+                </>
+              )}
+            </div>
+          </div>
+          {onRegenerate && (
+            <button onClick={onRegenerate} className="mt-4 w-full lcars-btn" aria-label="Reroll current report">
+              Reroll Current Report
+            </button>
+          )}
+        </Collapsible>
+  <Collapsible id="c-identity" title="Ship & Signature" persistKey="wcr_c_identity">
+          <div className="space-y-3">
+            <div className="flex items-center justify-end">
+              {onOpenHelp && (
+                <button
+                  type="button"
+                  className="lcars-btn text-xs"
+                  onClick={() => onOpenHelp("produce-reroll")}
+                  title="Open Help about Produce vs Reroll"
+                  aria-label="Open Help about Produce vs Reroll"
+                >
+                  ℹ️
+                </button>
+              )}
+            </div>
+            <div>
+              <label className="lcars-label">Starship</label>
+              <div className="flex gap-2 items-center">
+                <select value={vessel} onChange={e=>setVessel(e.target.value)} className="lcars-input flex-1" aria-label="Select starship">
+                  {STARFLEET_VESSELS.map(v => <option key={v.name} value={v.name}>{v.name}</option>)}
+                </select>
+                <button onClick={handleRandomVessel} className="lcars-btn text-xs" aria-label="Randomize starship">🎲</button>
+              </div>
+            </div>
+            <div>
+              <label className="lcars-label">Signing Engineer</label>
+              <div className="flex gap-2">
+                <input type="text" value={signatoryName} onChange={e=>setSignatoryName(e.target.value)} className="lcars-input flex-1" />
+                <button onClick={handleRandomName} className="lcars-btn text-xs" aria-label="Randomize name">🎲</button>
+              </div>
+              <div className="flex items-center gap-2 mt-2">
+                <input type="checkbox" id="mobAddRef" checked={signatoryReference} onChange={e=>setSignatoryReference(e.target.checked)} />
+                <label htmlFor="mobAddRef" className="lcars-small">Add Name to References</label>
+              </div>
+            </div>
+            <div>
+              <label className="lcars-label">Rank</label>
+              <div className="flex gap-2 items-center">
+                <select value={signatoryRank} onChange={e=>setSignatoryRank(e.target.value as any)} className="lcars-input flex-1">
+                  {ranks.map(r=> <option key={r}>{r}</option>)}
+                </select>
+                <button onClick={handleRandomRank} className="lcars-btn text-xs" aria-label="Randomize rank">🎲</button>
+              </div>
+            </div>
+            <div>
+              <label className="lcars-label">Humor Level</label>
+              <div className="flex items-center gap-2">
+                <input type="range" min={0} max={10} value={humor} onChange={e=>setHumor(parseInt(e.target.value))} className="flex-1" />
+                <button onClick={handleRandomHumor} className="lcars-btn text-xs" aria-label="Randomize humor">🎲</button>
+              </div>
+            </div>
+          </div>
+        </Collapsible>
+        <Collapsible id="c-random" title="Seed & Bias" persistKey="wcr_c_seed">
+          <div className="space-y-3">
+            <div>
+              <label className="lcars-label">Seed</label>
+              <div className="flex gap-2">
+                <input type="text" value={seed} onChange={e=>setSeed(e.target.value)} className="lcars-input flex-1" placeholder="optional" aria-label="Seed" />
+                <button onClick={handleRandomSeed} className="lcars-btn text-xs" aria-label="Randomize seed">🎲</button>
+                <button onClick={toggleSeedLock} className={"lcars-btn text-xs "+(seedLocked?"lcars-btn-locked":"")} aria-label="Toggle seed lock">{seedLocked?"🔒":"🔓"}</button>
+              </div>
+            </div>
+            <div>
+              <div className="flex items-center justify-between">
+                <label className="lcars-label">Figure Bias</label>
+                {onOpenHelp && <button type="button" className="lcars-btn text-xs" onClick={()=>onOpenHelp("figure-bias")} aria-label="Help figure bias">ℹ️</button>}
+              </div>
+              <select value={figureBias} onChange={e=>setFigureBias(e.target.value as any)} className="lcars-input">
+                <option value="auto">Auto</option>
+                <option value="warp">Warp</option>
+                <option value="eps">EPS</option>
+                <option value="sif">SIF</option>
+                <option value="deflector">Deflector</option>
+                <option value="transporter">Transporter</option>
+                <option value="inertial">Inertial</option>
+              </select>
+            </div>
+            <div>
+              <div className="flex items-center justify-between">
+                <label className="lcars-label">Mission Template</label>
+                {onOpenHelp && <button type="button" className="lcars-btn text-xs" onClick={()=>onOpenHelp("templates")} aria-label="Help templates">ℹ️</button>}
+              </div>
+              <select value={missionTemplate} onChange={e=>setMissionTemplate(e.target.value as any)} className="lcars-input">
+                <option value="none">None</option>
+                <option value="incident">Incident</option>
+                <option value="survey">Survey</option>
+              </select>
+            </div>
+          </div>
+        </Collapsible>
+        <Collapsible id="c-references" title="References & Canon" persistKey="wcr_c_refs">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <input type="checkbox" id="mobCanon" checked={allowCanonNames} onChange={e=>setAllowCanonNames(e.target.checked)} />
+              <label htmlFor="mobCanon" className="lcars-small">Allow Canon Names</label>
+              {onOpenHelp && <button type="button" className="lcars-btn text-xs" onClick={()=>onOpenHelp("references")} aria-label="Help references">ℹ️</button>}
+            </div>
+            <div className="flex items-center gap-2">
+              <input type="checkbox" id="mobEra" checked={filterCanonByEra} disabled={!allowCanonNames} onChange={e=>setFilterCanonByEra(e.target.checked)} />
+              <label htmlFor="mobEra" className="lcars-small">Filter by Era</label>
+            </div>
+            <div>
+              <label className="lcars-label">Famous Frequency</label>
+              <select value={famousAuthorFrequency} onChange={e=>setFamousAuthorFrequency(e.target.value as any)} className="lcars-input" disabled={!allowCanonNames}>
+                <option value="off">Off</option>
+                <option value="rare">Rare</option>
+                <option value="occasional">Occasional</option>
+                <option value="frequent">Frequent</option>
+              </select>
+            </div>
+            <div>
+              <label className="lcars-label">Rotation Memory ({famousRecentMemory})</label>
+              <input type="range" min={0} max={20} value={famousRecentMemory} disabled={!allowCanonNames} onChange={e=>setFamousRecentMemory(parseInt(e.target.value))} />
+            </div>
+          </div>
+        </Collapsible>
+        <Collapsible id="c-preset" title="Presets & Links" persistKey="wcr_c_preset">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <label className="lcars-label">Preset</label>
+              {onOpenHelp && <button type="button" className="lcars-btn text-xs" onClick={()=>onOpenHelp("presets")} aria-label="Help presets">ℹ️</button>}
+            </div>
+            <div className="flex gap-2 items-center">
+              <select value={preset} onChange={(e)=>applyPreset(e.target.value)} className="lcars-input flex-1">
+                <option value="custom">Custom</option>
+                <option value="diagnostic">Diagnostic</option>
+                <option value="incident">Incident</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="performance">Performance</option>
+              </select>
+              <span className={`text-xs px-2 py-1 rounded-md border ${presetStatus === 'Active' ? 'bg-green-600 border-green-500' : presetStatus === 'Modified' ? 'bg-amber-600 border-amber-500' : 'bg-slate-700 border-slate-600'}`}>{presetStatus}</span>
+              {wasReset && <span className="text-xs px-2 py-1 rounded-md border bg-blue-700 border-blue-500">Reset</span>}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button onClick={copySettingsLink} className="lcars-btn text-xs" aria-label="Copy settings link">Copy Link</button>
+              <button onClick={handleRandomizeAll} className="lcars-btn text-xs" aria-label="Randomize all">Randomize</button>
+              <button onClick={resetToDefaults} className="lcars-btn text-xs" aria-label="Reset all controls">Reset</button>
+              <button onClick={()=>onPreviewCrew(undefined, seed)} className={"lcars-btn text-xs "+(manifestPanelOpen?"lcars-btn-highlighted":"")} aria-label="Preview crew manifest">{manifestPanelOpen?"Hide Crew":"Crew Preview"}</button>
+            </div>
+          </div>
+        </Collapsible>
+        <button
+          onClick={generate}
+          className="w-full mt-4 lcars-cta"
+          aria-label="Produce a new report"
+        >Produce Report</button>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -345,6 +565,7 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
       <div className="lcars-card">
         <div className="lcars-rail lcars-rail-accent"></div>
         <div className="lcars-body space-y-2">
+          <div className="text-sm font-semibold tracking-wide text-amber-300 mb-1">Ship & Signature</div>
           <label className="lcars-label">Starship</label>
           <div className="flex gap-2 items-center">
             <select value={vessel} onChange={e=>setVessel(e.target.value)} className="lcars-input flex-1" aria-label="Select starship">

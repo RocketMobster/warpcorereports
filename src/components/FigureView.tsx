@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import LCARSChart from "./LCARSChart";
 import ChartEditor from "./ChartEditor";
 import { Figure } from "../types";
@@ -9,11 +9,24 @@ interface FigureViewProps {
   fig: Figure;
   onFigureUpdate?: (updatedFigure: Figure) => void;
   editEnabled?: boolean;
+  safeZonePx?: number;
+  textOnlyZoom?: boolean;
+  zoomScale?: number;
+  baseScale?: number;
 }
 
-export default function FigureView({ fig, onFigureUpdate, editEnabled = false }: FigureViewProps) {
+export default function FigureView({ fig, onFigureUpdate, editEnabled = false, safeZonePx = 0, textOnlyZoom = false, zoomScale = 1, baseScale = 1 }: FigureViewProps) {
   const [currentFigure, setCurrentFigure] = useState<Figure>(fig);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement|null>(null);
+  const chartRef = useRef<HTMLDivElement|null>(null);
+  const [chartWidth, setChartWidth] = useState<number>(0);
+  const initialWidthRef = useRef<number | null>(null);
+  const initialZoomRef = useRef<number | null>(null);
+  const titleRef = useRef<HTMLDivElement | null>(null);
+  const captionRef = useRef<HTMLDivElement | null>(null);
+  const [adaptivePad, setAdaptivePad] = useState(0);
   const accent = LCARS.accents[(fig.index ?? 0) % LCARS.accents.length];
   
   // Update local state when the figure prop changes
@@ -31,21 +44,144 @@ export default function FigureView({ fig, onFigureUpdate, editEnabled = false }:
     }
   };
 
+  // Lazy-render chart when visible
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    if (isVisible) return; // already visible
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+            io.disconnect();
+            break;
+          }
+        }
+      },
+      { root: null, rootMargin: "200px 0px", threshold: 0.01 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [containerRef, isVisible]);
+
+  // Measure chart container width for responsive SVG
+  useEffect(() => {
+    const el = chartRef.current;
+    if (!el) return;
+    const update = () => {
+      const w = Math.max(0, Math.floor(el.clientWidth));
+      setChartWidth(w);
+      if (w > 0) {
+        if (initialWidthRef.current == null) initialWidthRef.current = w;
+        else initialWidthRef.current = Math.max(initialWidthRef.current, w);
+      }
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    window.addEventListener('resize', update);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', update);
+    };
+  }, [chartRef]);
+
+  if (initialZoomRef.current == null) initialZoomRef.current = zoomScale || 1;
+
+  // Adaptive measurement: once visible and after layout/zoom changes, detect if title/caption are too close to right edge
+  useEffect(() => {
+    if (!isVisible) return; // wait until chart is rendered
+    // Only attempt when at higher zoom or full base scale scenarios where clipping risk is higher
+    const z = zoomScale || 1;
+    if (adaptivePad >= 8) return; // cap
+    // Defer to next frame to allow render/DOM updates
+    const id = requestAnimationFrame(() => {
+      const titleEl = titleRef.current;
+      const capEl = captionRef.current;
+      const candidates: HTMLElement[] = [];
+      if (titleEl) candidates.push(titleEl);
+      if (capEl) candidates.push(capEl);
+      let need = false;
+      for (const el of candidates) {
+        // scrollWidth > clientWidth -> actual overflow
+        if (el.scrollWidth - el.clientWidth > 0) { need = true; break; }
+        // measure remaining space by approximating last line right boundary
+        // We approximate: if (clientWidth - (scrollWidth)) < threshold (when scrollWidth is not that different) the browser is barely fitting content.
+        const delta = el.clientWidth - el.scrollWidth; // usually >=0 when no overflow
+        if (delta >= 0 && delta < 6) { need = true; break; }
+      }
+      if (need) {
+        setAdaptivePad(prev => (prev < 4 ? 4 : prev < 8 ? 8 : prev));
+      }
+    });
+    return () => cancelAnimationFrame(id);
+  }, [isVisible, zoomScale, baseScale, currentFigure.title, currentFigure.caption, adaptivePad]);
+
+  const highZoom = (zoomScale || 1) >= 1.3;
+  const extraContainerRightPad = highZoom ? 2 : 0; // slight shift inward to expose right border stroke
+
   return (
-    <div className={`figure-container rounded-2xl p-4 border bg-[#101425] relative group ${
+    <div ref={containerRef} className={`figure-container rounded-2xl p-4 border bg-[#101425] relative group ${
       editEnabled 
         ? 'border-purple-500 shadow-md transition-all duration-300 animate-pulse-border' 
         : 'border-slate-700'
-    }`}>
-      <div className="text-sm text-slate-300 mb-2 font-semibold">
+    }`} style={extraContainerRightPad ? { paddingRight: `calc(1rem + ${extraContainerRightPad}px)` } : undefined}>
+      <div
+        ref={titleRef}
+        className="text-sm text-slate-300 mb-2 font-semibold pr-1 break-words"
+        style={{ paddingRight: Math.max(0, Math.round(((safeZonePx as number) || 0) + 4 + adaptivePad)) }}
+      >
         {currentFigure.displayId || currentFigure.id}. {currentFigure.title}
       </div>
       
-      <div className="h-48">
-        <LCARSChart figure={currentFigure} />
-      </div>
+      {(() => {
+        const lockNoZoom = textOnlyZoom || (zoomScale || 1) > 1;
+        return (
+          <div
+            ref={chartRef}
+            className={`w-full flex ${lockNoZoom ? 'items-start justify-start' : 'items-center justify-center'}`}
+            style={lockNoZoom ? ({ height: `${192 / (zoomScale || 1)}px` } as React.CSSProperties) : { height: '192px' }}
+          >
+        {isVisible ? (
+          <div
+            className={lockNoZoom ? 'chart-no-zoom' : ''}
+            style={lockNoZoom ? ({ ['--zoom' as any]: String(zoomScale) } as React.CSSProperties) : undefined}
+          >
+            {(() => {
+              // Measure baseline width in visual pixels (post-transform) via BCR.
+              const baselineWidth = chartWidth;
+              const baseScaleClamped = Math.min(1, Math.max(0.5, (baseScale || 1)));
+              const firstWidth = initialWidthRef.current ?? baselineWidth;
+              const baseWidth = Math.max(200, firstWidth || baselineWidth || 300);
+              const w = Math.max(200, Math.round(baseWidth * baseScaleClamped));
+              let rightSafe = Math.max(20, Math.round((safeZonePx || 0)));
+              // Additional internal cushion at high zoom when charts are full-size.
+              if ((zoomScale || 1) >= 1.3 && Math.abs((baseScale || 1) - 1) < 0.001) {
+                rightSafe += 10; // primary extra breathing room
+                if ((zoomScale || 1) >= 1.35) {
+                  rightSafe += 2; // micro bump to clear rare descender clipping
+                }
+                // Transitional boost: if we started below threshold and crossed into high zoom, add a one-time extra margin
+                if ((initialZoomRef.current || 1) < 1.3) {
+                  rightSafe += 4; // helps match persisted-high-zoom wrap scenario
+                }
+              }
+              return <LCARSChart figure={currentFigure} width={w} height={192} rightSafe={rightSafe + adaptivePad} />;
+            })()}
+          </div>
+        ) : (
+          <div className="w-full h-full rounded-xl bg-slate-800/60 border border-slate-700 animate-pulse" aria-label="Chart loading placeholder" />
+        )}
+          </div>
+        );
+      })()}
       
-      <div className="text-xs text-slate-400 mt-2 italic">
+      <div
+        ref={captionRef}
+        className="text-xs text-slate-400 mt-2 italic break-words"
+        style={{ paddingRight: Math.max(0, Math.round(((safeZonePx as number) || 0) + 4 + adaptivePad)) }}
+      >
         {currentFigure.caption} {currentFigure.sectionAnchor ? `(Ref: ${currentFigure.sectionAnchor})` : ""}
       </div>
       
@@ -80,3 +216,5 @@ export default function FigureView({ fig, onFigureUpdate, editEnabled = false }:
     </div>
   );
 }
+
+// Add adaptive measurement inside component (cannot be outside). Reopen component scope via patch append not possible here; instead integrate effect above return.

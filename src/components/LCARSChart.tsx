@@ -1,5 +1,6 @@
 import React from "react";
 import { Figure } from "../types";
+import { lttb, lttbScatter } from "../utils/chartDownsample";
 
 // LCARS color palette
 const LCARS_COLORS = ["#FFB300", "#FF6F00", "#00BFFF", "#B39DDB", "#F44336", "#00C853", "#212121"];
@@ -10,7 +11,8 @@ function lcarsColor(idx: number) {
 }
 
 // Main LCARSChart component
-export default function LCARSChart({ figure, width = 320, height = 180 }: { figure: Figure; width?: number; height?: number }) {
+export default function LCARSChart({ figure, width = 320, height = 180, rightSafe = 0 }: { figure: Figure; width?: number; height?: number; rightSafe?: number }) {
+  const RS = Math.max(0, (rightSafe || 0) + 4);
   // Error state
   const [isError, setIsError] = React.useState(false);
   
@@ -63,7 +65,7 @@ export default function LCARSChart({ figure, width = 320, height = 180 }: { figu
   // If there's an error, render the warning triangle
   if (isError) {
     return (
-      <svg id={figure.id} width={width} height={height} style={{ background: "#222", borderRadius: 12 }}>
+  <svg id={figure.id} width={width} height={height} style={{ background: "#222", borderRadius: 12, overflow: "visible" }}>
         <rect x={0} y={0} width={width} height={height} fill="#222" />
         <g>
           {/* Caution triangle */}
@@ -93,7 +95,7 @@ export default function LCARSChart({ figure, width = 320, height = 180 }: { figu
   
   // PIE CHART
   if (figure.type === "pie") {
-    const radius = Math.min(width, height) / 2 - 30;
+    const radius = Math.min(width, height) / 2 - 34;
     const cx = width / 2, cy = height / 2;
     let total = figure.data.reduce((a:number,b:number)=>a+b,0);
     let angle = 0;
@@ -118,7 +120,7 @@ export default function LCARSChart({ figure, width = 320, height = 180 }: { figu
       />;
     });
     return (
-      <svg id={figure.id} width={width} height={height} style={{ background: "#222", borderRadius: 12 }}>
+  <svg id={figure.id} width={width} height={height} style={{ background: "#222", borderRadius: 12, overflow: "visible" }}>
         <rect x={0} y={0} width={width} height={height} fill="#222" />
         {slices}
         {renderTooltip()}
@@ -128,23 +130,25 @@ export default function LCARSChart({ figure, width = 320, height = 180 }: { figu
   // AREA CHART
   if (figure.type === "area") {
     // Filled line chart with axes/ticks
-    const pointsArr = figure.data.map((v: number, i: number):{x:number,y:number} => {
-      const x = (i / (figure.data.length - 1)) * (width - 48) + 36;
+    const series: number[] = Array.isArray(figure.data) ? figure.data : [];
+    const ds = series.length > 180 ? lttb(series, 180) : series;
+    const pointsArr = ds.map((v: number, i: number):{x:number,y:number} => {
+  const x = (i / (ds.length - 1)) * (width - (60 + RS)) + 36; // extra right margin
       const y = height - 30 - v * (height - 60);
       return {x, y};
     });
     const points = pointsArr.map((p:{x:number,y:number}) => `${p.x},${p.y}`).join(" ");
-    const areaPath = `M36,${height-30} L${points} L${width-20},${height-30} Z`;
-    const maxVal = Math.max(...figure.data);
-    const minVal = Math.min(...figure.data);
-    const ticks = [minVal, Math.round((minVal+maxVal)/2), maxVal];
+  const areaPath = `M36,${height-30} L${points} L${width-24},${height-30} Z`;
+    const maxVal = Math.max(...ds);
+    const minVal = Math.min(...ds);
+  const ticks = [minVal, Math.round((minVal+maxVal)/2), maxVal];
     return (
-      <svg id={figure.id} width={width} height={height} style={{ background: "#222", borderRadius: 12 }}>
+  <svg id={figure.id} width={width} height={height} style={{ background: "#222", borderRadius: 12, overflow: "visible" }}>
         <rect x={0} y={0} width={width} height={height} fill="#222" />
         {/* Y axis */}
         <line x1={36} y1={height-30} x2={36} y2={30} stroke="#888" strokeWidth={2}/>
         {/* X axis */}
-        <line x1={36} y1={height-30} x2={width-20} y2={height-30} stroke="#888" strokeWidth={2}/>
+  <line x1={36} y1={height-30} x2={width-(32+RS)} y2={height-30} stroke="#888" strokeWidth={2}/>
         {/* Y axis ticks */}
         {ticks.map((t, i) => (
           <g key={i}>
@@ -207,7 +211,7 @@ export default function LCARSChart({ figure, width = 320, height = 180 }: { figu
       );
     }
     return (
-      <svg id={figure.id} width={width} height={height} style={{ background: "#222", borderRadius: 12 }}>
+  <svg id={figure.id} width={width} height={height} style={{ background: "#222", borderRadius: 12, overflow: "visible" }}>
         <rect x={0} y={0} width={width} height={height} fill="#222" />
         {axes}
         <polygon points={points} fill={lcarsColor(2)} opacity={0.5}/>
@@ -219,22 +223,24 @@ export default function LCARSChart({ figure, width = 320, height = 180 }: { figu
   }
   if (figure.type === "line") {
     // Smoother, thinner line, less cartoonish
-    const pointsArr = figure.data.map((v: number, i: number):{x:number,y:number} => {
-      const x = (i / (figure.data.length - 1)) * (width - 60) + 52;
+    const series: number[] = Array.isArray(figure.data) ? figure.data : [];
+    const ds = series.length > 220 ? lttb(series, 220) : series;
+    const pointsArr = ds.map((v: number, i: number):{x:number,y:number} => {
+  const x = (i / (ds.length - 1)) * (width - (84 + RS)) + 52; // extra right margin
       const y = height - 30 - v * (height - 60);
       return {x, y};
     });
     const points = pointsArr.map((p:{x:number,y:number}) => `${p.x},${p.y}`).join(" ");
-    const maxVal = Math.max(...figure.data);
-    const minVal = Math.min(...figure.data);
+    const maxVal = Math.max(...ds);
+    const minVal = Math.min(...ds);
     const ticks = [minVal, Math.round((minVal+maxVal)/2), maxVal];
     return (
-      <svg id={figure.id} width={width} height={height} style={{ background: "#222", borderRadius: 12 }}>
+  <svg id={figure.id} width={width} height={height} style={{ background: "#222", borderRadius: 12, overflow: "visible" }}>
         <rect x={0} y={0} width={width} height={height} fill="#222" />
         {/* Y axis */}
         <line x1={52} y1={height-30} x2={52} y2={30} stroke="#888" strokeWidth={2}/>
         {/* X axis */}
-        <line x1={52} y1={height-30} x2={width-20} y2={height-30} stroke="#888" strokeWidth={2}/>
+  <line x1={52} y1={height-30} x2={width-(32+RS)} y2={height-30} stroke="#888" strokeWidth={2}/>
         {/* Y axis ticks */}
         {ticks.map((t, i) => (
           <g key={i}>
@@ -253,18 +259,22 @@ export default function LCARSChart({ figure, width = 320, height = 180 }: { figu
     if (!figure.data || figure.data.length < 2) {
       return <div style={{ color: '#FFB300', background: '#222', borderRadius: 12, padding: 16 }}>Insufficient data for bar chart</div>;
     }
-    const barWidth = Math.max(8, (width - 48) / figure.data.length - 2); // Fix axis cutoff by increasing left margin
+  const innerLeft = 36; // matches x-axis start
+  const innerRight = width - (32 + RS); // extra right padding
+    const innerWidth = Math.max(0, innerRight - innerLeft);
+    const gap = 2;
+    const barWidth = Math.max(8, (innerWidth - gap * (figure.data.length - 1)) / figure.data.length);
     const maxVal = Math.max(...figure.data);
     const minVal = Math.min(...figure.data);
     // Axis ticks
     const ticks = [minVal, Math.round((minVal+maxVal)/2), maxVal];
     return (
-      <svg id={figure.id} width={width} height={height} style={{ background: "#222", borderRadius: 12 }}>
+  <svg id={figure.id} width={width} height={height} style={{ background: "#222", borderRadius: 12, overflow: "visible" }}>
         <rect x={0} y={0} width={width} height={height} fill="#222" />
         {/* Y axis */}
         <line x1={28} y1={height-30} x2={28} y2={30} stroke="#888" strokeWidth={2}/>
         {/* X axis */}
-        <line x1={28} y1={height-30} x2={width-20} y2={height-30} stroke="#888" strokeWidth={2}/>
+  <line x1={28} y1={height-30} x2={width-(32+RS)} y2={height-30} stroke="#888" strokeWidth={2}/>
         {/* Y axis ticks */}
         {ticks.map((t, i) => (
           <g key={i}>
@@ -276,7 +286,7 @@ export default function LCARSChart({ figure, width = 320, height = 180 }: { figu
         {figure.data.map((v: number, i: number) => (
           <rect
             key={i}
-            x={36 + i * (barWidth + 2)}
+            x={innerLeft + i * (barWidth + gap)}
             y={height - 30 - (v / maxVal) * (height - 60)}
             width={barWidth}
             height={(v / maxVal) * (height - 60)}
@@ -299,11 +309,11 @@ export default function LCARSChart({ figure, width = 320, height = 180 }: { figu
     if (!figure.data || typeof figure.data !== "object" || !("min" in figure.data)) {
       return <div style={{ color: '#FFB300', background: '#222', borderRadius: 12, padding: 16 }}>Invalid boxplot data</div>;
     }
-    const { min, q1, median, q3, max, outliers } = figure.data;
-    const boxLeft = 48, boxRight = width-40, boxY = height/2;
+  const { min, q1, median, q3, max, outliers } = figure.data;
+  const boxLeft = 48, boxRight = width-(56+RS), boxY = height/2;
     const scale = (v:number) => boxLeft + ((v-min)/(max-min||1))*(boxRight-boxLeft);
     return (
-      <svg id={figure.id} width={width} height={height} style={{ background: "#222", borderRadius: 12 }}>
+  <svg id={figure.id} width={width} height={height} style={{ background: "#222", borderRadius: 12, overflow: "visible" }}>
         <rect x={0} y={0} width={width} height={height} fill="#222" />
         {/* Whiskers */}
         <line x1={scale(min)} y1={boxY} x2={scale(max)} y2={boxY} stroke="#888" strokeWidth={2}/>
@@ -340,38 +350,40 @@ export default function LCARSChart({ figure, width = 320, height = 180 }: { figu
     if (!Array.isArray(figure.data) || !figure.data.length || typeof figure.data[0] !== "object") {
       return <div style={{ color: '#FFB300', background: '#222', borderRadius: 12, padding: 16 }}>Invalid scatterplot data</div>;
     }
+    const pointsData = figure.data as {x:number;y:number}[];
+    const ds = pointsData.length > 260 ? lttbScatter(pointsData, 260) : pointsData;
     // Calculate linear regression (trend line)
-    const n = figure.data.length;
-    const sumX = figure.data.reduce((acc,pt)=>acc+pt.x,0);
-    const sumY = figure.data.reduce((acc,pt)=>acc+pt.y,0);
-    const sumXY = figure.data.reduce((acc,pt)=>acc+pt.x*pt.y,0);
-    const sumXX = figure.data.reduce((acc,pt)=>acc+pt.x*pt.x,0);
+  const n = ds.length;
+  const sumX = ds.reduce((acc,pt)=>acc+pt.x,0);
+  const sumY = ds.reduce((acc,pt)=>acc+pt.y,0);
+  const sumXY = ds.reduce((acc,pt)=>acc+pt.x*pt.y,0);
+  const sumXX = ds.reduce((acc,pt)=>acc+pt.x*pt.x,0);
     const slope = (n*sumXY - sumX*sumY)/(n*sumXX - sumX*sumX||1);
     const intercept = (sumY - slope*sumX)/n;
     const x0 = 0, x1 = 100;
     const y0 = slope*x0 + intercept;
     const y1 = slope*x1 + intercept;
     // Find outliers/extremes (top 2 max Y, bottom 2 min Y)
-    const sorted = [...figure.data].sort((a,b)=>a.y-b.y);
+    const sorted = [...ds].sort((a,b)=>a.y-b.y);
     const labelIdxs = new Set([
-      figure.data.indexOf(sorted[0]),
-      figure.data.indexOf(sorted[1]),
-      figure.data.indexOf(sorted[sorted.length-1]),
-      figure.data.indexOf(sorted[sorted.length-2])
+      ds.indexOf(sorted[0]),
+      ds.indexOf(sorted[1]),
+      ds.indexOf(sorted[sorted.length-1]),
+      ds.indexOf(sorted[sorted.length-2])
     ]);
     return (
       <svg id={figure.id} width={width} height={height} style={{ background: "#222", borderRadius: 12 }}>
         <rect x={0} y={0} width={width} height={height} fill="#222" />
         {/* Axes */}
         <line x1={36} y1={height-30} x2={36} y2={30} stroke="#888" strokeWidth={2}/>
-        <line x1={36} y1={height-30} x2={width-20} y2={height-30} stroke="#888" strokeWidth={2}/>
+  <line x1={36} y1={height-30} x2={width-(32+RS)} y2={height-30} stroke="#888" strokeWidth={2}/>
         {/* Trend line */}
-        <line x1={36 + x0/100*(width-56)} y1={height-30 - y0/100*(height-60)} x2={36 + x1/100*(width-56)} y2={height-30 - y1/100*(height-60)} stroke="#FFB300" strokeWidth={2} opacity={0.7}/>
+  <line x1={36 + x0/100*(width-(64+RS))} y1={height-30 - y0/100*(height-60)} x2={36 + x1/100*(width-(64+RS))} y2={height-30 - y1/100*(height-60)} stroke="#FFB300" strokeWidth={2} opacity={0.7}/>
         {/* Points */}
-        {figure.data.map((pt: { x: number; y: number }, i: number) => (
+  {ds.map((pt: { x: number; y: number }, i: number) => (
           <g key={i}>
             <circle
-              cx={36 + pt.x / 100 * (width - 56)}
+              cx={36 + pt.x / 100 * (width - (64 + RS))}
               cy={height - 30 - pt.y / 100 * (height - 60)}
               r={hovered?.idx === i ? 6 : 3.5}
               fill={lcarsColor(i)}
@@ -382,7 +394,7 @@ export default function LCARSChart({ figure, width = 320, height = 180 }: { figu
               onMouseLeave={() => setHovered(null)}
             />
             {labelIdxs.has(i) && (
-              <text x={36 + pt.x / 100 * (width - 56)} y={height - 30 - pt.y / 100 * (height - 60) - 8} fill="#fff" fontSize={11} textAnchor="middle">({pt.x},{pt.y})</text>
+              <text x={36 + pt.x / 100 * (width - (64 + RS))} y={height - 30 - pt.y / 100 * (height - 60) - 8} fill="#fff" fontSize={11} textAnchor="middle">({pt.x},{pt.y})</text>
             )}
           </g>
         ))}
@@ -394,7 +406,10 @@ export default function LCARSChart({ figure, width = 320, height = 180 }: { figu
   if (figure.type === "gauge") {
     // Accepts array of values, renders multiple horizontal bars
     const values = Array.isArray(figure.data) ? figure.data : [figure.data];
-    const gaugeWidth = width - 40;
+    // Add small internal left/right margins to avoid right-edge clipping when zoomed
+    const leftPad = 24;
+  const rightPad = 24 + RS;
+    const gaugeWidth = Math.max(0, width - leftPad - rightPad);
     const barHeight = 20;
     const gap = 16;
     const totalHeight = values.length * barHeight + (values.length-1)*gap;
@@ -411,21 +426,31 @@ export default function LCARSChart({ figure, width = 320, height = 180 }: { figu
         <rect x={0} y={0} width={width} height={height} fill="#222" />
         {values.map((value:number, i:number) => (
           <g key={i}>
-            <rect x={20} y={startY + i*(barHeight+gap)} width={gaugeWidth} height={barHeight} fill="#444" rx={10} />
-            <rect
-              x={20}
-              y={startY + i*(barHeight+gap)}
-              width={gaugeWidth * value / 100}
-              height={barHeight}
-              fill={lcarsColor(i)}
-              rx={10}
-              opacity={hovered?.idx === i ? 1 : 0.85}
-              stroke={hovered?.idx === i ? '#fff' : undefined}
-              strokeWidth={hovered?.idx === i ? 2 : undefined}
-              onMouseMove={e => setHovered({ idx: i, x: e.nativeEvent.offsetX, y: e.nativeEvent.offsetY, value: value })}
-              onMouseLeave={() => setHovered(null)}
-            />
-            <text x={width / 2} y={startY + i*(barHeight+gap) + barHeight/2 + 5} fill={gaugeTextColor(i)} fontSize={17} textAnchor="middle">{value}%</text>
+            {/* Background track */}
+            <rect x={leftPad} y={startY + i*(barHeight+gap)} width={gaugeWidth} height={barHeight} fill="#444" rx={10} />
+            {/* Foreground fill (clamped 0-100) with a tiny right safety margin */}
+            {(() => {
+              const p = Math.max(0, Math.min(100, Number(value) || 0));
+              // Subtract 4px so a 100% bar doesn’t touch the right edge
+              const safeWidth = Math.max(0, gaugeWidth - 4);
+              const fillW = Math.round((safeWidth * p) / 100);
+              return (
+                <rect
+                  x={leftPad}
+                  y={startY + i*(barHeight+gap)}
+                  width={fillW}
+                  height={barHeight}
+                  fill={lcarsColor(i)}
+                  rx={10}
+                  opacity={hovered?.idx === i ? 1 : 0.85}
+                  stroke={hovered?.idx === i ? '#fff' : undefined}
+                  strokeWidth={hovered?.idx === i ? 2 : undefined}
+                  onMouseMove={e => setHovered({ idx: i, x: e.nativeEvent.offsetX, y: e.nativeEvent.offsetY, value: value })}
+                  onMouseLeave={() => setHovered(null)}
+                />
+              );
+            })()}
+            <text x={leftPad + gaugeWidth/2} y={startY + i*(barHeight+gap) + barHeight/2 + 5} fill={gaugeTextColor(i)} fontSize={17} textAnchor="middle">{Math.max(0, Math.min(100, Number(value) || 0))}%</text>
           </g>
         ))}
         {renderTooltip()}
@@ -436,20 +461,20 @@ export default function LCARSChart({ figure, width = 320, height = 180 }: { figu
   if (figure.type === "step") {
     // Segmented line chart with axis/tick marks and data labels
     const n = figure.data.length;
-    const axisX1 = 36, axisYEnd = height-30, axisYStart = 30;
-    const axisX2 = width-20, axisY2 = height-30;
+  const axisX1 = 36, axisYEnd = height-30, axisYStart = 30;
+  const axisX2 = width-(32+RS), axisY2 = height-30;
     // Build step path
     let stepPath = `M${axisX1},${axisYEnd - ((figure.data[0]-Math.min(...figure.data))/(Math.max(...figure.data)-Math.min(...figure.data)||1))*(axisYEnd-axisYStart)}`;
     for (let i = 1; i < n; i++) {
       const prevY = axisYEnd - ((figure.data[i-1]-Math.min(...figure.data))/(Math.max(...figure.data)-Math.min(...figure.data)||1))*(axisYEnd-axisYStart);
-      const currX = axisX1 + (i/(n-1))*(width-40);
+  const currX = axisX1 + (i/(n-1))*(width-(60+RS));
       const currY = axisYEnd - ((figure.data[i]-Math.min(...figure.data))/(Math.max(...figure.data)-Math.min(...figure.data)||1))*(axisYEnd-axisYStart);
       stepPath += ` H${currX} V${currY}`;
     }
     // X axis ticks
     const xTicks = [];
     for (let i = 0; i < n; i++) {
-      const x = axisX1 + (i/(n-1))*(width-40);
+  const x = axisX1 + (i/(n-1))*(width-(60+RS));
       xTicks.push(
         <g key={i}>
           <line x1={x} y1={axisYEnd} x2={x} y2={axisYEnd+6} stroke="#fff" />
@@ -473,7 +498,7 @@ export default function LCARSChart({ figure, width = 320, height = 180 }: { figu
     // Data point labels
     const labels = [];
     for (let i = 0; i < n; i++) {
-      const x = axisX1 + (i/(n-1))*(width-40);
+  const x = axisX1 + (i/(n-1))*(width-(40+RS));
       const y = axisYEnd - ((figure.data[i]-minVal)/(maxVal-minVal||1))*(axisYEnd-axisYStart);
       labels.push(
         <text key={i} x={x} y={y-12} fill="#FFB300" fontSize={14} textAnchor="middle">{figure.data[i]}</text>
@@ -507,7 +532,7 @@ export default function LCARSChart({ figure, width = 320, height = 180 }: { figu
     }
     const rows = figure.data.length;
     const cols = figure.data[0].length;
-    const cellW = (width - 40) / cols;
+  const cellW = (width - (48 + RS)) / cols;
     const cellH = (height - 40) / rows;
     // Find min/max for color scaling
     const flat = figure.data.flat();
@@ -559,7 +584,7 @@ export default function LCARSChart({ figure, width = 320, height = 180 }: { figu
   }
   // Fallback
   // Fallback for unknown or missing chart type/data
-  return <svg id={figure.id} width={width} height={height} style={{ background: "#222", borderRadius: 12 }}>
+  return <svg id={figure.id} width={width} height={height} style={{ background: "#222", borderRadius: 12, overflow: "visible" }}>
     <rect x={0} y={0} width={width} height={height} fill="#222" />
     <text x={width/2} y={height/2} fill="#FFB300" fontSize={14} textAnchor="middle">
       {figure?.type ? `Unknown chart type: ${figure.type}` : 'Missing or invalid chart data'}

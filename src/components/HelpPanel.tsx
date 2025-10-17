@@ -1,6 +1,12 @@
 import React, { useEffect, useRef } from "react";
 
-export default function HelpPanel({ onClose, target }: { onClose: () => void, target?: "templates"|"figure-bias"|"presets"|"produce-reroll"|"references" }) {
+interface HelpPanelProps {
+  onClose: () => void;
+  target?: "templates"|"figure-bias"|"presets"|"produce-reroll"|"references";
+  asDrawer?: boolean; // when true, render just the card body (no backdrop) for embedding in Drawer
+}
+
+export default function HelpPanel({ onClose, target, asDrawer = false }: HelpPanelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const sectionRefs = {
@@ -34,15 +40,7 @@ export default function HelpPanel({ onClose, target }: { onClose: () => void, ta
     }, 0);
   }, [target]);
 
-  return (
-    <div
-      ref={containerRef}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="help-title"
-      onClick={onBackdropClick}
-    >
+  const content = (
       <div className="w-full max-w-3xl lcars-card shadow-2xl" onClick={(e)=>e.stopPropagation()}>
         <div className="lcars-rail lcars-rail-alt"></div>
         <div className="lcars-body">
@@ -83,7 +81,7 @@ export default function HelpPanel({ onClose, target }: { onClose: () => void, ta
           <div ref={sectionRefs['references']}>
             <div className="lcars-label">References & Canon Names</div>
             <ul className="list-disc pl-6 text-sm space-y-1">
-              <li><strong>Signatory</strong>: Enable “Add Name to References” to guarantee a signing engineer entry.</li>
+              <li><strong>Signature</strong>: Enable “Add Name to References” to guarantee a signing engineer entry.</li>
               <li><strong>Canon names</strong>: Toggle “Allow Canon Names in References” to occasionally include famous Star Trek names — curated for plausible ranks/titles.</li>
               <li><strong>Era filter</strong>: Enable “Filter Canon Names by Era” to only include canon names active during the vessel’s timeframe.</li>
               <li><strong>Frequency</strong>: Use “Famous Author Frequency” to choose Off / Rare / Occasional / Frequent appearance rates. Humor and template can nudge frequency slightly.</li>
@@ -96,6 +94,20 @@ export default function HelpPanel({ onClose, target }: { onClose: () => void, ta
           </div>
         </div>
       </div>
+  );
+
+  if (asDrawer) return content;
+
+  return (
+    <div
+      ref={containerRef}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="help-title"
+      onClick={onBackdropClick}
+    >
+      {content}
     </div>
   );
 }

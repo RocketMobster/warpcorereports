@@ -123,4 +123,9 @@
   /* #printable-report section:nth-of-type(1) {
     page-break-before: always;
   } */
+  
+  /* Accessibility: honor prefers-reduced-motion */
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
 }

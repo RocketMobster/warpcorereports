@@ -16,8 +16,12 @@ import { buildDocx } from "./utils/docxExport";
 import { randint } from "./utils/helpers";
 import { parseSharedReportUrl, decodeSharedReportId } from "./utils/urlParser";
 import { initSoundSettings, buttonClickSound, successSound, alertSound, notificationSound, playSound } from "./utils/sounds";
+import { hapticLight, hapticMedium, hapticHeavy, hapticSuccess, hapticError } from "./utils/haptics";
 import "./utils/print.css";
 import Footer from "./components/Footer";
+import useMediaQuery from "./hooks/useMediaQuery";
+import MobileActionBar from "./components/MobileActionBar";
+import Drawer from "./components/Drawer";
 
 export default function App() {
   const [report, setReport] = useState<Report | null>(null);
@@ -41,6 +45,28 @@ export default function App() {
   // Help panel state
   const [showHelp, setShowHelp] = useState(false);
   const [helpTarget, setHelpTarget] = useState<"templates"|"figure-bias"|"presets"|"produce-reroll"|"references"|undefined>(undefined);
+  const [pendingControlsCfg, setPendingControlsCfg] = useState<GeneratorConfig | null>(null);
+  // Mobile / responsive
+  const isDesktop = useMediaQuery('(min-width: 768px)');
+  const [mobileHelpOpen, setMobileHelpOpen] = useState(false);
+  const [mobileStardateOpen, setMobileStardateOpen] = useState(false);
+  const [mobileCrewOpen, setMobileCrewOpen] = useState(false);
+  const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
+  // Zoom mode: content (default, scales everything) or text-only (scales typography/layout, keeps charts steady)
+  const [textOnlyZoom, setTextOnlyZoom] = useState<boolean>(() => {
+    try { return localStorage.getItem('wcr_text_only_zoom') === 'true'; } catch { return false; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('wcr_text_only_zoom', String(textOnlyZoom)); } catch {}
+  }, [textOnlyZoom]);
+  // Density
+  const [densityCompact, setDensityCompact] = useState<boolean>(() => {
+    try { return localStorage.getItem('wcr_density_compact') === 'true'; } catch { return false; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('wcr_density_compact', String(densityCompact)); } catch {}
+  }, [densityCompact]);
+  // Removed: Zoom Safe Zone manual toggle — now automatic and scaled
   
   // Initialize sound system
   useEffect(() => {
@@ -79,9 +105,8 @@ export default function App() {
       setIsSharedLink(true);
       
       // Store the format if specified
-      if (format) {
-        setSharedLinkFormat(format as "pdf" | "docx" | "txt");
-      }
+  if (format) {
+  }
       
       // Try to decode the report ID
       const reportInfo = decodeSharedReportId(reportId);
@@ -139,6 +164,7 @@ export default function App() {
   const handleGenerate = (cfg: GeneratorConfig) => {
     // Play processing sound
     playSound('processing');
+  hapticMedium();
     
     // Always clone the config to avoid mutating the original
     const configToUse = { ...cfg };
@@ -171,6 +197,8 @@ export default function App() {
     
     // Play success sound when report is generated
     successSound();
+  successSound();
+  hapticSuccess();
     
     // Force a new report object to trigger updates
     setReport({...r});
@@ -214,8 +242,9 @@ export default function App() {
   const regenerateReport = () => {
     if (!config) return;
     
-    // Play sound effect
-    buttonClickSound();
+  // Play sound effect
+  buttonClickSound();
+  hapticLight();
     
     // Create a new seed
     const newSeed = Date.now().toString(36);
@@ -275,6 +304,7 @@ export default function App() {
   const exportTxt = () => {
     if (!report) return;
     buttonClickSound();
+  hapticLight();
     const txt = reportToTxt(report);
     const blob = new Blob([txt], { type: "text/plain" });
     saveAs(blob, "engineering_report.txt");
@@ -284,6 +314,7 @@ export default function App() {
   const exportPdf = async () => {
     if (!report) return;
     buttonClickSound();
+  hapticLight();
     const doc = new jsPDF({ unit: "pt", format: "letter" });
     const pageHeight = (doc as any).internal?.pageSize?.getHeight
       ? (doc as any).internal.pageSize.getHeight()
@@ -447,6 +478,7 @@ export default function App() {
   const exportDocx = async () => {
     if (!report) return;
     buttonClickSound();
+  hapticLight();
     const doc = buildDocx(report);
     const blob = await doc;
     saveAs(blob, "engineering_report.docx");
@@ -457,6 +489,7 @@ export default function App() {
     if (!report) return;
     
     buttonClickSound();
+  hapticLight();
     
     // We need to wait for all SVG charts to render properly
     setTimeout(() => {
@@ -466,6 +499,7 @@ export default function App() {
   
   const handleShare = () => {
     buttonClickSound();
+    hapticLight();
     setIsShareDialogOpen(true);
   };
 
@@ -475,10 +509,12 @@ export default function App() {
       await navigator.clipboard.writeText(text);
       setToastMessage(successMsg);
       setShowToast(true);
+      hapticSuccess();
       setTimeout(() => setShowToast(false), 1800);
     } catch (e) {
       setToastMessage('Clipboard unavailable. Copy manually.');
       setShowToast(true);
+      hapticError();
       setTimeout(() => setShowToast(false), 2000);
     }
   };
@@ -603,11 +639,31 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0d16] text-slate-100 p-6">
+    <div className={`min-h-screen bg-[#0b0d16] text-slate-100 p-6 pb-28 md:pb-6 ${densityCompact ? 'density-compact' : ''}`}>
       <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-6 gap-4">
           <h1 className="text-2xl font-extrabold">Starfleet Engineering Report Generator</h1>
-          <SoundControls />
+          <div className="flex items-center gap-3">
+            {densityCompact && (
+              <span
+                className="text-xs px-2 py-1 rounded-md border border-amber-500 text-amber-300 bg-[#1a1f33]"
+                aria-label="Compact density mode is on"
+                title="Compact density is enabled"
+              >
+                Compact On
+              </span>
+            )}
+            <label className="hidden md:flex items-center gap-2 text-xs select-none" title="Compact density">
+              <input type="checkbox" checked={densityCompact} onChange={e=>setDensityCompact(e.target.checked)} aria-label="Toggle compact density" />
+              Compact
+            </label>
+            {/* Zoom Safe Zone is automatic; toggle removed */}
+            <label className="hidden md:flex items-center gap-2 text-xs select-none" title="Text-only zoom (keeps charts steady)">
+              <input type="checkbox" checked={textOnlyZoom} onChange={e=>setTextOnlyZoom(e.target.checked)} aria-label="Toggle text-only zoom" />
+              Text-only Zoom
+            </label>
+            <SoundControls />
+          </div>
         </div>
         
         {isSharedLink && (
@@ -625,13 +681,28 @@ export default function App() {
           </div>
         )}
         
+        <div className="hidden md:block">
         <ReportControls
           onGenerate={handleGenerate}
           onPreviewCrew={handlePreviewCrewToggle}
           manifestPanelOpen={manifestPanelOpen}
           onRegenerate={report ? regenerateReport : undefined}
           onOpenHelp={(section) => { setHelpTarget(section); setShowHelp(true); }}
+          onConfigChange={(cfg)=>setPendingControlsCfg(cfg)}
         />
+        </div>
+        {/* Mobile simplified: keep existing controls for now, future accordion (Phase A step 4) */}
+        <div className="md:hidden">
+          <ReportControls
+            onGenerate={handleGenerate}
+            onPreviewCrew={handlePreviewCrewToggle}
+            manifestPanelOpen={manifestPanelOpen}
+            onRegenerate={report ? regenerateReport : undefined}
+            onOpenHelp={(section) => { setHelpTarget(section); setMobileHelpOpen(true); }}
+            onConfigChange={(cfg)=>setPendingControlsCfg(cfg)}
+            mobile
+          />
+        </div>
         {manifestPanelOpen && (
           <CrewManifestPanel 
             count={currentCrewCount} 
@@ -667,7 +738,7 @@ export default function App() {
             currentStardate={stardateOverride}
           />
         )}
-        <div id="button-bar" className="flex flex-wrap gap-3 mb-6 sticky top-4 z-10 bg-[#0b0d16] p-3 rounded-xl border border-slate-700 shadow-lg transition-all duration-300">
+  <div id="button-bar" className="hidden md:flex flex-wrap gap-3 mb-6 sticky top-4 z-10 bg-[#0b0d16] p-3 rounded-xl border border-slate-700 shadow-lg transition-all duration-300">
           <button onClick={exportTxt} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all duration-200">Download TXT</button>
           <button onClick={async()=>{ if(!report){ setToastMessage('No report to copy.'); setShowToast(true); setTimeout(()=>setShowToast(false),1500); return;} await copyToClipboard(reportToTxt(report), 'Full report copied as TXT.'); }} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all duration-200" title="Copy full report as plain text" aria-label="Copy full report as plain text">Copy Full Report (TXT)</button>
           <button onClick={exportPdf} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all duration-200">Download PDF</button>
@@ -697,7 +768,7 @@ export default function App() {
           )}
 
           <button
-            onClick={() => setShowHelp(true)}
+            onClick={() => { hapticLight(); setShowHelp(true); }}
             className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all duration-200 ml-auto"
             title="Open Help"
             aria-label="Open Help"
@@ -705,7 +776,7 @@ export default function App() {
             Help
           </button>
         </div>
-        {showHelp && (
+        {showHelp && isDesktop && (
           <HelpPanel onClose={() => setShowHelp(false)} target={helpTarget} />
         )}
         
@@ -739,19 +810,24 @@ export default function App() {
               </div>
             )}
             
-            <ReportPreview 
-              report={report} 
-              onReportUpdate={handleReportUpdate}
-              editEnabled={chartEditingEnabled}
-              onCopyHeaderLine={copyHeaderLine}
-              onCopyAbstract={copyAbstract}
-              onCopyProblems={copyProblems}
-              onCopyConclusion={copyConclusion}
-              onCopyReferences={copyReferences}
-              onCopyProblemItem={copyProblemItem}
-              onCopyCrewManifest={copyCrewManifest}
-              missionTemplate={config?.missionTemplate || 'none'}
-            />
+            <div className="mt-4 md:mt-6">
+              <ReportPreview 
+                report={report} 
+                onReportUpdate={handleReportUpdate}
+                editEnabled={chartEditingEnabled}
+                compact={densityCompact}
+                textOnlyZoom={textOnlyZoom}
+                
+                onCopyHeaderLine={copyHeaderLine}
+                onCopyAbstract={copyAbstract}
+                onCopyProblems={copyProblems}
+                onCopyConclusion={copyConclusion}
+                onCopyReferences={copyReferences}
+                onCopyProblemItem={copyProblemItem}
+                onCopyCrewManifest={copyCrewManifest}
+                missionTemplate={config?.missionTemplate || 'none'}
+              />
+            </div>
           </>
         ) : (
           <div>No report yet.</div>
@@ -777,6 +853,88 @@ export default function App() {
         )}
         <Footer />
       </div>
+      {/* Mobile Action Bar */}
+      {!isDesktop && (
+        <MobileActionBar
+          hasReport={!!report}
+          onProduce={() => {
+            const cfg = pendingControlsCfg || lastCfg;
+            if (cfg) handleGenerate(cfg);
+          }}
+          onReroll={report ? regenerateReport : undefined}
+          onShare={() => { if (report) setIsShareDialogOpen(true); }}
+          onHelp={() => { setHelpTarget(undefined); setMobileHelpOpen(true); }}
+          onStardate={() => setMobileStardateOpen(true)}
+          onCrew={() => setMobileCrewOpen(true)}
+          onMore={() => setMobileMoreOpen(true)}
+        />
+      )}
+      {/* Drawers for mobile */}
+      {!isDesktop && (
+        <>
+          <Drawer open={mobileHelpOpen} onClose={() => setMobileHelpOpen(false)} title="Help">
+            <HelpPanel onClose={() => setMobileHelpOpen(false)} target={helpTarget} asDrawer />
+          </Drawer>
+          <Drawer open={mobileStardateOpen} onClose={() => setMobileStardateOpen(false)} title="Stardate Calculator" side="bottom" widthClass="h-[70vh]">
+            <StardateCalculator
+              onStardateChange={(sd)=>setStardateOverride(sd)}
+              currentStardate={stardateOverride}
+            />
+            <div className="mt-2 flex items-center gap-2">
+              <input type="checkbox" checked={useStardateOverride} onChange={e=>setUseStardateOverride(e.target.checked)} id="mobileUseSd" />
+              <label htmlFor="mobileUseSd" className="text-xs">Use Stardate in Report</label>
+            </div>
+          </Drawer>
+          <Drawer open={mobileCrewOpen} onClose={() => setMobileCrewOpen(false)} title="Crew Manifest" side="bottom" widthClass="h-[65vh]">
+            {manifestPanelOpen || crewManifest.length ? (
+              <CrewManifestPanel 
+                count={currentCrewCount} 
+                onCrewChange={handleCrewChange} 
+                onRegenerate={regenerateCrewManifest}
+              />
+            ) : (
+              <div className="text-sm text-slate-300">
+                <p>No crew manifest yet. Tap Generate to preview.</p>
+                <button className="mt-3 lcars-btn" onClick={()=>{ handlePreviewCrewToggle(); }}>Generate Crew Preview</button>
+              </div>
+            )}
+          </Drawer>
+          <Drawer open={mobileMoreOpen} onClose={() => setMobileMoreOpen(false)} title="More Actions" side="bottom" widthClass="h-[70vh]">
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <button onClick={exportTxt} className="lcars-btn" disabled={!report}>TXT</button>
+              <button onClick={exportPdf} className="lcars-btn" disabled={!report}>PDF</button>
+              <button onClick={exportDocx} className="lcars-btn" disabled={!report}>DOCX</button>
+              <button onClick={handlePrint} className="lcars-btn" disabled={!report}>Print</button>
+              <button
+                onClick={async()=>{ if(!report){ setToastMessage('No report'); setShowToast(true); setTimeout(()=>setShowToast(false),1200); return;} await navigator.clipboard.writeText(reportToTxt(report)); setToastMessage('Full report copied'); setShowToast(true); setTimeout(()=>setShowToast(false),1500); }}
+                className="lcars-btn" disabled={!report}
+              >Copy Full</button>
+              <button
+                onClick={async()=>{ if(!report){ setToastMessage('No references'); setShowToast(true); setTimeout(()=>setShowToast(false),1200); return;} const text = report.references.map((r,i)=>`[${i+1}] ${r.text.replace(/^\[\d+\]\s*/, '')}`).join('\n'); await navigator.clipboard.writeText(text); setToastMessage('References copied'); setShowToast(true); setTimeout(()=>setShowToast(false),1500); }}
+                className="lcars-btn" disabled={!report}
+              >Copy Refs</button>
+              <div className="col-span-2 flex items-center justify-between mt-2 p-2 rounded-md border border-slate-700">
+                <span className="text-xs text-slate-300">Compact density</span>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={densityCompact} onChange={e=>setDensityCompact(e.target.checked)} aria-label="Toggle compact density" />
+                </label>
+              </div>
+              <div className="col-span-2 flex items-center justify-between mt-1 p-2 rounded-md border border-slate-700">
+                <span className="text-xs text-slate-300">Text-only zoom</span>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={textOnlyZoom} onChange={e=>setTextOnlyZoom(e.target.checked)} aria-label="Toggle text-only zoom" />
+                </label>
+              </div>
+              {/* Zoom Safe Zone now automatic; no manual toggle */}
+              {report && (
+                <button onClick={toggleChartEditing} className="lcars-btn col-span-2" aria-label="Toggle chart editing">
+                  {chartEditingEnabled ? 'Exit Chart Editing' : 'Edit Charts'}
+                </button>
+              )}
+            </div>
+          </Drawer>
+        </>
+      )}
     </div>
   );
 }
