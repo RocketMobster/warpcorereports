@@ -282,6 +282,10 @@ You can customize the sound experience using the sound control panel in the appl
 
 The repository ignores accidental large artifacts and documents (e.g., screenshots, ZIP bundles, and large draft docs). If you need to share such assets, please attach them to releases rather than committing them to the repo.
 
+### Recovery Playbook
+
+If Git ever surprises you (rebase/reset/stash mishaps), see the PowerShell‑safe recovery steps in `docs/RECOVERY.md`. It covers reflog-based recovery, turning stashes into branches, rescuing dangling commits, restoring single files, and recommended safer defaults.
+
 ## Randomize Controls
 
 For quick exploration and fine-tuned randomness:
