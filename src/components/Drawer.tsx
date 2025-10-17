@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useRef } from 'react';
+import React, { ReactNode, useEffect } from 'react';
 
 type DrawerProps = {
   open: boolean;
@@ -13,61 +13,22 @@ type DrawerProps = {
 };
 
 export default function Drawer({ open, onClose, title, side = 'bottom', children, accentClass, titleClass, panelClassName, headerClassName }: DrawerProps) {
-  const panelRef = useRef<HTMLDivElement|null>(null);
-  const previouslyFocused = useRef<HTMLElement|null>(null);
-
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.preventDefault(); onClose(); } };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     if (open) window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
 
-  // Focus management + trap
-  useEffect(() => {
-    if (open) {
-      previouslyFocused.current = document.activeElement as HTMLElement | null;
-      // announce open
-      try { window.dispatchEvent(new CustomEvent('wcr-live', { detail: `${title || 'Panel'} opened` })); } catch {}
-      setTimeout(() => {
-        const focusable = panelRef.current?.querySelector<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-        focusable?.focus();
-      }, 0);
-    } else if (previouslyFocused.current) {
-      // announce close
-      try { window.dispatchEvent(new CustomEvent('wcr-live', { detail: `${title || 'Panel'} closed` })); } catch {}
-      previouslyFocused.current.focus();
-    }
-  }, [open, title]);
-
-  useEffect(() => {
-    if (!open) return;
-    const node = panelRef.current;
-    if (!node) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return;
-      const focusables = Array.from(node.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')).filter(el => !el.hasAttribute('disabled'));
-      if (!focusables.length) return;
-      const first = focusables[0];
-      const last = focusables[focusables.length - 1];
-      if (e.shiftKey) {
-        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
-      } else if (document.activeElement === last) { e.preventDefault(); first.focus(); }
-    };
-    node.addEventListener('keydown', handler);
-    return () => node.removeEventListener('keydown', handler);
-  }, [open]);
-
   return (
-    <div className={`fixed inset-0 z-40 pointer-events-none ${open ? '' : 'invisible'}`} aria-hidden={!open}>
+    <div className={`fixed inset-0 z-40 ${open ? '' : 'pointer-events-none invisible'}`} aria-hidden={!open}>
       {/* Backdrop */}
       <div
-        className={`absolute inset-0 bg-black/50 transition-opacity ${open ? 'opacity-100' : 'opacity-0'} pointer-events-auto`}
+        className={`absolute inset-0 bg-black/50 transition-opacity ${open ? 'opacity-100' : 'opacity-0'} pointer-events-auto z-40`}
         onClick={onClose}
       />
       {/* Panel */}
       <div
-        ref={panelRef}
-        className={`absolute pointer-events-auto flex flex-col ${panelClassName ?? 'bg-slate-900'} border-t ${headerClassName ?? 'border-slate-700'} shadow-xl w-full max-h-[80%] ${
+        className={`absolute pointer-events-auto flex flex-col ${panelClassName ?? 'bg-slate-900'} border-t ${headerClassName ?? 'border-slate-700'} shadow-xl w-full max-h-[80%] z-50 ${
           side === 'bottom' ? 'left-0 bottom-0 rounded-t-xl' : ''
         } transition-transform duration-300 ${open ? 'translate-y-0' : 'translate-y-full'}`}
         role="dialog"
@@ -79,6 +40,7 @@ export default function Drawer({ open, onClose, title, side = 'bottom', children
             <span className={`${titleClass ?? 'font-semibold text-sm tracking-wide'}`}>{title}</span>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="text-xs uppercase tracking-wide px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600"
           >Close</button>

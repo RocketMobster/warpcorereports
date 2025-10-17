@@ -61,25 +61,6 @@ export default function App() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastIsError, setToastIsError] = useState(false);
-  // Live region message for structural announcements (panels/dialogs)
-  const [liveStructuralMsg, setLiveStructuralMsg] = useState<string>("");
-  useEffect(() => {
-    const lastRef = { detail: '', ts: 0 } as { detail: string; ts: number };
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      if (typeof detail !== 'string') return;
-      const now = Date.now();
-      // Debounce identical structural messages fired within 900ms
-      if (detail === lastRef.detail && now - lastRef.ts < 900) return;
-      lastRef.detail = detail;
-      lastRef.ts = now;
-      setLiveStructuralMsg(detail);
-      // Clear after a short delay to avoid verbosity build-up in SR queues
-      setTimeout(()=> setLiveStructuralMsg(""), 2500);
-    };
-    window.addEventListener('wcr-live', handler as EventListener);
-    return () => window.removeEventListener('wcr-live', handler as EventListener);
-  }, []);
   const errorDetailRef = React.useRef<string>("");
   // Simple error toast throttle
   const [lastErrorAt, setLastErrorAt] = useState<number>(0);
@@ -369,17 +350,9 @@ export default function App() {
     }
   };
 
-  // Helper to present a short-lived toast (non-error)
-  const showTempToast = (msg: string, duration: number = 1800) => {
-    setToastIsError(false);
-    setToastMessage(msg);
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), duration);
-  };
-
   const exportTxt = () => {
+    if (!report) return;
     buttonClickSound();
-    if (!report) return; // Accessible disabled pattern handles messaging
     const txt = reportToTxt(report);
     const blob = new Blob([txt], { type: "text/plain" });
     saveAs(blob, "engineering_report.txt");
@@ -387,8 +360,8 @@ export default function App() {
   };
 
   const exportPdf = async () => {
-    buttonClickSound();
     if (!report) return;
+    buttonClickSound();
     const doc = new jsPDF({ unit: "pt", format: "letter" });
     const pageHeight = (doc as any).internal?.pageSize?.getHeight
       ? (doc as any).internal.pageSize.getHeight()
@@ -550,8 +523,8 @@ export default function App() {
   };
 
   const exportDocx = async () => {
-    buttonClickSound();
     if (!report) return;
+    buttonClickSound();
     const doc = buildDocx(report);
     const blob = await doc;
     saveAs(blob, "engineering_report.docx");
@@ -559,8 +532,9 @@ export default function App() {
   };
 
   const handlePrint = () => {
-    buttonClickSound();
     if (!report) return;
+    
+    buttonClickSound();
     
     // We need to wait for all SVG charts to render properly
     setTimeout(() => {
@@ -570,7 +544,6 @@ export default function App() {
   
   const handleShare = () => {
     buttonClickSound();
-    if (!report) return;
     setIsShareDialogOpen(true);
   };
 
@@ -709,9 +682,7 @@ export default function App() {
 
   return (
     <div className={`min-h-screen bg-[#0b0d16] text-slate-100 p-6 ${densityCompact ? 'density-compact' : ''}`}>   
-      {/* Skip to main content link (appears on keyboard focus) */}
-      <a href="#main-content" className="skip-link" aria-label="Skip to main content">Skip to main content</a>
-      <div className="max-w-6xl mx-auto" id="main-content">
+      <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-extrabold">Starfleet Engineering Report Generator</h1>
           {/* Settings gear moved to header */}
@@ -781,51 +752,16 @@ export default function App() {
 
         {/* Stardate controls moved into the Stardate accordion in mobile controls */}
         {showDesktopControls && (
-        <div id="button-bar" className="flex flex-wrap gap-3 mb-6 sticky top-4 z-10 bg-[#0b0d16] p-3 rounded-xl border border-slate-700 shadow-lg transition-all duration-300" aria-describedby={!report ? 'export-hint' : undefined}>
-          {!report && (
-            <p id="export-hint" className="w-full text-[11px] text-amber-300 bg-slate-800/60 border border-slate-700 rounded px-3 py-2 mb-1" aria-live="polite">
-              Produce a report to enable export, print, and share actions.
-            </p>
-          )}
-          <button
-            onClick={exportTxt}
-            aria-disabled={!report}
-            aria-describedby={!report ? 'export-hint' : undefined}
-            className={`px-3 py-2 rounded-xl border transition-all duration-200 ${!report ? 'bg-slate-800/50 border-slate-700/50 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700 hover:bg-slate-700'}`}
-          >Download TXT</button>
-          <button
-            onClick={async()=>{ if(!report) return; await copyToClipboard(reportToTxt(report), 'Full report copied as TXT.'); }}
-            aria-disabled={!report}
-            aria-describedby={!report ? 'export-hint' : undefined}
-            title="Copy full report as plain text"
-            aria-label="Copy full report as plain text"
-            className={`px-3 py-2 rounded-xl border transition-all duration-200 ${!report ? 'bg-slate-800/50 border-slate-700/50 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700 hover:bg-slate-700'}`}
-          >
-            Copy Full Report (TXT)
-          </button>
-          <button
-            onClick={exportPdf}
-            aria-disabled={!report}
-            aria-describedby={!report ? 'export-hint' : undefined}
-            className={`px-3 py-2 rounded-xl border transition-all duration-200 ${!report ? 'bg-slate-800/50 border-slate-700/50 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700 hover:bg-slate-700'}`}
-          >Download PDF</button>
-          <button
-            onClick={exportDocx}
-            aria-disabled={!report}
-            aria-describedby={!report ? 'export-hint' : undefined}
-            className={`px-3 py-2 rounded-xl border transition-all duration-200 ${!report ? 'bg-slate-800/50 border-slate-700/50 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700 hover:bg-slate-700'}`}
-          >Download DOCX</button>
-          <button
-            onClick={handlePrint}
-            aria-disabled={!report}
-            aria-describedby={!report ? 'export-hint' : undefined}
-            className={`px-3 py-2 rounded-xl font-bold border transition-all duration-200 ${!report ? 'bg-amber-600/40 border-amber-500/40 text-amber-300/60 cursor-not-allowed' : 'bg-amber-600 text-black border-amber-500 hover:bg-amber-500'}`}
-          >Print Report</button>
+        <div id="button-bar" className="flex flex-wrap gap-3 mb-6 sticky top-4 z-10 bg-[#0b0d16] p-3 rounded-xl border border-slate-700 shadow-lg transition-all duration-300">
+          <button onClick={exportTxt} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all duration-200">Download TXT</button>
+          <button onClick={async()=>{ if(!report){ setToastMessage('No report to copy.'); setShowToast(true); setTimeout(()=>setShowToast(false),1500); return;} await copyToClipboard(reportToTxt(report), 'Full report copied as TXT.'); }} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all duration-200" title="Copy full report as plain text" aria-label="Copy full report as plain text">Copy Full Report (TXT)</button>
+          <button onClick={exportPdf} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all duration-200">Download PDF</button>
+          <button onClick={exportDocx} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all duration-200">Download DOCX</button>
+          <button onClick={handlePrint} className="px-3 py-2 rounded-xl bg-amber-600 text-black font-bold border border-amber-500 hover:bg-amber-500 transition-all duration-200">Print Report</button>
           <button 
-            onClick={handleShare}
-            aria-disabled={!report}
-            aria-describedby={!report ? 'export-hint' : undefined}
-            className={`px-3 py-2 rounded-xl font-bold border transition-all duration-200 ${!report ? 'bg-blue-600/40 border-blue-500/40 text-blue-300/70 cursor-not-allowed' : 'bg-blue-600 text-white border-blue-500 hover:bg-blue-500'}`}
+            onClick={handleShare} 
+            className="px-3 py-2 rounded-xl bg-blue-600 text-white font-bold border border-blue-500 hover:bg-blue-500 transition-all duration-200"
+            disabled={!report}
           >
             Share Report
           </button>
@@ -905,9 +841,9 @@ export default function App() {
           />
         )}
         
-        {/* Toast Notification (visual) */}
+        {/* Toast Notification */}
         {showToast && (
-          <div className="fixed bottom-4 right-4 bg-purple-900 text-white px-6 py-3 rounded-lg shadow-lg animate-fadeIn z-50 flex items-center gap-3" role="alert" aria-live="assertive">
+          <div className="fixed bottom-4 right-4 bg-purple-900 text-white px-6 py-3 rounded-lg shadow-lg animate-fadeIn z-50 flex items-center gap-3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
               <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
               <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
@@ -967,14 +903,6 @@ export default function App() {
             )}
           </div>
         )}
-        {/* Off-screen polite live region to announce toast updates (non-error) */}
-        <div aria-live="polite" aria-atomic="true" className="sr-only" style={{position:'absolute',left:-9999,top:'auto',width:1,height:1,overflow:'hidden'}}>
-          {showToast && !toastIsError ? toastMessage : ''}
-        </div>
-        {/* Off-screen structural announcements (panel/dialog open/close) */}
-        <div aria-live="polite" aria-atomic="true" className="sr-only" style={{position:'absolute',left:-9999,top:'auto',width:1,height:1,overflow:'hidden'}}>
-          {liveStructuralMsg}
-        </div>
         {/* Mobile overlays (touch devices or small screens) */}
         {showMobileUI && (
           <>
@@ -1008,26 +936,14 @@ export default function App() {
               />
             </Drawer>
             <Drawer open={mobileExportOpen} onClose={()=>setMobileExportOpen(false)} title="Export">
-              <div className="space-y-3 text-sm" aria-describedby={!report ? 'export-hint-mobile' : undefined}>
-                {!report && (
-                  <p id="export-hint-mobile" className="text-[11px] text-amber-300 bg-slate-800/60 border border-slate-700 rounded p-2">
-                    Produce a report to enable export, print, and share actions.
-                  </p>
-                )}
+              <div className="space-y-3 text-sm">
                 <div className="grid grid-cols-2 gap-2">
-                  <button onClick={exportTxt} aria-disabled={!report} aria-describedby={!report ? 'export-hint-mobile' : undefined} className={`px-2 py-2 rounded border ${!report ? 'bg-slate-800/40 border-slate-700/40 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700'}`}>Download TXT</button>
-                  <button
-                    onClick={async()=>{ if(!report) return; await copyToClipboard(reportToTxt(report), 'Full report copied as TXT.'); }}
-                    aria-disabled={!report}
-                    aria-describedby={!report ? 'export-hint-mobile' : undefined}
-                    className={`px-2 py-2 rounded border ${!report ? 'bg-slate-800/40 border-slate-700/40 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700'}`}
-                  >
-                    Copy Full (TXT)
-                  </button>
-                  <button onClick={exportPdf} aria-disabled={!report} aria-describedby={!report ? 'export-hint-mobile' : undefined} className={`px-2 py-2 rounded border ${!report ? 'bg-slate-800/40 border-slate-700/40 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700'}`}>Download PDF</button>
-                  <button onClick={exportDocx} aria-disabled={!report} aria-describedby={!report ? 'export-hint-mobile' : undefined} className={`px-2 py-2 rounded border ${!report ? 'bg-slate-800/40 border-slate-700/40 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700'}`}>Download DOCX</button>
-                  <button onClick={handlePrint} aria-disabled={!report} aria-describedby={!report ? 'export-hint-mobile' : undefined} className={`px-2 py-2 rounded border font-semibold ${!report ? 'bg-amber-600/40 border-amber-500/40 text-amber-300/60 cursor-not-allowed' : 'bg-amber-600 text-black border-amber-500'}`}>Print</button>
-                  <button onClick={handleShare} aria-disabled={!report} aria-describedby={!report ? 'export-hint-mobile' : undefined} className={`px-2 py-2 rounded border font-semibold ${!report ? 'bg-blue-600/40 border-blue-500/40 text-blue-300/70 cursor-not-allowed' : 'bg-blue-600 text-white border-blue-500'}`}>Share</button>
+                  <button onClick={exportTxt} className="px-2 py-2 rounded bg-slate-800 border border-slate-700">Download TXT</button>
+                  <button onClick={async()=>{ if(!report){ setToastMessage('No report to copy.'); setShowToast(true); setTimeout(()=>setShowToast(false),1500); return;} await copyToClipboard(reportToTxt(report), 'Full report copied as TXT.'); }} className="px-2 py-2 rounded bg-slate-800 border border-slate-700">Copy Full (TXT)</button>
+                  <button onClick={exportPdf} className="px-2 py-2 rounded bg-slate-800 border border-slate-700">Download PDF</button>
+                  <button onClick={exportDocx} className="px-2 py-2 rounded bg-slate-800 border border-slate-700">Download DOCX</button>
+                  <button onClick={handlePrint} className="px-2 py-2 rounded bg-amber-600 text-black border border-amber-500">Print</button>
+                  <button onClick={handleShare} className="px-2 py-2 rounded bg-blue-600 text-white border border-blue-500" disabled={!report}>Share</button>
                 </div>
               </div>
             </Drawer>
