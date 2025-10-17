@@ -2,8 +2,96 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { color-scheme: dark; }
-body { @apply bg-[#0b0d16] text-slate-100; }
+:root { 
+  color-scheme: dark;
+  
+  /* Base colors - Enhanced contrast for WCAG AA */
+  --wcr-text-primary: rgb(241 245 249);      /* slate-100 */
+  --wcr-text-secondary: rgb(203 213 225);    /* slate-300 - Enhanced from 400 */
+  --wcr-text-muted: rgb(148 163 184);        /* slate-400 - Enhanced from 500 */
+  --wcr-border: rgb(71 85 105);              /* slate-600 - Enhanced from 700 */
+  --wcr-surface: rgb(15 23 42);              /* slate-900 */
+  --wcr-surface-hover: rgb(30 41 59);        /* slate-800 */
+  
+  /* Interactive states */
+  --wcr-focus-ring-color: rgb(59 130 246);   /* blue-500 */
+  --wcr-focus-ring-width: 2px;
+}
+
+/* High contrast mode overrides */
+.high-contrast {
+  --wcr-text-primary: rgb(255 255 255);      /* white */
+  --wcr-text-secondary: rgb(226 232 240);    /* slate-200 */
+  --wcr-text-muted: rgb(203 213 225);        /* slate-300 */
+  --wcr-border: rgb(71 85 105);              /* slate-600 */
+  --wcr-surface: rgb(2 6 23);                /* slate-950 */
+  --wcr-surface-hover: rgb(15 23 42);        /* slate-900 */
+
+  /* Increase focus ring contrast */
+  --wcr-focus-ring-color: rgb(59 130 246);   /* blue-500 */
+  --wcr-focus-ring-width: 3px;
+}
+
+body { 
+  background-color: #0b0d16;
+  color: var(--wcr-text-primary);
+}
+
+/* --- Z-index Layers --- */
+.modal-layer {
+	position: fixed;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1000;
+}
+
+.modal-backdrop {
+	position: absolute;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.6);
+	backdrop-filter: blur(3px);
+	z-index: 1000;
+}
+
+.modal-content {
+	position: relative;
+	z-index: 1010;
+	background: var(--wcr-color-surface);
+	border-radius: 0.75rem;
+	box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+	max-height: 90vh;
+	max-width: 90vw;
+	margin: 2rem;
+	overflow-y: auto;
+}
+
+.drawer-layer {
+	position: fixed;
+	inset: 0;
+	z-index: 1000;
+}
+
+.drawer-backdrop {
+	position: absolute;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.5);
+	z-index: 1000;
+}
+
+.drawer-content {
+	position: fixed;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 1010;
+	background: var(--wcr-color-surface);
+	max-height: 85vh;
+	overflow-y: auto;
+	transform: translateY(0);
+	transition: transform 0.3s ease-in-out;
+}
 
 /* --- Skip Link (a11y) --- */
 .skip-link {
@@ -49,13 +137,67 @@ textarea:focus-visible {
 .lcars-rail { position:absolute; left:0; top:0; bottom:0; width:10px; background:#ff9966; }
 .lcars-rail-alt { background:#66ccff; }
 .lcars-rail-accent { background:#ff6699; }
-.lcars-body { @apply pl-4 md:pl-6 pr-4 py-4; margin-left:10px; }
-.lcars-label { @apply block text-xs uppercase tracking-widest text-slate-400 mb-1; }
-.lcars-small { @apply text-xs text-slate-300; }
-.lcars-input { @apply bg-slate-900 rounded-md px-3 py-2 text-sm border border-slate-700; }
-.lcars-btn { @apply px-2 py-1 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm; }
-.lcars-btn-locked { @apply bg-amber-600 hover:bg-amber-500; }
-.lcars-cta { @apply bg-amber-500 hover:bg-amber-400 text-black font-semibold px-3 py-2 rounded-xl; }
+.lcars-body { 
+  padding: 1rem;
+  padding-left: 1rem;
+  margin-left: 10px;
+}
+@media (min-width: 768px) {
+  .lcars-body {
+    padding-left: 1.5rem;
+  }
+}
+
+.lcars-label { 
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--wcr-text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.lcars-small { 
+  font-size: 0.75rem;
+  color: var(--wcr-text-secondary);
+}
+
+.lcars-input { 
+  background-color: var(--wcr-surface);
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  border: 1px solid var(--wcr-border);
+}
+
+.lcars-btn { 
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  background-color: var(--wcr-surface);
+  font-size: 0.875rem;
+  border: 1px solid var(--wcr-border);
+}
+.lcars-btn:hover {
+  background-color: var(--wcr-surface-hover);
+}
+
+.lcars-btn-locked { 
+  background-color: rgb(217 119 6); /* amber-600 */
+}
+.lcars-btn-locked:hover {
+  background-color: rgb(245 158 11); /* amber-500 */
+}
+
+.lcars-cta { 
+  background-color: rgb(245 158 11); /* amber-500 */
+  color: black;
+  font-weight: 600;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+}
+.lcars-cta:hover {
+  background-color: rgb(251 191 36); /* amber-400 */
+}
 
 /* --- LCARS control accents (checkboxes, toggles, sliders) --- */
 /* Use accessible, bright LCARS palette instead of red */

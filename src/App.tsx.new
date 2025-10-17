@@ -1,0 +1,291 @@
+import React, { useState, useEffect } from "react";
+// @ts-ignore
+import { Canvg } from "canvg";
+import ReportControls from "./components/ReportControls";
+import StardateCalculator from "./components/StardateCalculator";
+import ReportPreview from "./components/ReportPreview";
+import CrewManifestPanel from "./components/CrewManifestPanel";
+import ShareDialog from "./components/ShareDialog";
+import SettingsPanel from "./components/SettingsPanel";
+import SoundControls from "./components/SoundControls";
+import HelpPanel from "./components/HelpPanel";
+import { generateReport, reportToTxt, generateCrewManifest } from "./utils/reportGen";
+import { jsPDF } from "jspdf";
+import { saveAs } from "file-saver";
+import { Report, GeneratorConfig } from "./types";
+import { buildDocx } from "./utils/docxExport";
+import { randint } from "./utils/helpers";
+import { parseSharedReportUrl, decodeSharedReportId } from "./utils/urlParser";
+import { initSoundSettings, buttonClickSound, successSound, alertSound, notificationSound, playSound } from "./utils/sounds";
+import "./utils/print.css";
+import Footer from "./components/Footer";
+import useMediaQuery from "./hooks/useMediaQuery";
+import MobileActionBar from "./components/MobileActionBar";
+import Drawer from "./components/Drawer";
+// @ts-ignore - vite supports importing JSON in ESM by default
+import pkg from "../package.json";
+
+export default function App() {
+  // Initialize settings
+  const [highContrastMode, setHighContrastMode] = useState<boolean>(() => {
+    try { return localStorage.getItem('wcr_high_contrast_enabled') === '1'; } catch { return false; }
+  });
+
+  const [verboseAnnouncements, setVerboseAnnouncements] = useState<boolean>(() => {
+    try { return localStorage.getItem('wcr_verbose_announcements') === '0' ? false : true; } catch { return true; }
+  });
+
+  useEffect(() => {
+    // Initialize sound and other settings
+    initSoundSettings();
+
+    // Set up high contrast mode
+    document.documentElement.classList.toggle('high-contrast', highContrastMode);
+  }, [highContrastMode]);
+
+  // State management for existing features
+  const [report, setReport] = useState<Report | null>(null);
+  const [config, setConfig] = useState<GeneratorConfig>({
+    vessel: "USS Enterprise-D",
+    problems: 3,
+    detail: 3,
+    graphsEnabled: true,
+    graphCount: 2,
+    engineerRank: "Lieutenant",
+    engineerName: "",
+    humorLevel: 0.5,
+    seed: "",
+    template: "general",
+    figureBias: "auto",
+    addSigRef: false,
+    canonNames: true,
+    canonEra: true,
+    famousFreq: "occasional",
+    memoryWindow: 6,
+  });
+  const [lastConfigUsed, setLastConfigUsed] = useState<GeneratorConfig | null>(null);
+  const [crew, setCrew] = useState<any[]>(() => generateCrewManifest(8));
+  const [currentCrewCount, setCurrentCrewCount] = useState<number>(8);
+  const [showShare, setShowShare] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const [helpTarget, setHelpTarget] = useState<"templates"|"figure-bias"|"presets"|"produce-reroll"|"references"|"crew-size"|"crew-panel"|undefined>(undefined);
+  const [densityCompact, setDensityCompact] = useState<boolean>(false);
+  const [persistZoom, setPersistZoom] = useState<boolean>(() => {
+    try { return localStorage.getItem('wcr_zoom_persist_enabled') === '0' ? false : true; } catch { return true; }
+  });
+  const [lastReportAt, setLastReportAt] = useState<number>(0);
+  const [reportDisabled, setReportDisabled] = useState<boolean>(false);
+  const [reportCooldownSec, setReportCooldownSec] = useState<number>(0);
+
+  // Mobile UI state
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const [mobileCrewOpen, setMobileCrewOpen] = useState(false);
+  const [mobileExportOpen, setMobileExportOpen] = useState(false);
+  const [mobileHelpOpen, setMobileHelpOpen] = useState(false);
+  const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false);
+
+  // Listen for help open requests from child components
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const customEvent = e as CustomEvent<{ section: "templates"|"figure-bias"|"presets"|"produce-reroll"|"references"|"crew-size"|"crew-panel" }>;
+      setHelpTarget(customEvent.detail.section);
+      if (isMobile) {
+        setMobileHelpOpen(true);
+      } else {
+        setShowHelp(true);
+      }
+    };
+    window.addEventListener('wcr-open-help', handler);
+    return () => window.removeEventListener('wcr-open-help', handler);
+  }, [isMobile]);
+
+  // Handle report generation
+  const handleGenerateReport = () => {
+    const now = Date.now();
+    if (now - lastReportAt < 500) return; // debounce
+    setLastReportAt(now);
+    
+    // Generate new report with current config
+    const newReport = generateReport(config, crew);
+    setReport(newReport);
+    setLastConfigUsed({...config});
+    
+    // Play sound effect
+    playSound('success');
+    
+    // Announce with screen reader
+    if (verboseAnnouncements) {
+      const liveRegion = document.createElement('div');
+      liveRegion.setAttribute('aria-live', 'polite');
+      liveRegion.textContent = `New report generated for ${config.vessel}`;
+      document.body.appendChild(liveRegion);
+      setTimeout(() => document.body.removeChild(liveRegion), 1000);
+    }
+  };
+
+  // Handle crew changes
+  const handleCrewChange = (newCrew: any[]) => {
+    setCrew(newCrew);
+    setCurrentCrewCount(newCrew.length);
+  };
+
+  // Export functions
+  const exportTxt = () => {
+    if (!report) return;
+    const blob = new Blob([reportToTxt(report)], { type: 'text/plain;charset=utf-8' });
+    saveAs(blob, `${report.vessel.replace(/\s+/g, '_')}_Report.txt`);
+  };
+
+  const exportPdf = async () => {
+    if (!report) return;
+    // PDF generation logic here
+  };
+
+  const exportDocx = async () => {
+    if (!report) return;
+    try {
+      const blob = await buildDocx(report);
+      saveAs(blob, `${report.vessel.replace(/\s+/g, '_')}_Report.docx`);
+    } catch (err) {
+      console.error('DOCX generation failed:', err);
+    }
+  };
+
+  const handlePrint = () => {
+    if (!report) return;
+    window.print();
+  };
+
+  const handleShare = () => {
+    if (!report) return;
+    setShowShare(true);
+  };
+
+  const copyToClipboard = async (text: string, successMsg: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      // Use live region for success message if verbose announcements enabled
+      if (verboseAnnouncements) {
+        const liveRegion = document.createElement('div');
+        liveRegion.setAttribute('aria-live', 'polite');
+        liveRegion.textContent = successMsg;
+        document.body.appendChild(liveRegion);
+        setTimeout(() => document.body.removeChild(liveRegion), 1000);
+      }
+      playSound('success');
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      playSound('negative');
+    }
+  };
+
+  return (
+    <div className="min-h-screen">
+      <div className="max-w-5xl mx-auto px-4 py-8">
+        <header className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold tracking-tight">Starfleet Engineering Report Generator</h1>
+        </header>
+
+        <main>
+          <ReportControls
+            config={config}
+            setConfig={setConfig}
+            onGenerate={handleGenerateReport}
+            report={report}
+            lastConfigUsed={lastConfigUsed}
+            disabled={reportDisabled}
+            cooldownSec={reportCooldownSec}
+            crew={crew}
+            crewCount={currentCrewCount}
+            onCrewChange={handleCrewChange}
+            densityCompact={densityCompact}
+          />
+
+          {report && <ReportPreview report={report} />}
+        </main>
+
+        {/* Modals & Overlays */}
+        {showShare && <ShareDialog onClose={() => setShowShare(false)} report={report} config={lastConfigUsed} />}
+        {showHelp && <HelpPanel onClose={() => setShowHelp(false)} target={helpTarget} />}
+
+        {/* Mobile UI */}
+        {isMobile && (
+          <>
+            <MobileActionBar
+              report={report}
+              onProduce={handleGenerateReport}
+              onExport={() => setMobileExportOpen(true)}
+              onSettings={() => setMobileSettingsOpen(true)}
+              onHelp={() => setMobileHelpOpen(true)}
+            />
+
+            <Drawer 
+              open={mobileCrewOpen} 
+              onClose={() => setMobileCrewOpen(false)}
+              title="Crew Manifest"
+              accentClass="bg-pink-500"
+              titleClass="font-semibold text-sm tracking-wide text-pink-300"
+              panelClassName="bg-pink-500/10"
+              headerClassName="border-pink-400/40"
+            >
+              <CrewManifestPanel
+                count={currentCrewCount}
+                onCrewChange={handleCrewChange}
+                onClose={() => setMobileCrewOpen(false)}
+              />
+            </Drawer>
+
+            <Drawer 
+              open={mobileExportOpen} 
+              onClose={() => setMobileExportOpen(false)} 
+              title="Export"
+            >
+              <div className="space-y-3 text-sm" aria-describedby={!report ? 'export-hint-mobile' : undefined}>
+                {!report && (
+                  <p id="export-hint-mobile" className="text-[11px] text-amber-300 bg-slate-800/60 border border-slate-700 rounded p-2">
+                    Produce a report to enable export, print, and share actions.
+                  </p>
+                )}
+                <div className="grid grid-cols-2 gap-2">
+                  <button onClick={exportTxt} aria-disabled={!report} aria-describedby={!report ? 'export-hint-mobile' : undefined} className={`px-2 py-2 rounded border ${!report ? 'bg-slate-800/40 border-slate-700/40 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700'}`}>Download TXT</button>
+                  <button
+                    onClick={async () => { if (!report) return; await copyToClipboard(reportToTxt(report), 'Full report copied as TXT.'); }}
+                    aria-disabled={!report}
+                    aria-describedby={!report ? 'export-hint-mobile' : undefined}
+                    className={`px-2 py-2 rounded border ${!report ? 'bg-slate-800/40 border-slate-700/40 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700'}`}
+                  >
+                    Copy Full (TXT)
+                  </button>
+                  <button onClick={exportPdf} aria-disabled={!report} aria-describedby={!report ? 'export-hint-mobile' : undefined} className={`px-2 py-2 rounded border ${!report ? 'bg-slate-800/40 border-slate-700/40 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700'}`}>Download PDF</button>
+                  <button onClick={exportDocx} aria-disabled={!report} aria-describedby={!report ? 'export-hint-mobile' : undefined} className={`px-2 py-2 rounded border ${!report ? 'bg-slate-800/40 border-slate-700/40 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border-slate-700'}`}>Download DOCX</button>
+                  <button onClick={handlePrint} aria-disabled={!report} aria-describedby={!report ? 'export-hint-mobile' : undefined} className={`px-2 py-2 rounded border font-semibold ${!report ? 'bg-amber-600/40 border-amber-500/40 text-amber-300/60 cursor-not-allowed' : 'bg-amber-600 text-black border-amber-500'}`}>Print</button>
+                  <button onClick={handleShare} aria-disabled={!report} aria-describedby={!report ? 'export-hint-mobile' : undefined} className={`px-2 py-2 rounded border font-semibold ${!report ? 'bg-blue-600/40 border-blue-500/40 text-blue-300/70 cursor-not-allowed' : 'bg-blue-600 text-white border-blue-500'}`}>Share</button>
+                </div>
+              </div>
+            </Drawer>
+
+            {mobileHelpOpen && <HelpPanel onClose={() => setMobileHelpOpen(false)} target={helpTarget} />}
+
+            <Drawer 
+              open={mobileSettingsOpen} 
+              onClose={() => setMobileSettingsOpen(false)} 
+              title="Settings"
+            >
+              <SettingsPanel
+                densityCompact={densityCompact}
+                setDensityCompact={setDensityCompact}
+                persistZoom={persistZoom}
+                setPersistZoom={setPersistZoom}
+                highContrastMode={highContrastMode}
+                setHighContrastMode={setHighContrastMode}
+                verboseAnnouncements={verboseAnnouncements}
+                setVerboseAnnouncements={setVerboseAnnouncements}
+              />
+            </Drawer>
+          </>
+        )}
+      </div>
+      <Footer version={pkg.version} />
+    </div>
+  );
+}

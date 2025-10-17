@@ -20,17 +20,33 @@ Enhancements implemented:
 - CrewManifestPanel now announces open/close and restores focus to its trigger.
 - Drawer initial automatic focus (first focusable or close button) for keyboard efficiency.
 
-Future opportunities:
-// Completed: aria-valuetext on Humor slider implemented (see Mirrored Public Checklist)
-- Provide a global Skip to Main Content link for faster keyboard navigation.
-- Evaluate color contrast of secondary text (e.g., slate-300 on dark backgrounds) against WCAG AA.
-- Add reduced motion preference handling for any remaining animated transitions.
-- De-duplicate repeated structural announcements (debounce identical messages within a short window).
-- Optionally add inert / aria-hidden to background content while dialogs/drawers are open for stricter SR isolation.
-- Provide live announcements for drag-and-drop (describe original index, new index, and department changes when reordering crew).
-- Add aria-live feedback when crew constraints auto-adjust rank (currently only visual text for 2s).
-- ARIA description for Seed lock toggle clarifying Produce vs Reroll behavior.
-- Provide a single consolidated "Status" live region (merge toast + structural if verbosity remains low).
+Current Status and Future Opportunities:
+
+Recently Completed:
+✅ Added live announcements for crew rank adjustments
+✅ Enhanced focus ring visibility and contrast
+✅ Added CSS design tokens for consistent theming
+✅ Improved contrast ratios for borders and text
+✅ Added high contrast mode toggle
+✅ Enhanced keyboard navigation feedback
+✅ Unified status messaging regions
+✅ Enhanced drag and drop accessibility
+
+Temporarily Reverted (Due to Interaction Issues):
+❌ Inert/aria-hidden background content during modal display
+❌ Aggressive pointer-events handling
+❌ Complex z-index layer changes
+
+Remaining Backlog:
+🔲 Skip to Main Content link for faster keyboard navigation
+🔲 Evaluate remaining color contrasts against WCAG AA
+🔲 Add reduced motion preference handling for remaining transitions
+🔲 De-duplicate repeated structural announcements
+🔲 Complete drag-and-drop announcements
+🔲 ARIA description for Seed lock toggle
+🔲 Consider consolidating status regions if verbosity stays low
+
+Note: Some features were temporarily reverted due to interaction issues with modals and drawers. These will be revisited with a different implementation approach in the future.
 
 ---
 
