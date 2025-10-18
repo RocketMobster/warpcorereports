@@ -721,7 +721,8 @@ export default function App() {
     await copyToClipboard(lines.join('\n'), 'Figures copied to clipboard.');
   };
 
-  const anyModalOpen = showHelp || isShareDialogOpen || manifestPanelOpen || mobileCrewOpen || mobileExportOpen || mobileHelpOpen || mobileSettingsOpen;
+  // Inline CrewManifestPanel is not a true modal; do not inert the main content when only it is open
+  const anyModalOpen = showHelp || isShareDialogOpen || mobileCrewOpen || mobileExportOpen || mobileHelpOpen || mobileSettingsOpen;
   return (
     <div className={`min-h-screen bg-[#0b0d16] text-slate-100 p-6 ${densityCompact ? 'density-compact' : ''}`}>   
       {/* Skip to main content link (appears on keyboard focus) */}

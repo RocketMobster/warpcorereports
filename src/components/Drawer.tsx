@@ -42,7 +42,8 @@ export default function Drawer({ open, onClose, title, side = 'bottom', children
           <button
             type="button"
             onClick={onClose}
-            className="text-xs uppercase tracking-wide px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600"
+            className="lcars-btn"
+            aria-label="Close"
           >Close</button>
         </div>
         <div className="overflow-y-auto p-4 text-sm">
