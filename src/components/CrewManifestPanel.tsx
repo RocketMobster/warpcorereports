@@ -457,17 +457,19 @@ export default function CrewManifestPanel({
   }, []);
 
   return (
-  <div className="mt-4 rounded-2xl border border-pink-400/40 bg-pink-500/10 p-4 shadow-md relative">
-      {onClose && (
-        <button
-          type="button"
-          className="absolute top-2 right-2 text-pink-300 hover:text-pink-200"
-          aria-label="Close crew manifest panel"
-          title="Close crew manifest panel"
-          onClick={onClose}
-        >×</button>
-      )}
-      <h3 className="text-lg font-bold mb-2 text-pink-300">Crew Manifest ({crew.length})</h3>
+  <div className="mt-4 rounded-2xl border border-pink-400/40 bg-pink-500/10 p-4 shadow-md relative pointer-events-auto">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-lg font-bold text-pink-300">Crew Manifest ({crew.length})</h3>
+        {onClose && (
+          <button
+            type="button"
+            className="lcars-btn border-pink-400 text-pink-200 hover:text-pink-100"
+            aria-label="Close crew manifest panel"
+            title="Close crew manifest panel"
+            onClick={onClose}
+          >Close</button>
+        )}
+      </div>
       {constraintMsg && (
         <div className="mb-2 text-[12px] text-amber-300 bg-slate-900/50 border border-amber-400/40 rounded px-2 py-1">
           {constraintMsg}
