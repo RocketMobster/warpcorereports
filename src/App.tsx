@@ -61,13 +61,35 @@ export default function App() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastIsError, setToastIsError] = useState(false);
+  // Verbose structural announcements (Settings toggle)
+  const [verboseAnnouncements, setVerboseAnnouncements] = useState<boolean>(() => {
+    try { return localStorage.getItem('wcr_verbose_announcements') === '0' ? false : true; } catch { return true; }
+  });
+  useEffect(()=>{ try { localStorage.setItem('wcr_verbose_announcements', verboseAnnouncements ? '1' : '0'); } catch {} }, [verboseAnnouncements]);
   // Live region message for structural announcements (panels/dialogs)
   const [liveStructuralMsg, setLiveStructuralMsg] = useState<string>("");
   useEffect(() => {
     const lastRef = { detail: '', ts: 0 } as { detail: string; ts: number };
+    const noisyPatterns = [
+      'adjusted rank',
+      'reassigned',
+      'crew expanded',
+      'crew reduced',
+      'crew regenerated',
+      'crew reset',
+      'some crew ranks were adjusted',
+      'reordering ',
+      'move target position',
+      'dropped ',
+      'reorder cancelled'
+    ];
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (typeof detail !== 'string') return;
+      if (!verboseAnnouncements) {
+        const d = detail.toLowerCase();
+        if (noisyPatterns.some(p => d.includes(p))) return;
+      }
       const now = Date.now();
       // Debounce identical structural messages fired within 900ms
       if (detail === lastRef.detail && now - lastRef.ts < 900) return;
@@ -79,7 +101,7 @@ export default function App() {
     };
     window.addEventListener('wcr-live', handler as EventListener);
     return () => window.removeEventListener('wcr-live', handler as EventListener);
-  }, []);
+  }, [verboseAnnouncements]);
   const errorDetailRef = React.useRef<string>("");
   // Simple error toast throttle
   const [lastErrorAt, setLastErrorAt] = useState<number>(0);
@@ -1088,6 +1110,11 @@ export default function App() {
                 <label htmlFor="highContrast" className="text-xs uppercase tracking-wider opacity-80">High Contrast</label>
               </div>
               <p id="highContrastDesc" className="text-[10px] text-slate-400 leading-snug">Boosts border & secondary text contrast and focus ring visibility. Persists locally.</p>
+              <div className="flex items-center gap-2 pt-2 border-t border-slate-700">
+                <input id="verboseAnnouncements" type="checkbox" checked={verboseAnnouncements} onChange={e=> setVerboseAnnouncements(e.target.checked)} aria-describedby="verboseDesc" />
+                <label htmlFor="verboseAnnouncements" className="text-xs uppercase tracking-wider opacity-80">Verbose Announcements</label>
+              </div>
+              <p id="verboseDesc" className="text-[10px] text-slate-400 leading-snug">When off, mutes frequent DnD/auto-adjust messages; open/close notices remain.</p>
             </div>
           </Drawer>
         </>

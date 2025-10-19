@@ -392,7 +392,7 @@ Implemented items are checked; unchecked are on the near/medium‑term backlog.
 - [x] Reduced motion refinements for remaining transitions
 - [x] Consolidated single status region (merged structural + light status announcements; assertive channel retained for urgent toasts)
 - [x] ARIA description for Seed lock toggle (Produce vs Reroll behavior)
- - [ ] Verbosity toggle for automatic rank adjustment announcements (option to mute or summarize)
+ - [x] Verbosity toggle for frequent announcements (option to mute auto-adjust and DnD messages)
 
 ### Philosophy
 We favor progressive enhancement: ship a small, verifiable improvement, document it, then iterate. Internal notes (`A11Y_NOTES.md`) keep implementation rationale and future ideas so the public README stays concise.
