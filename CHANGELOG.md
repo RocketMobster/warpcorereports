@@ -2,6 +2,66 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2025-10-21
+
+### Added
+- **DEV Mode Tooling**: Development-only features gated by `import.meta.env.DEV`
+  - Purple "DEV" badge displayed next to app title in dev mode
+  - Structural live-region overlay visualization panel (fixed at bottom of screen)
+  - "Show Structural Overlay (DEV)" toggle in Settings drawer
+  - Keyboard shortcut `Ctrl+Alt+L` to toggle overlay visibility
+  - Overlay displays all structural announcements for 2.5 seconds with keyboard hint
+- **Verbose Announcements Control**: User-configurable toggle in Settings to control announcement verbosity
+  - When ON: all announcements (DnD, crew edits, rank adjustments, panel open/close)
+  - When OFF: only panel/dialog open/close (mutes noisy DnD and crew editing messages)
+  - Persisted via `wcr_verbose_announcements` localStorage key
+  - Clear description: "When checked (ON): all drag-drop and crew edit messages announced. When unchecked (OFF): only panel open/close announced."
+- **Unified Settings Drawer**: Single Settings drawer accessible from both desktop and mobile
+  - Moved outside mobile-only block to prevent inert attribute conflicts
+  - Fixed desktop gear icon freeze issue (drawer was trapped inside inert region)
+  - Unified control IDs (no more `densityCompactMobile` vs `densityCompact`)
+  - Settings accessible via gear icon (⚙︎) in header on both layouts
+- **Enhanced Role Dropdown**: Expanded crew role datalist with 23 canonical Star Trek roles
+  - Command: Captain, First Officer, Commander, Executive Officer
+  - Operations: Operations Officer, Helm Officer, Communications Officer, Tactical Officer
+  - Engineering: Chief Engineer, Warp Specialist, EPS Engineer, Structural Engineer, Deflector Officer, Transporter Chief
+  - Science: Chief Science Officer, Science Officer, Sensor Technician, Astrometrics Officer
+  - Medical: Chief Medical Officer, Medical Officer, Nurse, Counselor
+  - Security: Chief of Security, Security Officer
+  - Auto-clears on focus to show all options immediately
+  - Remains fully writeable for custom roles
+  - Added placeholder: "Select or type role..."
+- **Drag-and-Drop Announcements**: Complete DnD event coverage
+  - "Reordering [role]: current position X of Y" on drag start
+  - "Move target position X of Y" while dragging over items
+  - "Dropped [role] at position X of Y" on successful drop
+  - "Reorder cancelled" on Escape key or failed drop
+  - All DnD messages now dispatch to structural overlay (previously local-only)
+
+### Changed
+- Settings drawer now rendered once outside mobile/inert blocks (previously duplicated)
+- Role editing input now auto-focuses and clears on first interaction for better UX
+- Structural announcements listener now respects verbose announcements toggle
+- DEV overlay and verbose toggle only visible/functional in development mode
+
+### Fixed
+- Desktop gear icon no longer freezes when clicked (Settings was inside inert region during modal states)
+- Mobile Settings drawer now accessible without conflicts
+- Duplicate "Tactical Officer" in role dropdown removed (was causing React key warnings)
+- Escape key during drag now properly announces "Reorder cancelled" (added explicit `onDragCancel` handler)
+- Gear emoji encoding corrected (was displaying as corrupted characters)
+- Role dropdown datalist filtering issue resolved (field clears on focus to show all options)
+
+### Developer Experience
+- Added `src/vite-env.d.ts` for proper TypeScript support of `import.meta.env.DEV`
+- DEV features automatically disabled in production builds
+- Structural overlay provides real-time visibility into accessibility announcements for testing
+
+### Notes
+- Verbose announcements primarily affect crew manifest actions (most frequent source)
+- Other announcement sources: Help/Share/Crew panel open/close, Settings changes
+- All DEV features require development server or dev build to function
+
 ## [0.2.10] - 2025-09-26
 
 ### Added

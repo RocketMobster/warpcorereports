@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 // @ts-ignore
 import { Canvg } from "canvg";
 import ReportControls from "./components/ReportControls";
@@ -41,7 +41,7 @@ export default function App() {
   const [mobileCrewOpen, setMobileCrewOpen] = useState(false);
   const [mobileExportOpen, setMobileExportOpen] = useState(false);
   const [mobileHelpOpen, setMobileHelpOpen] = useState(false);
-  const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [report, setReport] = useState<Report | null>(null);
   const [crewManifest, setCrewManifest] = useState<any[]>([]);
   const [lastCfg, setLastCfg] = useState<any | null>(null);
@@ -66,6 +66,25 @@ export default function App() {
     try { return localStorage.getItem('wcr_verbose_announcements') === '0' ? false : true; } catch { return true; }
   });
   useEffect(()=>{ try { localStorage.setItem('wcr_verbose_announcements', verboseAnnouncements ? '1' : '0'); } catch {} }, [verboseAnnouncements]);
+  // Dev-only structural overlay (visualizes structural live region)
+  const isDev = import.meta.env.DEV;
+  const [showStructuralOverlay, setShowStructuralOverlay] = useState<boolean>(() => {
+    try { return localStorage.getItem('wcr_dev_structural_overlay') === '1'; } catch { return false; }
+  });
+  useEffect(()=>{ try { localStorage.setItem('wcr_dev_structural_overlay', showStructuralOverlay ? '1' : '0'); } catch {} }, [showStructuralOverlay]);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const k = (e.key || '').toLowerCase();
+      if (e.ctrlKey && e.altKey && k === 'l') {
+        e.preventDefault();
+        const next = !showStructuralOverlay;
+        setShowStructuralOverlay(next);
+        window.dispatchEvent(new CustomEvent('wcr-live', { detail: next ? 'DEV overlay enabled' : 'DEV overlay disabled' }));
+      }
+    };
+    window.addEventListener('keydown', onKey as EventListener);
+    return () => window.removeEventListener('keydown', onKey as EventListener);
+  }, [showStructuralOverlay]);
   // Live region message for structural announcements (panels/dialogs)
   const [liveStructuralMsg, setLiveStructuralMsg] = useState<string>("");
   useEffect(() => {
@@ -744,7 +763,7 @@ export default function App() {
   };
 
   // Inline CrewManifestPanel is not a true modal; do not inert the main content when only it is open
-  const anyModalOpen = showHelp || isShareDialogOpen || mobileCrewOpen || mobileExportOpen || mobileHelpOpen || mobileSettingsOpen;
+  const anyModalOpen = showHelp || isShareDialogOpen || mobileCrewOpen || mobileExportOpen || mobileHelpOpen || settingsOpen;
   return (
     <div className={`min-h-screen bg-[#0b0d16] text-slate-100 p-6 ${densityCompact ? 'density-compact' : ''}`}>   
       {/* Skip to main content link (appears on keyboard focus) */}
@@ -756,10 +775,15 @@ export default function App() {
         data-inert-applied={anyModalOpen ? 'true' : 'false'}
       >
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-extrabold">Starfleet Engineering Report Generator</h1>
+          <h1 className="text-2xl font-extrabold">
+            Starfleet Engineering Report Generator
+            {isDev && (
+              <span className="ml-2 align-middle text-[10px] px-2 py-1 rounded bg-purple-700/40 border border-purple-500/60 text-purple-200">DEV</span>
+            )}
+          </h1>
           {/* Settings gear moved to header */}
           <button
-            onClick={() => setMobileSettingsOpen(true)}
+            onClick={() => setSettingsOpen(true)}
             className="ml-4 px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 hover:bg-slate-700 text-sm"
             title="Settings"
             aria-label="Open Settings"
@@ -1026,10 +1050,18 @@ export default function App() {
       <div aria-live="polite" aria-atomic="true" className="sr-only" style={{position:'absolute',left:-9999,top:'auto',width:1,height:1,overflow:'hidden'}}>
         {showToast && !toastIsError ? toastMessage : ''}
       </div>
-      {/* Off-screen structural announcements (panel/dialog open/close) */}
-      <div aria-live="polite" aria-atomic="true" className="sr-only" style={{position:'absolute',left:-9999,top:'auto',width:1,height:1,overflow:'hidden'}}>
-        {liveStructuralMsg}
-      </div>
+      {/* Structural announcements (panel/dialog open/close) */}
+      {isDev && showStructuralOverlay ? (
+        <div className="fixed left-4 right-4 bottom-4 z-50 bg-slate-900/80 border border-slate-700 text-slate-100 p-3 rounded-lg shadow-lg">
+          <div className="text-[10px] uppercase tracking-wider opacity-70 mb-1">Structural live-region</div>
+          <div className="text-sm min-h-[1.25rem]">{liveStructuralMsg || '—'}</div>
+          <div className="mt-1 text-[10px] text-slate-400">Toggle with Ctrl+Alt+L</div>
+        </div>
+      ) : (
+        <div aria-live="polite" aria-atomic="true" className="sr-only" style={{position:'absolute',left:-9999,top:'auto',width:1,height:1,overflow:'hidden'}}>
+          {liveStructuralMsg}
+        </div>
+      )}
       {showMobileUI && (
         <>
           <MobileActionBar
@@ -1088,37 +1120,48 @@ export default function App() {
           {mobileHelpOpen && (
             <HelpPanel onClose={()=>setMobileHelpOpen(false)} target={helpTarget} />
           )}
-          <Drawer open={mobileSettingsOpen} onClose={()=>setMobileSettingsOpen(false)} title="Settings">
-            <div className="space-y-4 text-sm">
-              <SoundControls />
-              <div className="flex items-center gap-2">
-                <input id="densityCompactMobile" type="checkbox" checked={densityCompact} onChange={e=>setDensityCompact(e.target.checked)} />
-                <label htmlFor="densityCompactMobile" className="text-xs uppercase tracking-wider opacity-80">Compact Density</label>
-              </div>
-              <div className="flex items-center gap-2">
-                <input id="persistZoomMobile" type="checkbox" checked={persistZoom} onChange={e=>{ const v=e.target.checked; try { localStorage.setItem('wcr_zoom_persist_enabled', v? '1':'0'); if(!v) localStorage.removeItem('previewZoom'); } catch {}; setPersistZoom(v); window.dispatchEvent(new Event('wcr-zoom-persist-changed')); }} />
-                <label htmlFor="persistZoomMobile" className="text-xs uppercase tracking-wider opacity-80">Persist Zoom</label>
-              </div>
-              <p className="text-[10px] text-slate-400 leading-snug">When disabled, report zoom always resets to 100% on load.</p>
-              <div className="flex items-center gap-2 pt-2 border-t border-slate-700">
-                <input id="forceMobile" type="checkbox" checked={forceMobile} onChange={e=>setForceMobile(e.target.checked)} />
-                <label htmlFor="forceMobile" className="text-xs uppercase tracking-wider opacity-80">Force Mobile Controls</label>
-              </div>
-              <p className="text-[10px] text-slate-400 leading-snug">Enable if your device shows the desktop controls.</p>
-              <div className="flex items-center gap-2 pt-2 border-t border-slate-700">
-                <input id="highContrast" type="checkbox" checked={highContrast} onChange={e=> setHighContrast(e.target.checked)} aria-describedby="highContrastDesc" />
-                <label htmlFor="highContrast" className="text-xs uppercase tracking-wider opacity-80">High Contrast</label>
-              </div>
-              <p id="highContrastDesc" className="text-[10px] text-slate-400 leading-snug">Boosts border & secondary text contrast and focus ring visibility. Persists locally.</p>
-              <div className="flex items-center gap-2 pt-2 border-t border-slate-700">
-                <input id="verboseAnnouncements" type="checkbox" checked={verboseAnnouncements} onChange={e=> setVerboseAnnouncements(e.target.checked)} aria-describedby="verboseDesc" />
-                <label htmlFor="verboseAnnouncements" className="text-xs uppercase tracking-wider opacity-80">Verbose Announcements</label>
-              </div>
-              <p id="verboseDesc" className="text-[10px] text-slate-400 leading-snug">When off, mutes frequent DnD/auto-adjust messages; open/close notices remain.</p>
-            </div>
-          </Drawer>
         </>
       )}
+
+      {/* Settings Drawer - rendered outside mobile/inert blocks for universal access */}
+      <Drawer open={settingsOpen} onClose={()=>setSettingsOpen(false)} title="Settings">
+        <div className="space-y-4 text-sm">
+          <SoundControls />
+          <div className="flex items-center gap-2">
+            <input id="densityCompact" type="checkbox" checked={densityCompact} onChange={e=>setDensityCompact(e.target.checked)} />
+            <label htmlFor="densityCompact" className="text-xs uppercase tracking-wider opacity-80">Compact Density</label>
+          </div>
+          <div className="flex items-center gap-2">
+            <input id="persistZoom" type="checkbox" checked={persistZoom} onChange={e=>{ const v=e.target.checked; try { localStorage.setItem('wcr_zoom_persist_enabled', v? '1':'0'); if(!v) localStorage.removeItem('previewZoom'); } catch {}; setPersistZoom(v); window.dispatchEvent(new Event('wcr-zoom-persist-changed')); }} />
+            <label htmlFor="persistZoom" className="text-xs uppercase tracking-wider opacity-80">Persist Zoom</label>
+          </div>
+          <p className="text-[10px] text-slate-400 leading-snug">When disabled, report zoom always resets to 100% on load.</p>
+          <div className="flex items-center gap-2 pt-2 border-t border-slate-700">
+            <input id="forceMobile" type="checkbox" checked={forceMobile} onChange={e=>setForceMobile(e.target.checked)} />
+            <label htmlFor="forceMobile" className="text-xs uppercase tracking-wider opacity-80">Force Mobile Controls</label>
+          </div>
+          <p className="text-[10px] text-slate-400 leading-snug">Enable if your device shows the desktop controls.</p>
+          <div className="flex items-center gap-2 pt-2 border-t border-slate-700">
+            <input id="highContrast" type="checkbox" checked={highContrast} onChange={e=> setHighContrast(e.target.checked)} aria-describedby="highContrastDesc2" />
+            <label htmlFor="highContrast" className="text-xs uppercase tracking-wider opacity-80">High Contrast</label>
+          </div>
+          <p id="highContrastDesc2" className="text-[10px] text-slate-400 leading-snug">Boosts border & secondary text contrast and focus ring visibility. Persists locally.</p>
+          <div className="flex items-center gap-2 pt-2 border-t border-slate-700">
+            <input id="verboseAnnouncements" type="checkbox" checked={verboseAnnouncements} onChange={e=> setVerboseAnnouncements(e.target.checked)} aria-describedby="verboseDesc2" />
+            <label htmlFor="verboseAnnouncements" className="text-xs uppercase tracking-wider opacity-80">Verbose Announcements</label>
+          </div>
+          <p id="verboseDesc2" className="text-[10px] text-slate-400 leading-snug">When checked (ON): all drag-drop and crew edit messages announced. When unchecked (OFF): only panel open/close announced.</p>
+          {isDev && (
+            <>
+              <div className="flex items-center gap-2 pt-2 border-t border-slate-700">
+                <input id="devStructuralOverlay" type="checkbox" checked={showStructuralOverlay} onChange={e=> setShowStructuralOverlay(e.target.checked)} aria-describedby="devOverlayDesc" />
+                <label htmlFor="devStructuralOverlay" className="text-xs uppercase tracking-wider opacity-80">Show Structural Overlay (DEV)</label>
+              </div>
+              <p id="devOverlayDesc" className="text-[10px] text-slate-400 leading-snug">Visualize structural announcements. Shortcut: Ctrl+Alt+L</p>
+            </>
+          )}
+        </div>
+      </Drawer>
     </div>
   );
 }

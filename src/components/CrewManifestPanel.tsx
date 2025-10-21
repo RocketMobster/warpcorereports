@@ -54,9 +54,20 @@ export default function CrewManifestPanel({
   };
 
   const DEFAULT_ROLES = useMemo(() => [
-    "Sensor Technician","Warp Specialist","EPS Engineer","Structural Engineer","Deflector Officer","Transporter Chief","Operations",
-    "Medical Officer","Science Officer","Security Officer","Helm Officer","Communications Officer","Tactical Officer","Chief Engineer","Chief Science Officer"
+    // Command
+    "Captain", "First Officer", "Commander", "Executive Officer",
+    // Operations
+    "Operations Officer", "Helm Officer", "Communications Officer", "Tactical Officer",
+    // Engineering
+    "Chief Engineer", "Warp Specialist", "EPS Engineer", "Structural Engineer", "Deflector Officer", "Transporter Chief",
+    // Science
+    "Chief Science Officer", "Science Officer", "Sensor Technician", "Astrometrics Officer",
+    // Medical
+    "Chief Medical Officer", "Medical Officer", "Nurse", "Counselor",
+    // Security
+    "Chief of Security", "Security Officer"
   ], []);
+
 
   const roleToDepartment = (role: string): Department => {
     const r = role.toLowerCase();
@@ -151,6 +162,7 @@ export default function CrewManifestPanel({
   const [draftRole, setDraftRole] = useState<string>("");
   const [targetSize, setTargetSize] = useState<number>(count);
   const [constraintMsg, setConstraintMsg] = useState<string>("");
+  const roleInputJustOpenedRef = useRef(false);
 
   // Initialize crew (prefer persisted)
   useEffect(() => {
@@ -239,6 +251,8 @@ export default function CrewManifestPanel({
     setDndMsg(msg);
     // Clear after a short delay so SR re-reads on next update
     setTimeout(() => { setDndMsg(prev => prev === msg ? "" : prev); }, 2200);
+    // Dispatch to structural live region for DEV overlay
+    try { window.dispatchEvent(new CustomEvent('wcr-live', { detail: msg })); } catch {}
   };
 
   const getVisibleIndex = (id: string) => visibleCrew.findIndex(c => c.id === id);
@@ -270,10 +284,14 @@ export default function CrewManifestPanel({
     }
   };
 
+  const handleDragCancel = () => {
+    announce('Reorder cancelled.', 0);
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) {
-      announce('Reorder cancelled.');
+      announce('Reorder cancelled.', 0);
       return;
     }
     const oldIndex = crew.findIndex(c => c.id === active.id);
@@ -291,10 +309,12 @@ export default function CrewManifestPanel({
   const startEdit = (id: string, currentRole: string) => {
     setEditingId(id);
     setDraftRole(currentRole);
+    roleInputJustOpenedRef.current = true;
   };
   const cancelEdit = () => {
     setEditingId(null);
     setDraftRole("");
+    roleInputJustOpenedRef.current = false;
   };
   type DeptChange = { from: Department; to: Department; name: string; role: string };
   const commitEdit = () => {
@@ -419,8 +439,17 @@ export default function CrewManifestPanel({
                 list="roles-list"
                 value={draftRole}
                 onChange={(e) => setDraftRole(e.target.value)}
+                onFocus={(e) => {
+                  if (roleInputJustOpenedRef.current) {
+                    roleInputJustOpenedRef.current = false;
+                    setDraftRole('');
+                    // Brief delay to ensure dropdown opens
+                    setTimeout(() => e.target.click(), 10);
+                  }
+                }}
                 onKeyDown={(e) => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') cancelEdit(); }}
                 autoFocus
+                placeholder="Select or type role..."
               />
               <button className="px-2 py-1 rounded bg-pink-500 text-black border border-pink-400 font-bold text-xs" onClick={commitEdit}>Save</button>
               <button className="px-2 py-1 rounded bg-slate-700 text-pink-200 border border-pink-400/40 text-xs" onClick={cancelEdit}>Cancel</button>
@@ -547,6 +576,7 @@ export default function CrewManifestPanel({
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
       >
         <SortableContext items={visibleCrew.map(c => c.id)} strategy={verticalListSortingStrategy}>
           <ul className="text-[15px] text-slate-100 space-y-1 mb-3 overscroll-contain">

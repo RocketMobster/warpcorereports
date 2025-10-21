@@ -1,4 +1,4 @@
-# Accessibility Enhancements (Work In Progress)
+﻿# Accessibility Enhancements (Work In Progress)
 
 This file documents recent a11y upgrades so future changes can follow the same patterns.
 
@@ -67,7 +67,7 @@ This section mirrors the concise checklist in `README.md` and maps it to the mor
 ✅ Reduced motion refinements (respect prefers-reduced-motion fully)
 ✅ Consolidated single status region (merged structural + light status; assertive toast channel retained)
 ✅ ARIA description for Seed lock toggle (clarify Produce vs Reroll nuance)
-⏳ Verbosity toggle for automatic rank adjustment announcements (mute or summarize messages)
+⏳ Verbosity toggle for structural announcements (mutes DnD and crew edit messages when off; panel open/close notices always announced)`n DEV mode structural overlay (visual panel for real-time announcement inspection; keyboard shortcut Ctrl+Alt+L; dev-only feature)`n Unified Settings drawer (single drawer for desktop + mobile, moved outside inert regions to prevent interaction freezes)`n Enhanced role dropdown (23 canonical roles, auto-clears on focus, remains fully writeable for custom entries)
 
 ### Update Procedure
 1. Implement feature.
@@ -80,3 +80,6 @@ This section mirrors the concise checklist in `README.md` and maps it to the mor
 - Debounce logic should avoid swallowing legitimate rapid sequential announcements (e.g., user rapidly opening/closing two distinct panels) by scoping uniqueness to message + 800–1000ms window.
 - When adding `aria-valuetext` for Humor, preserve existing descriptive helpers—SR output should become: numeric value + qualitative state + any existing described-by context (consider order).
 
+- **DEV Mode Structural Overlay**: Visual panel showing live structural announcements in real-time (dev-only, toggled via Settings or Ctrl+Alt+L).
+- **Verbose Announcements Control**: User toggle to filter noisy DnD/crew edit messages while preserving panel open/close notices; persisted via localStorage.
+- **Unified Settings Drawer**: Single Settings drawer accessible from both desktop and mobile, moved outside inert regions to prevent gear icon freeze.
