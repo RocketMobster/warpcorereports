@@ -666,6 +666,25 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
             aria-describedby="detail-help"
           />
           <div id="detail-help" className="lcars-small">{problemDetailLevel} sentence{problemDetailLevel > 1 ? "s" : ""} per problem</div>
+          
+          {/* Stardate Calculator */}
+          {onStardateChange && onUseStardateToggle && (
+            <div className="mt-4 pt-3 border-t border-slate-700">
+              <div className="flex items-center gap-2 mb-2">
+                <input
+                  type="checkbox"
+                  id="useStardateOverride"
+                  checked={!!useStardateOverride}
+                  onChange={e => onUseStardateToggle(e.target.checked)}
+                />
+                <label htmlFor="useStardateOverride" className="lcars-label">Use Stardate in Report</label>
+                {useStardateOverride && (
+                  <span className="lcars-small">Current: {stardateOverride || "—"}</span>
+                )}
+              </div>
+              <StardateCalculator onStardateChange={onStardateChange} currentStardate={stardateOverride || ""} />
+            </div>
+          )}
         </div>
       </div>
 
@@ -695,6 +714,35 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
             />
             <div id="graphs-help" className="lcars-small">{graphsCount} graphs</div>
           </>}
+          
+          {/* Humor Slider */}
+          <div className="mt-4 pt-3 border-t border-slate-700">
+            <div className="flex items-center justify-between">
+              <label className="lcars-label">Humor Level</label>
+              <button onClick={handleRandomHumor} className="lcars-btn" title="Randomize humor level" aria-label="Randomize humor level">🎲</button>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={10}
+              value={humor}
+              onChange={e=>setHumor(parseInt(e.target.value))}
+              aria-describedby="humor-help-desktop"
+              aria-valuetext={humorValueText(humor)}
+            />
+            <div id="humor-help-desktop" className="lcars-small flex items-center gap-2">
+              <span>{humor}</span>
+              {humor === 0 ? (
+                <span>No humor</span>
+              ) : humor === 5 ? (
+                <span>Moderate humor</span>
+              ) : humor === 10 ? (
+                <span>Max Humor</span>
+              ) : (
+                <span className="sr-only">Humor level</span>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -868,31 +916,6 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
               <option value="incident">Incident</option>
               <option value="survey">Survey</option>
             </select>
-            <div className="flex items-center justify-between mt-2">
-              <label className="lcars-label">Humor Level</label>
-              <button onClick={handleRandomHumor} className="lcars-btn" title="Randomize humor level" aria-label="Randomize humor level">🎲</button>
-            </div>
-          <input
-            type="range"
-            min={0}
-            max={10}
-            value={humor}
-            onChange={e=>setHumor(parseInt(e.target.value))}
-            aria-describedby="humor-help"
-            aria-valuetext={humorValueText(humor)}
-          />
-          <div id="humor-help" className="lcars-small flex items-center gap-2">
-            <span>{humor}</span>
-            {humor === 0 ? (
-              <span>No humor</span>
-            ) : humor === 5 ? (
-              <span>Moderate humor</span>
-            ) : humor === 10 ? (
-              <span>Max Humor</span>
-            ) : (
-              <span className="sr-only">Humor level</span>
-            )}
-          </div>
         </div>
       </div>
 
