@@ -818,6 +818,10 @@ export default function App() {
             onOpenHelp={(section) => { setHelpTarget(section); setShowHelp(true); }}
             persistZoom={persistZoom}
             onTogglePersistZoom={(v)=>{ try { localStorage.setItem('wcr_zoom_persist_enabled', v? '1':'0'); if(!v) localStorage.removeItem('previewZoom'); } catch {}; setPersistZoom(v); window.dispatchEvent(new Event('wcr-zoom-persist-changed')); }}
+            stardateOverride={stardateOverride}
+            onStardateChange={(sd)=>setStardateOverride(sd)}
+            useStardateOverride={useStardateOverride}
+            onUseStardateToggle={(v)=>setUseStardateOverride(v)}
             variant="desktop"
           />
         )}
