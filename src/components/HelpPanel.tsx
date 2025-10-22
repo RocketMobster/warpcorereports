@@ -142,9 +142,8 @@ export default function HelpPanel({ onClose, target }: { onClose: () => void, ta
               <li><strong>Signature</strong>: Enable “Add Name to References” to add this specific name to the References section of the report.</li>
               <li><strong>Canon names</strong>: Toggle “Allow Canon Names in References” to occasionally include famous Star Trek names — curated for plausible ranks/titles.</li>
               <li><strong>Era filter</strong>: Enable “Filter Canon Names by Era” to only include canon names active during the vessel’s timeframe.</li>
-              <li><strong>Frequency</strong>: Use “Famous Author Frequency” to choose Off / Rare / Occasional / Frequent appearance rates. Humor and template can nudge frequency slightly.</li>
-              <li><strong>Rotation memory</strong>: “Famous Rotation Memory” avoids reusing recently seen famous names (default 6). Set to 0 to disable.</li>
-              <li><strong>One-per-entry</strong>: At most one famous author appears in a single reference entry.</li>
+              <li><strong>Frequency</strong>: Use "Famous Author Frequency" to choose Off / Rare / Occasional / Frequent appearance rates. Humor and template can nudge frequency slightly.</li>
+              <li><strong>Rotation memory</strong>: "Famous Rotation Memory" (0–20, default 6) is the number of recent famous names to remember and avoid reusing. Higher values reduce repetition; set to 0 to disable rotation tracking.</li>
               <li><strong>Good defaults</strong>: Canon names allowed; era filter on; frequency "Occasional"; rotation memory 6.</li>
               <li><strong>Share links</strong>: Settings links encode these as <code>cn</code>, <code>ce</code>, <code>ff</code>, and <code>fm</code>.</li>
             </ul>
