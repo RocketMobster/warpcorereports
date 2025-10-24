@@ -17,6 +17,7 @@ interface SystemPerformance {
   name: string;
   framesOutOfRange: number;
   percentOutOfRange: number;
+  secondsOutOfRange: number;
 }
 
 export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps) {
@@ -148,6 +149,7 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
         name,
         framesOutOfRange: framesOut,
         percentOutOfRange: (framesOut / totalFrames) * 100,
+        secondsOutOfRange: (framesOut / 10), // 10 FPS, so frames / 10 = seconds
       })).sort((a, b) => b.framesOutOfRange - a.framesOutOfRange); // Sort by worst performer first
       
       // Give user 5 seconds to read results before generating report
@@ -173,7 +175,7 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
     return colors[color] || 'border-slate-400';
   };
 
-  const maxScore = 30 * 60 * 4;
+  const maxScore = 30 * 10 * 4; // 30 seconds * 10 FPS * 4 systems = 1200
   const scorePercentage = Math.round((score / maxScore) * 100);
 
   return (

@@ -588,15 +588,40 @@ export function generateReport(cfg: GeneratorConfig & { crewManifest?: CrewMembe
     const crewNames = assigned.map(({cm}) => `${cm.rank} ${cm.name} (${cm.role})`).join(" & ");
     // Problem summary: generate detailLevel sentences
     const sentences: string[] = [];
+    
+    // Check if this is a custom problem with duration data
+    const customDuration = cfg.customProblemDurations && cfg.customProblemDurations[i];
+    const isPerfectPerformance = title.includes('All Systems Nominal');
+    
     for (let s = 0; s < detailLevel; s++) {
       if (s === 0) {
-        const jargon = generateTechJargon(sys);
-        const variance = (rnd() * 0.2 + 0.01).toFixed(2);
-        const techDetails = `${jargon} experiencing a ${variance} phase variance`;
-        sentences.push(`Detected anomaly in the ${sys.toLowerCase()} ${techDetails}. ${crewNames} performed diagnostic protocol and implemented corrective measures according to Starfleet regulation ${randint(1000, 9999, rnd)}-${String.fromCharCode(65 + Math.floor(rnd() * 26))}.`);
+        if (isPerfectPerformance) {
+          // Perfect performance - no anomaly detected
+          sentences.push(`Continuous monitoring of all warp core systems during a ${30}-second stabilization exercise. ${crewNames} confirmed all parameters remained within optimal operational ranges throughout the diagnostic period. No corrective measures required.`);
+        } else {
+          const jargon = generateTechJargon(sys);
+          const variance = (rnd() * 0.2 + 0.01).toFixed(2);
+          
+          // Include duration if available
+          const durationText = customDuration && customDuration > 0 
+            ? ` for ${customDuration.toFixed(1)} seconds` 
+            : '';
+          const techDetails = `${jargon} experiencing a ${variance} phase variance${durationText}`;
+          
+          sentences.push(`Detected anomaly in the ${sys.toLowerCase()} ${techDetails}. ${crewNames} performed diagnostic protocol and implemented corrective measures according to Starfleet regulation ${randint(1000, 9999, rnd)}-${String.fromCharCode(65 + Math.floor(rnd() * 26))}.`);
+        }
       } else {
         // Follow-up sentences respect humor level
-        if (humor <= 2) {
+        if (isPerfectPerformance) {
+          // For perfect performance, add positive follow-ups
+          const perfectFollowUps = [
+            `All subsystems operated at peak efficiency with zero variance from baseline parameters.`,
+            `Diagnostic suite confirms exceptional warp core stability throughout the monitoring period.`,
+            `Crew performance commended for maintaining optimal system balance under simulated stress conditions.`,
+            `Results validate current maintenance protocols and crew training standards.`
+          ];
+          sentences.push(pick(perfectFollowUps, rnd));
+        } else if (humor <= 2) {
           const followUps = [
             `Post-repair diagnostics indicate nominal operation across monitored parameters. Continued observation scheduled for ${randint(2,6,rnd)} duty cycles.`,
             `Calibration values stabilized within Starfleet tolerances. No further action required at this time.`,

@@ -373,14 +373,16 @@ export default function App() {
       problemsCount = Math.min(problemSystems.length, 5) as 1 | 2 | 3 | 4 | 5;
     }
     
-    // Build custom problem titles based on actual game performance
+    // Build custom problem titles and durations based on actual game performance
     const customProblems = problemSystems.slice(0, 5).map(s => 
       systemProblemMap[s.name] || `${s.name} Stability Issues`
     );
+    const customDurations = problemSystems.slice(0, 5).map(s => s.secondsOutOfRange);
     
     // If all systems were perfect, add a positive report
     if (customProblems.length === 0) {
       customProblems.push('Warp Core Stabilization - All Systems Nominal');
+      customDurations.push(0); // No duration for perfect performance
     }
     
     // Create config for report generation
@@ -392,16 +394,17 @@ export default function App() {
       vessel: config?.vessel || 'USS Enterprise NCC-1701-D',
       signatoryName: config?.signatoryName || 'Warp Core Monitor',
       signatoryRank: (config?.signatoryRank || 'Lieutenant Commander') as any,
-      humorLevel: config?.humorLevel || 5,
+      humorLevel: config?.humorLevel ?? 5,
       seed: `warpcore_${score}_${Date.now()}`,
       missionTemplate: missionTemplate as any,
       figureBias: 'warp' as any,
-      signatoryReference: config?.signatoryReference || false,
-      allowCanonNames: config?.allowCanonNames || false,
-      filterCanonByEra: config?.filterCanonByEra || true,
+      signatoryReference: config?.signatoryReference ?? false,
+      allowCanonNames: config?.allowCanonNames ?? false,
+      filterCanonByEra: config?.filterCanonByEra ?? true,
       famousAuthorFrequency: (config?.famousAuthorFrequency || 'occasional') as any,
-      famousRecentMemory: config?.famousRecentMemory || 6,
-      customProblemTitles: customProblems, // Pass custom problem titles
+      famousRecentMemory: config?.famousRecentMemory ?? 6,
+      customProblemTitles: customProblems,
+      customProblemDurations: customDurations,
     };
     
     handleGenerate(gameConfig);
