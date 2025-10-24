@@ -8,6 +8,7 @@ import CrewManifestPanel from "./components/CrewManifestPanel";
 import ShareDialog from "./components/ShareDialog";
 import SoundControls from "./components/SoundControls";
 import HelpPanel from "./components/HelpPanel";
+import WarpCoreGame from "./components/WarpCoreGame";
 import { generateReport, reportToTxt, generateCrewManifest } from "./utils/reportGen";
 import { jsPDF } from "jspdf";
 import { saveAs } from "file-saver";
@@ -129,6 +130,8 @@ export default function App() {
   const [reportCooldownSec, setReportCooldownSec] = useState<number>(0);
   // Help panel state
   const [showHelp, setShowHelp] = useState(false);
+  // Warp Core Game state
+  const [showWarpCoreGame, setShowWarpCoreGame] = useState(false);
   const [persistZoom, setPersistZoom] = useState<boolean>(() => {
     try { return localStorage.getItem('wcr_zoom_persist_enabled') === '0' ? false : true; } catch { return true; }
   });
@@ -337,6 +340,42 @@ export default function App() {
       const r = generateReport({ ...config, crewManifest: crew });
       setReport(r);
     }
+  };
+
+  // Handle warp core game completion
+  const handleWarpCoreComplete = (score: number, perfect: boolean) => {
+    setShowWarpCoreGame(false);
+    
+    // Generate a report based on game performance
+    const maxScore = 30 * 60 * 4;
+    const scorePercentage = (score / maxScore) * 100;
+    
+    // Determine mission template and problem count based on performance
+    const missionTemplate = scorePercentage >= 80 ? 'none' : 'incident';
+    const problemsCount = scorePercentage >= 95 ? 1 : scorePercentage >= 80 ? 2 : scorePercentage >= 60 ? 3 : 5;
+    
+    // Create config for report generation
+    const gameConfig: any = {
+      problemsCount: problemsCount as 1 | 2 | 3 | 4 | 5,
+      problemDetailLevel: 3,
+      graphsEnabled: true,
+      graphsCount: Math.min(problemsCount + 1, 5),
+      vessel: 'USS Enterprise NCC-1701-D',
+      signatoryName: 'Engineering Simulation',
+      signatoryRank: 'Lieutenant Commander' as any,
+      humor: 0,
+      seed: `warpcore_${score}_${Date.now()}`,
+      missionTemplate: missionTemplate as any,
+      figureBias: 'warp' as any,
+      signatoryReference: false,
+      allowCanonNames: false,
+      filterCanonByEra: true,
+      famousAuthorFrequency: 'occasional' as any,
+      famousRecentMemory: 6,
+    };
+    
+    handleGenerate(gameConfig);
+    playSound(perfect ? 'success' : 'notification');
   };
 
   // Toggle crew manifest panel and update crew/report if opening
@@ -781,15 +820,26 @@ export default function App() {
               <span className="ml-2 align-middle text-[10px] px-2 py-1 rounded bg-purple-700/40 border border-purple-500/60 text-purple-200">DEV</span>
             )}
           </h1>
-          {/* Settings gear moved to header */}
-          <button
-            onClick={() => setSettingsOpen(true)}
-            className="ml-4 px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 hover:bg-slate-700 text-sm"
-            title="Settings"
-            aria-label="Open Settings"
-          >
-            <span className="text-xl leading-none">⚙︎</span>
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Warp Core Game Button */}
+            <button
+              onClick={() => setShowWarpCoreGame(true)}
+              className="px-3 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 border border-amber-500 text-slate-950 text-sm font-semibold transition-colors"
+              title="Warp Core Stabilization Mini-Game"
+              aria-label="Launch Warp Core Stabilization Game"
+            >
+              🎮 Warp Core
+            </button>
+            {/* Settings gear moved to header */}
+            <button
+              onClick={() => setSettingsOpen(true)}
+              className="px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 hover:bg-slate-700 text-sm"
+              title="Settings"
+              aria-label="Open Settings"
+            >
+              <span className="text-xl leading-none">⚙︎</span>
+            </button>
+          </div>
         </div>
         {/* Compact density moved to Settings drawer */}
         
@@ -981,6 +1031,12 @@ export default function App() {
       {/* Overlays rendered outside inert main-content so they remain interactive */}
       {showHelp && (
         <HelpPanel onClose={() => setShowHelp(false)} target={helpTarget} />
+      )}
+      {showWarpCoreGame && (
+        <WarpCoreGame 
+          onComplete={handleWarpCoreComplete}
+          onCancel={() => setShowWarpCoreGame(false)}
+        />
       )}
       {report && (
         <ShareDialog 
