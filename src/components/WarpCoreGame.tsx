@@ -59,17 +59,18 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
 
     // Main game loop (10 FPS - much more manageable)
     gameLoopRef.current = window.setInterval(() => {
-      // Apply drift to systems
-      setSystems(prev => prev.map(s => ({
-        ...s,
-        value: Math.max(MIN_VALUE, Math.min(MAX_VALUE, s.value + s.drift))
-      })));
-
-      // Calculate score increment
       setSystems(prev => {
-        const inOptimalRange = prev.filter(s => s.value >= MIN_OPTIMAL && s.value <= MAX_OPTIMAL).length;
+        // Apply drift to systems
+        const updated = prev.map(s => ({
+          ...s,
+          value: Math.max(MIN_VALUE, Math.min(MAX_VALUE, s.value + s.drift))
+        }));
+        
+        // Calculate score increment based on systems in optimal range
+        const inOptimalRange = updated.filter(s => s.value >= MIN_OPTIMAL && s.value <= MAX_OPTIMAL).length;
         setScore(prevScore => prevScore + inOptimalRange);
-        return prev;
+        
+        return updated;
       });
     }, 100); // 10 FPS instead of 60 FPS
 
@@ -99,11 +100,6 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
       setTimeRemaining(t => {
         if (t <= 1) {
           setIsRunning(false);
-          const maxScore = 30 * 10 * 4; // 30 seconds * 10 FPS * 4 systems = 1200
-          const perfect = score >= maxScore * 0.95;
-          try { playSound(perfect ? 'success' : 'negative'); } catch {}
-          // Give user 5 seconds to read results before generating report
-          setTimeout(() => onComplete(score, perfect), 5000);
           return 0;
         }
         return t - 1;
@@ -111,7 +107,19 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
     }, 1000);
 
     return () => clearInterval(timerInterval);
-  }, [isRunning, score, onComplete]);
+  }, [isRunning]);
+  
+  // Handle game end separately to avoid timer recreation issues
+  useEffect(() => {
+    if (!isRunning && timeRemaining === 0) {
+      const maxScore = 30 * 10 * 4; // 30 seconds * 10 FPS * 4 systems = 1200
+      const perfect = score >= maxScore * 0.95;
+      try { playSound(perfect ? 'success' : 'negative'); } catch {}
+      // Give user 5 seconds to read results before generating report
+      const timeout = setTimeout(() => onComplete(score, perfect), 5000);
+      return () => clearTimeout(timeout);
+    }
+  }, [isRunning, timeRemaining, score, onComplete]);
 
   // System color based on value
   const getSystemColor = (value: number): string => {
