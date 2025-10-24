@@ -133,6 +133,9 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
   useEffect(() => {
     if (!isRunning) return;
     
+    // Skip tracking on initial mount - only track when frameCount > 0
+    if (frameCountRef.current === 0) return;
+    
     // Track current systems that are out of optimal range
     // This runs once per state update, not twice like code inside setSystems
     systems.forEach(s => {
