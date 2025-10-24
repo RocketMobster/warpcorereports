@@ -292,45 +292,60 @@ export default function App() {
   const getRandomCrewSize = () => randint(3, 10, Math.random);
 
   const handleGenerate = (cfg: GeneratorConfig) => {
-    // Play processing sound
-    playSound('processing');
+    console.log('handleGenerate called with config:', cfg);
     
-    // Always clone the config to avoid mutating the original
-    const configToUse = { ...cfg };
-    
-    // Ensure stardate is set if not already provided, or override is enabled
-    if (useStardateOverride && stardateOverride) {
-      configToUse.stardate = stardateOverride;
-    } else if (!configToUse.stardate) {
-      configToUse.stardate = (50000 + Math.random() * 9999).toFixed(1);
+    try {
+      // Play processing sound
+      playSound('processing');
+      
+      // Always clone the config to avoid mutating the original
+      const configToUse = { ...cfg };
+      
+      // Ensure stardate is set if not already provided, or override is enabled
+      if (useStardateOverride && stardateOverride) {
+        configToUse.stardate = stardateOverride;
+      } else if (!configToUse.stardate) {
+        configToUse.stardate = (50000 + Math.random() * 9999).toFixed(1);
+      }
+      
+      console.log('Stardate set to:', configToUse.stardate);
+      
+      // Always respect explicitly provided seeds
+      if (configToUse.seed) {
+        console.log("Using explicitly provided seed:", configToUse.seed);
+      } 
+      // Otherwise create a deterministic seed
+      else if (configToUse.signatoryName) {
+        configToUse.seed = configToUse.signatoryName + (configToUse.stardate || "") + Date.now().toString();
+        console.log("Created new seed from signatory:", configToUse.seed);
+      }
+      
+      console.log('About to call generateReport...');
+      
+      // Generate the report with the enhanced config
+      const r = generateReport({ 
+        ...configToUse, 
+        crewManifest,
+        problemDetailLevel: configToUse.problemDetailLevel 
+      });
+      
+      console.log("Generated report with seed:", r.originalSeed);
+      console.log("Report object:", r);
+      
+      // Play success sound when report is generated
+      successSound();
+      
+      // Force a new report object to trigger updates
+      setReport({...r});
+      setConfig({...configToUse});
+      setLastCfg({...configToUse});
+      
+      console.log('Report state updated successfully');
+    } catch (error) {
+      console.error('ERROR in handleGenerate:', error);
+      alert('Failed to generate report: ' + error);
+      throw error;
     }
-    
-    // Always respect explicitly provided seeds
-    if (configToUse.seed) {
-      console.log("Using explicitly provided seed:", configToUse.seed);
-    } 
-    // Otherwise create a deterministic seed
-    else if (configToUse.signatoryName) {
-      configToUse.seed = configToUse.signatoryName + (configToUse.stardate || "") + Date.now().toString();
-      console.log("Created new seed from signatory:", configToUse.seed);
-    }
-    
-    // Generate the report with the enhanced config
-    const r = generateReport({ 
-      ...configToUse, 
-      crewManifest,
-      problemDetailLevel: configToUse.problemDetailLevel 
-    });
-    
-    console.log("Generated report with seed:", r.originalSeed);
-    
-    // Play success sound when report is generated
-    successSound();
-    
-    // Force a new report object to trigger updates
-    setReport({...r});
-    setConfig({...configToUse});
-    setLastCfg({...configToUse});
   };
 
   // Update both crew manifest and report when crew changes
@@ -420,11 +435,21 @@ export default function App() {
     
     console.log('Generating report with config:', gameConfig);
     
+    // Ensure we have a crew manifest for the game report
+    if (!crewManifest || crewManifest.length === 0) {
+      console.log('No crew manifest, generating one...');
+      const gameCrew = generateCrewManifest(getRandomCrewSize(), gameConfig.seed || Date.now().toString());
+      setCrewManifest(gameCrew);
+      gameConfig.crewManifest = gameCrew;
+    }
+    
     try {
       handleGenerate(gameConfig);
-      playSound(perfect ? 'success' : 'notification');
+      console.log('Report generation completed successfully');
     } catch (error) {
       console.error('Error generating warp core report:', error);
+      // Try to show an error to the user
+      alert('Error generating report: ' + error);
     }
   };
 
