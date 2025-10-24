@@ -1037,6 +1037,9 @@ export function generateReport(cfg: GeneratorConfig & { crewManifest?: CrewMembe
 
 // Generate appropriate abstract based on humor level and problems
 function generateAbstract(problems: any[], humorLevel: number, rnd: () => number, missionTemplate?: MissionTemplate): string {
+  // Check for perfect performance
+  const isPerfectPerformance = problems.length === 1 && problems[0].title.includes('All Systems Nominal');
+  
   // Pluralize generic system names
   function pluralizeSystem(name: string): string {
     // If name is already plural or is specific, return as is
@@ -1071,6 +1074,18 @@ function generateAbstract(problems: any[], humorLevel: number, rnd: () => number
   const vessel = (globalThis as any).__reportVessel || "the vessel";
   const crewNames = (globalThis as any).__reportCrewNames || "engineering team";
   const mt = missionTemplate && missionTemplate !== 'none' ? missionTemplate : undefined;
+  
+  // Perfect performance abstract
+  if (isPerfectPerformance) {
+    if (humorLevel <= 2) {
+      return `During routine warp core stabilization exercise aboard ${vessel}, all systems maintained optimal operational parameters throughout the diagnostic period. No anomalies were detected. Continuous monitoring confirmed zero variance from baseline across all measured subsystems. Crew performance and equipment status exceed Starfleet standards. No corrective action required.`;
+    } else if (humorLevel <= 7) {
+      return `This report documents a ${30}-second warp core stabilization exercise conducted aboard ${vessel}. All four primary systems remained within optimal ranges throughout the diagnostic period. ${crewNames} demonstrated excellent system management with no anomalies detected. Results validate current maintenance protocols and crew training standards. Mission readiness confirmed.`;
+    } else {
+      return `In what can only be described as a refreshingly boring engineering report, absolutely nothing went wrong aboard ${vessel} during the warp core diagnostic. All systems behaved exactly as intended. The engineering team is almost disappointed by the lack of excitement. Coffee consumption was minimal. No heroic last-minute fixes were required. Everything is nominal, and we're honestly a bit suspicious.`;
+    }
+  }
+  
   if (humorLevel <= 2) {
     // Dry technical, multi-sentence
     const intro = mt === 'incident'
@@ -1105,6 +1120,9 @@ function generateAbstract(problems: any[], humorLevel: number, rnd: () => number
 
 // Generate appropriate conclusion based on humor level and problems
 function generateConclusion(problems: any[], humorLevel: number, rnd: () => number, missionTemplate?: MissionTemplate): string {
+  // Check for perfect performance
+  const isPerfectPerformance = problems.length === 1 && problems[0].title.includes('All Systems Nominal');
+  
   // Use full system names from POOLS.systems for natural phrasing
   const getFullSystemName = (title: string) => {
     const lower = title.toLowerCase();
@@ -1118,6 +1136,18 @@ function generateConclusion(problems: any[], humorLevel: number, rnd: () => numb
     ? systemsMentioned.slice(0, -1).join(', ') + ' and ' + systemsMentioned[systemsMentioned.length - 1]
     : systemsMentioned[0];
   const mt = missionTemplate && missionTemplate !== 'none' ? missionTemplate : undefined;
+  
+  // Perfect performance conclusion
+  if (isPerfectPerformance) {
+    if (humorLevel <= 2) {
+      return `Diagnostic exercise completed successfully with zero anomalies detected. All warp core systems performed at optimal levels throughout the monitoring period. No corrective action required. Current maintenance protocols and crew training standards are validated as effective. Continued routine monitoring scheduled per standard operational procedures.`;
+    } else if (humorLevel <= 7) {
+      return `Exercise completed with exemplary results. All systems maintained optimal parameters throughout the diagnostic period, demonstrating excellent crew performance and equipment reliability. No issues identified. Current protocols validated. ${vessel} remains at full mission readiness with all engineering systems operating at peak efficiency.`;
+    } else {
+      return `In conclusion: nothing broke, nobody panicked, and the coffee stayed in the cups. Engineering declares this an unqualified success and would like to request that all future shifts be this uneventful. The crew is disappointed they don't get to be heroes today, but we'll survive. Recommend continuing to do exactly what we're doing, because apparently it's working. Who knew?`;
+    }
+  }
+  
   if (humorLevel <= 2) {
     // Dry technical, multi-sentence
     const tail = mt === 'incident' ? `Incident response logs updated and submitted to Operations.` : mt === 'survey' ? `Survey logs updated and transmitted to Science.` : `Maintenance schedule updated in the engineering database.`;
