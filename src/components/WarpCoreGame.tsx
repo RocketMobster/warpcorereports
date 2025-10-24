@@ -234,15 +234,21 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
         {/* Active game */}
         {isRunning && (
           <>
-            {/* Timer and score */}
-            <div className="flex items-center justify-between mb-4 p-3 bg-slate-800 rounded-lg border border-slate-700">
-              <div className="text-center flex-1">
+            {/* Timer, score, and current stability */}
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="p-3 bg-slate-800 rounded-lg border border-slate-700 text-center">
                 <div className="text-xs text-slate-400 uppercase tracking-wider">Time Remaining</div>
                 <div className="text-3xl font-bold text-amber-300 tabular-nums">{timeRemaining}s</div>
               </div>
-              <div className="text-center flex-1">
+              <div className="p-3 bg-slate-800 rounded-lg border border-slate-700 text-center">
                 <div className="text-xs text-slate-400 uppercase tracking-wider">Performance</div>
                 <div className="text-3xl font-bold text-cyan-300 tabular-nums">{scorePercentage}%</div>
+              </div>
+              <div className="p-3 bg-slate-800 rounded-lg border border-slate-700 text-center">
+                <div className="text-xs text-slate-400 uppercase tracking-wider">Current Stability</div>
+                <div className="text-3xl font-bold text-green-300 tabular-nums">
+                  {systems.filter(s => s.value >= MIN_OPTIMAL && s.value <= MAX_OPTIMAL).length}/4
+                </div>
               </div>
             </div>
 
