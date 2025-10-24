@@ -37,6 +37,7 @@ export interface GeneratorConfig {
   filterCanonByEra?: boolean; // Whether to filter canon names by vessel era
   famousAuthorFrequency?: FamousAuthorFrequency; // Frequency control for famous authors in references
   famousRecentMemory?: number; // LRU size to reduce repeat famous authors (0 = no memory)
+  customProblemTitles?: string[]; // Custom problem titles (e.g., from warp core game)
 }
 
 export interface ProblemSection { id: string; title: string; summary: string; }

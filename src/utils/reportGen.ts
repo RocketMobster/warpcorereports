@@ -519,17 +519,29 @@ export function generateReport(cfg: GeneratorConfig & { crewManifest?: CrewMembe
       "Operations": ["relay", "metrics", "calibration", "console", "monitor", "command"],
     };
     let sys: string;
-    if (cfg.missionTemplate && cfg.missionTemplate !== "none") {
-      const pool = (TEMPLATE_SYSTEMS as any)[cfg.missionTemplate] as string[] | undefined;
-      // 70% from template pool, otherwise fallback to general systems
-      if (pool && pool.length && rnd() < 0.7) {
-        sys = pick(pool, rnd);
+    let title: string;
+    
+    // Use custom problem title if provided
+    if (cfg.customProblemTitles && cfg.customProblemTitles[i]) {
+      title = cfg.customProblemTitles[i];
+      // Extract system name from custom title for use in technical details
+      sys = title.replace(/ (Issue|Irregularities|Anomalies|Imbalance|Degradation|Stability Issues|All Systems Nominal)$/i, '').trim();
+    } else {
+      // Original system selection logic
+      if (cfg.missionTemplate && cfg.missionTemplate !== "none") {
+        const pool = (TEMPLATE_SYSTEMS as any)[cfg.missionTemplate] as string[] | undefined;
+        // 70% from template pool, otherwise fallback to general systems
+        if (pool && pool.length && rnd() < 0.7) {
+          sys = pick(pool, rnd);
+        } else {
+          sys = pick(POOLS.systems, rnd);
+        }
       } else {
         sys = pick(POOLS.systems, rnd);
       }
-    } else {
-      sys = pick(POOLS.systems, rnd);
+      title = `${sys} Issue`;
     }
+    
     // Extract main system keyword from sys
     const sysKey = sys.toLowerCase();
     let mainKeyword = "";
@@ -561,19 +573,19 @@ export function generateReport(cfg: GeneratorConfig & { crewManifest?: CrewMembe
       }
     }
     assigned.forEach(({idx}) => crewUsage[idx]++);
-    // Pick system based on crew role if possible
-    if (assigned.length && roleKeywords[assigned[0].cm.role]) {
+    // Pick system based on crew role if possible (only if not using custom title)
+    if (!cfg.customProblemTitles && assigned.length && roleKeywords[assigned[0].cm.role]) {
       const possible = roleKeywords[assigned[0].cm.role];
       for (let sysOption of POOLS.systems) {
         const sysOptionKey = sysOption.toLowerCase();
         if (possible.some(kw => sysOptionKey.includes(kw))) {
           sys = sysOption;
+          title = `${sys} Issue`;
           break;
         }
       }
     }
     const crewNames = assigned.map(({cm}) => `${cm.rank} ${cm.name} (${cm.role})`).join(" & ");
-    const title = `${sys} Issue`;
     // Problem summary: generate detailLevel sentences
     const sentences: string[] = [];
     for (let s = 0; s < detailLevel; s++) {

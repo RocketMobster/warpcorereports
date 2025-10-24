@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { playSound } from '../utils/sounds';
 
 interface WarpCoreGameProps {
-  onComplete: (score: number, perfect: boolean) => void;
+  onComplete: (score: number, perfect: boolean, systemStats: SystemPerformance[]) => void;
   onCancel: () => void;
 }
 
@@ -11,6 +11,12 @@ interface SystemState {
   value: number;
   drift: number;
   color: string;
+}
+
+interface SystemPerformance {
+  name: string;
+  framesOutOfRange: number;
+  percentOutOfRange: number;
 }
 
 export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps) {
@@ -26,6 +32,12 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
 
   const gameLoopRef = useRef<number>();
   const driftTimerRef = useRef<number>();
+  const systemStatsRef = useRef<{ [key: string]: number }>({
+    'EPS Flow': 0,
+    'Plasma Temp': 0,
+    'Matter/Antimatter': 0,
+    'Dilithium Matrix': 0,
+  });
 
   // Optimal range: 40-60
   const MIN_OPTIMAL = 40;
@@ -39,6 +51,13 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
     setTimeRemaining(30);
     setScore(0);
     setSystems(prev => prev.map(s => ({ ...s, value: 50, drift: 0 })));
+    // Reset stats tracking
+    systemStatsRef.current = {
+      'EPS Flow': 0,
+      'Plasma Temp': 0,
+      'Matter/Antimatter': 0,
+      'Dilithium Matrix': 0,
+    };
     try { playSound('buttonClick'); } catch {}
   };
 
@@ -65,6 +84,13 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
           ...s,
           value: Math.max(MIN_VALUE, Math.min(MAX_VALUE, s.value + s.drift))
         }));
+        
+        // Track systems that are out of optimal range
+        updated.forEach(s => {
+          if (s.value < MIN_OPTIMAL || s.value > MAX_OPTIMAL) {
+            systemStatsRef.current[s.name]++;
+          }
+        });
         
         // Calculate score increment based on systems in optimal range
         const inOptimalRange = updated.filter(s => s.value >= MIN_OPTIMAL && s.value <= MAX_OPTIMAL).length;
@@ -113,10 +139,19 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
   useEffect(() => {
     if (!isRunning && timeRemaining === 0) {
       const maxScore = 30 * 10 * 4; // 30 seconds * 10 FPS * 4 systems = 1200
+      const totalFrames = 30 * 10; // 300 frames total
       const perfect = score >= maxScore * 0.95;
       try { playSound(perfect ? 'success' : 'negative'); } catch {}
+      
+      // Calculate system performance statistics
+      const systemStats: SystemPerformance[] = Object.entries(systemStatsRef.current).map(([name, framesOut]) => ({
+        name,
+        framesOutOfRange: framesOut,
+        percentOutOfRange: (framesOut / totalFrames) * 100,
+      })).sort((a, b) => b.framesOutOfRange - a.framesOutOfRange); // Sort by worst performer first
+      
       // Give user 5 seconds to read results before generating report
-      const timeout = setTimeout(() => onComplete(score, perfect), 5000);
+      const timeout = setTimeout(() => onComplete(score, perfect, systemStats), 5000);
       return () => clearTimeout(timeout);
     }
   }, [isRunning, timeRemaining, score, onComplete]);

@@ -343,35 +343,65 @@ export default function App() {
   };
 
   // Handle warp core game completion
-  const handleWarpCoreComplete = (score: number, perfect: boolean) => {
+  const handleWarpCoreComplete = (score: number, perfect: boolean, systemStats: any[]) => {
     setShowWarpCoreGame(false);
     
-    // Generate a report based on game performance
+    // Generate a report based on actual game performance
     const maxScore = 30 * 10 * 4; // 30 seconds * 10 FPS * 4 systems = 1200
     const scorePercentage = (score / maxScore) * 100;
     
-    // Determine mission template and problem count based on performance
-    const missionTemplate = scorePercentage >= 80 ? 'none' : 'incident';
-    const problemsCount = scorePercentage >= 95 ? 1 : scorePercentage >= 80 ? 2 : scorePercentage >= 60 ? 3 : 5;
+    // Map system names to technical problem titles
+    const systemProblemMap: { [key: string]: string } = {
+      'EPS Flow': 'Electro-Plasma System (EPS) Flow Irregularities',
+      'Plasma Temp': 'Plasma Temperature Regulation Anomalies',
+      'Matter/Antimatter': 'Matter/Antimatter Reaction Chamber Imbalance',
+      'Dilithium Matrix': 'Dilithium Crystal Matrix Degradation',
+    };
     
-    // Create config for report generation with warp-core related settings
+    // Filter systems that had problems (went out of range)
+    const problemSystems = systemStats.filter(s => s.framesOutOfRange > 0);
+    
+    // Determine report structure based on performance
+    const missionTemplate = scorePercentage >= 80 ? 'none' : 'incident';
+    let problemsCount: 1 | 2 | 3 | 4 | 5;
+    
+    if (problemSystems.length === 0) {
+      // Perfect performance - all systems nominal
+      problemsCount = 1;
+    } else {
+      // Use number of problem systems, capped at 5
+      problemsCount = Math.min(problemSystems.length, 5) as 1 | 2 | 3 | 4 | 5;
+    }
+    
+    // Build custom problem titles based on actual game performance
+    const customProblems = problemSystems.slice(0, 5).map(s => 
+      systemProblemMap[s.name] || `${s.name} Stability Issues`
+    );
+    
+    // If all systems were perfect, add a positive report
+    if (customProblems.length === 0) {
+      customProblems.push('Warp Core Stabilization - All Systems Nominal');
+    }
+    
+    // Create config for report generation
     const gameConfig: any = {
-      problemsCount: problemsCount as 1 | 2 | 3 | 4 | 5,
+      problemsCount,
       problemDetailLevel: 3,
       graphsEnabled: true,
       graphsCount: Math.min(problemsCount + 1, 5),
       vessel: config?.vessel || 'USS Enterprise NCC-1701-D',
-      signatoryName: config?.signatoryName || 'Engineering Simulation',
+      signatoryName: config?.signatoryName || 'Warp Core Monitor',
       signatoryRank: (config?.signatoryRank || 'Lieutenant Commander') as any,
       humorLevel: config?.humorLevel || 5,
       seed: `warpcore_${score}_${Date.now()}`,
       missionTemplate: missionTemplate as any,
-      figureBias: 'warp' as any, // Force warp-related problems
+      figureBias: 'warp' as any,
       signatoryReference: config?.signatoryReference || false,
       allowCanonNames: config?.allowCanonNames || false,
       filterCanonByEra: config?.filterCanonByEra || true,
       famousAuthorFrequency: (config?.famousAuthorFrequency || 'occasional') as any,
       famousRecentMemory: config?.famousRecentMemory || 6,
+      customProblemTitles: customProblems, // Pass custom problem titles
     };
     
     handleGenerate(gameConfig);
