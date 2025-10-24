@@ -774,6 +774,17 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
               Add Name to References
             </label>
           </div>
+          <label className="lcars-label">Rank</label>
+          <div className="flex gap-2 items-center">
+            <select value={signatoryRank} onChange={e=>setSignatoryRank(e.target.value as Rank)} className="lcars-input flex-1" aria-label="Select rank">
+              {ranks.map(r=> <option key={r}>{r}</option>)}
+            </select>
+            <button onClick={handleRandomRank} className="lcars-btn" title="Randomize rank" aria-label="Randomize rank">🎲</button>
+          </div>
+
+          {/* Divider between Ship & Signature and References & Canon Names sections */}
+          <div className="border-t border-slate-700/50 my-3"></div>
+
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -849,13 +860,9 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
             />
             <div id="famous-mem-help" className="lcars-small">Memory window: {famousRecentMemory}</div>
           </div>
-          <label className="lcars-label">Rank</label>
-          <div className="flex gap-2 items-center">
-            <select value={signatoryRank} onChange={e=>setSignatoryRank(e.target.value as Rank)} className="lcars-input flex-1" aria-label="Select rank">
-              {ranks.map(r=> <option key={r}>{r}</option>)}
-            </select>
-            <button onClick={handleRandomRank} className="lcars-btn" title="Randomize rank" aria-label="Randomize rank">🎲</button>
-          </div>
+
+          {/* Divider between References & Canon Names and Seed section */}
+          <div className="border-t border-slate-700/50 my-3"></div>
 
           <label className="lcars-label">Seed</label>
           <div className="flex gap-2">
