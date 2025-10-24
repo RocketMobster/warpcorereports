@@ -88,19 +88,10 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
     console.log('Game loop effect running, creating interval');
     
     // Main game loop (10 FPS - much more manageable)
-    let setSystemsCallCount = 0;
     gameLoopRef.current = window.setInterval(() => {
       frameCountRef.current++;
-      if (frameCountRef.current <= 3) {
-        console.log(`[INTERVAL FIRED] Frame ${frameCountRef.current}`);
-      }
       
       setSystems(prev => {
-        setSystemsCallCount++;
-        if (frameCountRef.current <= 3) {
-          console.log(`  [setSystems CALLED] Call #${setSystemsCallCount} for frame ${frameCountRef.current}`);
-        }
-        
         // Apply drift to systems
         const updated = prev.map(s => ({
           ...s,
@@ -108,15 +99,8 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
         }));
         
         // Track systems that are out of optimal range
-        updated.forEach(s => {
-          if (s.value < MIN_OPTIMAL || s.value > MAX_OPTIMAL) {
-            const before = systemStatsRef.current[s.name];
-            systemStatsRef.current[s.name]++;
-            if (frameCountRef.current <= 3) {
-              console.log(`    [TRACKING] ${s.name} out of range, count: ${before} -> ${systemStatsRef.current[s.name]}`);
-            }
-          }
-        });
+        // Do this OUTSIDE the state updater to avoid double-counting in React Strict Mode
+        // We'll use a separate effect to track after state updates
         
         // Calculate score increment based on systems in optimal range
         const inOptimalRange = updated.filter(s => s.value >= MIN_OPTIMAL && s.value <= MAX_OPTIMAL).length;
@@ -144,6 +128,19 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
       if (driftTimerRef.current) clearTimeout(driftTimerRef.current);
     };
   }, [isRunning]);
+
+  // Track system performance (separate effect to avoid React Strict Mode double-counting)
+  useEffect(() => {
+    if (!isRunning) return;
+    
+    // Track current systems that are out of optimal range
+    // This runs once per state update, not twice like code inside setSystems
+    systems.forEach(s => {
+      if (s.value < MIN_OPTIMAL || s.value > MAX_OPTIMAL) {
+        systemStatsRef.current[s.name]++;
+      }
+    });
+  }, [systems, isRunning]);
 
   // Timer countdown - using interval for more reliable timing
   useEffect(() => {
