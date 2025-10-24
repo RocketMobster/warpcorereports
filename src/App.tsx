@@ -423,7 +423,7 @@ export default function App() {
       signatoryName: engineerName,
       signatoryRank: (config?.signatoryRank || 'Lieutenant Commander') as any,
       stardate: gameStardate,
-      humorLevel: enableHumor ? 5 : 0,
+      humorLevel: enableHumor ? 8 : 0, // 8 = humorous, 0 = dry technical
       seed: `warpcore_${score}_${Date.now()}`,
       missionTemplate: missionTemplate as any,
       figureBias: 'warp' as any,
