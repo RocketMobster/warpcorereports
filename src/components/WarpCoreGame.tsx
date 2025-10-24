@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { playSound } from '../utils/sounds';
 
 interface WarpCoreGameProps {
-  onComplete: (score: number, perfect: boolean, systemStats: SystemPerformance[]) => void;
+  onComplete: (score: number, perfect: boolean, systemStats: SystemPerformance[], playerName: string, enableHumor: boolean) => void;
   onCancel: () => void;
 }
 
@@ -24,6 +24,9 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
   const [timeRemaining, setTimeRemaining] = useState(30);
   const [isRunning, setIsRunning] = useState(false);
   const [score, setScore] = useState(0);
+  const [showSettings, setShowSettings] = useState(true);
+  const [playerName, setPlayerName] = useState('');
+  const [enableHumor, setEnableHumor] = useState(true);
   const [systems, setSystems] = useState<SystemState[]>([
     { name: 'EPS Flow', value: 50, drift: 0, color: 'amber' },
     { name: 'Plasma Temp', value: 50, drift: 0, color: 'purple' },
@@ -163,10 +166,10 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
       // Give user 5 seconds to read results before generating report
       setTimeout(() => {
         console.log('Calling onComplete after 5 second delay...');
-        onComplete(score, perfect, systemStats);
+        onComplete(score, perfect, systemStats, playerName, enableHumor);
       }, 5000);
     }
-  }, [isRunning, timeRemaining, score, onComplete]);
+  }, [isRunning, timeRemaining, score, onComplete, playerName, enableHumor]);
 
   // System color based on value
   const getSystemColor = (value: number): string => {
@@ -208,7 +211,45 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
         </div>
 
         {/* Game status */}
-        {!isRunning && timeRemaining === 30 && (
+        {!isRunning && timeRemaining === 30 && showSettings && (
+          <div className="text-center py-8">
+            <p className="text-lg text-slate-300 mb-6">
+              Enter your details for the engineering report:
+            </p>
+            <div className="max-w-md mx-auto space-y-4 mb-6">
+              <div className="text-left">
+                <label htmlFor="playerName" className="block text-sm text-slate-400 mb-2">Your Name (Optional)</label>
+                <input
+                  id="playerName"
+                  type="text"
+                  value={playerName}
+                  onChange={(e) => setPlayerName(e.target.value)}
+                  placeholder="e.g., Miles O'Brien"
+                  className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100 focus:border-amber-500 focus:outline-none"
+                />
+              </div>
+              <div className="flex items-center justify-between p-4 bg-slate-800 border border-slate-700 rounded">
+                <label htmlFor="enableHumor" className="text-sm text-slate-300">Enable Humor in Report</label>
+                <button
+                  id="enableHumor"
+                  onClick={() => setEnableHumor(!enableHumor)}
+                  className={`relative w-12 h-6 rounded-full transition-colors ${enableHumor ? 'bg-green-500' : 'bg-slate-600'}`}
+                  aria-pressed={enableHumor}
+                >
+                  <span className={`absolute top-1 ${enableHumor ? 'right-1' : 'left-1'} w-4 h-4 bg-white rounded-full transition-all`} />
+                </button>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowSettings(false)}
+              className="px-8 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg uppercase tracking-wider transition-colors"
+            >
+              Continue
+            </button>
+          </div>
+        )}
+
+        {!isRunning && timeRemaining === 30 && !showSettings && (
           <div className="text-center py-8">
             <p className="text-lg text-slate-300 mb-4">
               Adjust system levels using the ▲ and ▼ controls.<br />

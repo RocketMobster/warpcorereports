@@ -358,8 +358,8 @@ export default function App() {
   };
 
   // Handle warp core game completion
-  const handleWarpCoreComplete = (score: number, perfect: boolean, systemStats: any[]) => {
-    console.log('Warp core game completed:', { score, perfect, systemStats });
+  const handleWarpCoreComplete = (score: number, perfect: boolean, systemStats: any[], playerName: string, enableHumor: boolean) => {
+    console.log('Warp core game completed:', { score, perfect, systemStats, playerName, enableHumor });
     setShowWarpCoreGame(false);
     
     // Generate a report based on actual game performance
@@ -410,6 +410,9 @@ export default function App() {
       ? stardateOverride 
       : (50000 + Math.random() * 9999).toFixed(1);
     
+    // Use player name if provided, otherwise use config name or default
+    const engineerName = playerName.trim() || config?.signatoryName || 'Warp Core Monitor';
+    
     // Create config for report generation
     const gameConfig: any = {
       problemsCount,
@@ -417,10 +420,10 @@ export default function App() {
       graphsEnabled: true,
       graphsCount: Math.min(problemsCount + 1, 5),
       vessel: config?.vessel || 'USS Enterprise NCC-1701-D',
-      signatoryName: config?.signatoryName || 'Warp Core Monitor',
+      signatoryName: engineerName,
       signatoryRank: (config?.signatoryRank || 'Lieutenant Commander') as any,
       stardate: gameStardate,
-      humorLevel: config?.humorLevel ?? 5,
+      humorLevel: enableHumor ? 5 : 0,
       seed: `warpcore_${score}_${Date.now()}`,
       missionTemplate: missionTemplate as any,
       figureBias: 'warp' as any,
