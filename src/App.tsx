@@ -347,31 +347,31 @@ export default function App() {
     setShowWarpCoreGame(false);
     
     // Generate a report based on game performance
-    const maxScore = 30 * 60 * 4;
+    const maxScore = 30 * 10 * 4; // 30 seconds * 10 FPS * 4 systems = 1200
     const scorePercentage = (score / maxScore) * 100;
     
     // Determine mission template and problem count based on performance
     const missionTemplate = scorePercentage >= 80 ? 'none' : 'incident';
     const problemsCount = scorePercentage >= 95 ? 1 : scorePercentage >= 80 ? 2 : scorePercentage >= 60 ? 3 : 5;
     
-    // Create config for report generation
+    // Create config for report generation with warp-core related settings
     const gameConfig: any = {
       problemsCount: problemsCount as 1 | 2 | 3 | 4 | 5,
       problemDetailLevel: 3,
       graphsEnabled: true,
       graphsCount: Math.min(problemsCount + 1, 5),
-      vessel: 'USS Enterprise NCC-1701-D',
-      signatoryName: 'Engineering Simulation',
-      signatoryRank: 'Lieutenant Commander' as any,
-      humor: 0,
+      vessel: config.vessel,
+      signatoryName: config.signatoryName,
+      signatoryRank: config.signatoryRank,
+      humor: config.humor,
       seed: `warpcore_${score}_${Date.now()}`,
       missionTemplate: missionTemplate as any,
-      figureBias: 'warp' as any,
-      signatoryReference: false,
-      allowCanonNames: false,
-      filterCanonByEra: true,
-      famousAuthorFrequency: 'occasional' as any,
-      famousRecentMemory: 6,
+      figureBias: 'warp' as any, // Force warp-related problems
+      signatoryReference: config.signatoryReference,
+      allowCanonNames: config.allowCanonNames,
+      filterCanonByEra: config.filterCanonByEra,
+      famousAuthorFrequency: config.famousAuthorFrequency,
+      famousRecentMemory: config.famousRecentMemory,
     };
     
     handleGenerate(gameConfig);
