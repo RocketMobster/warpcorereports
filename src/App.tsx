@@ -360,18 +360,18 @@ export default function App() {
       problemDetailLevel: 3,
       graphsEnabled: true,
       graphsCount: Math.min(problemsCount + 1, 5),
-      vessel: config.vessel,
-      signatoryName: config.signatoryName,
-      signatoryRank: config.signatoryRank,
-      humor: config.humor,
+      vessel: config?.vessel || 'USS Enterprise NCC-1701-D',
+      signatoryName: config?.signatoryName || 'Engineering Simulation',
+      signatoryRank: (config?.signatoryRank || 'Lieutenant Commander') as any,
+      humorLevel: config?.humorLevel || 5,
       seed: `warpcore_${score}_${Date.now()}`,
       missionTemplate: missionTemplate as any,
       figureBias: 'warp' as any, // Force warp-related problems
-      signatoryReference: config.signatoryReference,
-      allowCanonNames: config.allowCanonNames,
-      filterCanonByEra: config.filterCanonByEra,
-      famousAuthorFrequency: config.famousAuthorFrequency,
-      famousRecentMemory: config.famousRecentMemory,
+      signatoryReference: config?.signatoryReference || false,
+      allowCanonNames: config?.allowCanonNames || false,
+      filterCanonByEra: config?.filterCanonByEra || true,
+      famousAuthorFrequency: (config?.famousAuthorFrequency || 'occasional') as any,
+      famousRecentMemory: config?.famousRecentMemory || 6,
     };
     
     handleGenerate(gameConfig);
