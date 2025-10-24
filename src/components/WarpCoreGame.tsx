@@ -88,10 +88,19 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
     console.log('Game loop effect running, creating interval');
     
     // Main game loop (10 FPS - much more manageable)
+    let setSystemsCallCount = 0;
     gameLoopRef.current = window.setInterval(() => {
       frameCountRef.current++;
+      if (frameCountRef.current <= 3) {
+        console.log(`[INTERVAL FIRED] Frame ${frameCountRef.current}`);
+      }
       
       setSystems(prev => {
+        setSystemsCallCount++;
+        if (frameCountRef.current <= 3) {
+          console.log(`  [setSystems CALLED] Call #${setSystemsCallCount} for frame ${frameCountRef.current}`);
+        }
+        
         // Apply drift to systems
         const updated = prev.map(s => ({
           ...s,
@@ -101,7 +110,11 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
         // Track systems that are out of optimal range
         updated.forEach(s => {
           if (s.value < MIN_OPTIMAL || s.value > MAX_OPTIMAL) {
+            const before = systemStatsRef.current[s.name];
             systemStatsRef.current[s.name]++;
+            if (frameCountRef.current <= 3) {
+              console.log(`    [TRACKING] ${s.name} out of range, count: ${before} -> ${systemStatsRef.current[s.name]}`);
+            }
           }
         });
         
