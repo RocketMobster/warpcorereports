@@ -140,7 +140,12 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
     // This runs once per state update, not twice like code inside setSystems
     systems.forEach(s => {
       if (s.value < MIN_OPTIMAL || s.value > MAX_OPTIMAL) {
+        const before = systemStatsRef.current[s.name];
         systemStatsRef.current[s.name]++;
+        // Debug: see when tracking happens
+        if (frameCountRef.current <= 5 || systemStatsRef.current[s.name] > frameCountRef.current) {
+          console.log(`[TRACKING] Frame ${frameCountRef.current}, ${s.name} count: ${before} -> ${systemStatsRef.current[s.name]}`);
+        }
       }
     });
   }, [systems, isRunning]);
