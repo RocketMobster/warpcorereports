@@ -33,6 +33,7 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
 
   const gameLoopRef = useRef<number>();
   const driftTimerRef = useRef<number>();
+  const gameEndedRef = useRef<boolean>(false);
   const systemStatsRef = useRef<{ [key: string]: number }>({
     'EPS Flow': 0,
     'Plasma Temp': 0,
@@ -59,6 +60,8 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
       'Matter/Antimatter': 0,
       'Dilithium Matrix': 0,
     };
+    gameEndedRef.current = false; // Reset game ended flag
+    console.log('Game started');
     try { playSound('buttonClick'); } catch {}
   };
 
@@ -138,7 +141,10 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
   
   // Handle game end separately to avoid timer recreation issues
   useEffect(() => {
-    if (!isRunning && timeRemaining === 0) {
+    if (!isRunning && timeRemaining === 0 && !gameEndedRef.current) {
+      console.log('Game ended! Score:', score);
+      gameEndedRef.current = true; // Mark as ended to prevent multiple calls
+      
       const maxScore = 30 * 10 * 4; // 30 seconds * 10 FPS * 4 systems = 1200
       const totalFrames = 30 * 10; // 300 frames total
       const perfect = score >= maxScore * 0.95;
@@ -152,9 +158,13 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
         secondsOutOfRange: (framesOut / 10), // 10 FPS, so frames / 10 = seconds
       })).sort((a, b) => b.framesOutOfRange - a.framesOutOfRange); // Sort by worst performer first
       
+      console.log('System stats:', systemStats);
+      
       // Give user 5 seconds to read results before generating report
-      const timeout = setTimeout(() => onComplete(score, perfect, systemStats), 5000);
-      return () => clearTimeout(timeout);
+      setTimeout(() => {
+        console.log('Calling onComplete after 5 second delay...');
+        onComplete(score, perfect, systemStats);
+      }, 5000);
     }
   }, [isRunning, timeRemaining, score, onComplete]);
 
