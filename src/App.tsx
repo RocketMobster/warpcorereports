@@ -344,6 +344,7 @@ export default function App() {
 
   // Handle warp core game completion
   const handleWarpCoreComplete = (score: number, perfect: boolean, systemStats: any[]) => {
+    console.log('Warp core game completed:', { score, perfect, systemStats });
     setShowWarpCoreGame(false);
     
     // Generate a report based on actual game performance
@@ -360,6 +361,7 @@ export default function App() {
     
     // Filter systems that had problems (went out of range)
     const problemSystems = systemStats.filter(s => s.framesOutOfRange > 0);
+    console.log('Problem systems:', problemSystems);
     
     // Determine report structure based on performance
     const missionTemplate = scorePercentage >= 80 ? 'none' : 'incident';
@@ -385,6 +387,14 @@ export default function App() {
       customDurations.push(0); // No duration for perfect performance
     }
     
+    console.log('Custom problems:', customProblems);
+    console.log('Custom durations:', customDurations);
+    
+    // Generate stardate for the report
+    const gameStardate = useStardateOverride && stardateOverride 
+      ? stardateOverride 
+      : (50000 + Math.random() * 9999).toFixed(1);
+    
     // Create config for report generation
     const gameConfig: any = {
       problemsCount,
@@ -394,6 +404,7 @@ export default function App() {
       vessel: config?.vessel || 'USS Enterprise NCC-1701-D',
       signatoryName: config?.signatoryName || 'Warp Core Monitor',
       signatoryRank: (config?.signatoryRank || 'Lieutenant Commander') as any,
+      stardate: gameStardate,
       humorLevel: config?.humorLevel ?? 5,
       seed: `warpcore_${score}_${Date.now()}`,
       missionTemplate: missionTemplate as any,
@@ -407,8 +418,14 @@ export default function App() {
       customProblemDurations: customDurations,
     };
     
-    handleGenerate(gameConfig);
-    playSound(perfect ? 'success' : 'notification');
+    console.log('Generating report with config:', gameConfig);
+    
+    try {
+      handleGenerate(gameConfig);
+      playSound(perfect ? 'success' : 'notification');
+    } catch (error) {
+      console.error('Error generating warp core report:', error);
+    }
   };
 
   // Toggle crew manifest panel and update crew/report if opening
