@@ -38,6 +38,7 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
   const driftTimerRef = useRef<number>();
   const gameEndedRef = useRef<boolean>(false);
   const frameCountRef = useRef<number>(0);
+  const lastTrackedFrameRef = useRef<number>(0); // Track which frame we last counted
   const systemStatsRef = useRef<{ [key: string]: number }>({
     'EPS Flow': 0,
     'Plasma Temp': 0,
@@ -66,6 +67,7 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
     };
     gameEndedRef.current = false; // Reset game ended flag
     frameCountRef.current = 0; // Reset frame counter
+    lastTrackedFrameRef.current = 0; // Reset last tracked frame
     console.log('Game started');
     try { playSound('buttonClick'); } catch {}
   };
@@ -136,16 +138,16 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
     // Skip tracking on initial mount - only track when frameCount > 0
     if (frameCountRef.current === 0) return;
     
+    // Only track once per frame - skip if we already tracked this frame
+    // (drift timer can cause systems to update mid-frame)
+    if (lastTrackedFrameRef.current === frameCountRef.current) return;
+    lastTrackedFrameRef.current = frameCountRef.current;
+    
     // Track current systems that are out of optimal range
     // This runs once per state update, not twice like code inside setSystems
     systems.forEach(s => {
       if (s.value < MIN_OPTIMAL || s.value > MAX_OPTIMAL) {
-        const before = systemStatsRef.current[s.name];
         systemStatsRef.current[s.name]++;
-        // Debug: see when tracking happens
-        if (frameCountRef.current <= 5 || systemStatsRef.current[s.name] > frameCountRef.current) {
-          console.log(`[TRACKING] Frame ${frameCountRef.current}, ${s.name} count: ${before} -> ${systemStatsRef.current[s.name]}`);
-        }
       }
     });
   }, [systems, isRunning]);
