@@ -37,6 +37,7 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
   const gameLoopRef = useRef<number>();
   const driftTimerRef = useRef<number>();
   const gameEndedRef = useRef<boolean>(false);
+  const frameCountRef = useRef<number>(0);
   const systemStatsRef = useRef<{ [key: string]: number }>({
     'EPS Flow': 0,
     'Plasma Temp': 0,
@@ -64,6 +65,7 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
       'Dilithium Matrix': 0,
     };
     gameEndedRef.current = false; // Reset game ended flag
+    frameCountRef.current = 0; // Reset frame counter
     console.log('Game started');
     try { playSound('buttonClick'); } catch {}
   };
@@ -83,8 +85,12 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
   useEffect(() => {
     if (!isRunning) return;
 
+    console.log('Game loop effect running, creating interval');
+    
     // Main game loop (10 FPS - much more manageable)
     gameLoopRef.current = window.setInterval(() => {
+      frameCountRef.current++;
+      
       setSystems(prev => {
         // Apply drift to systems
         const updated = prev.map(s => ({
@@ -120,6 +126,7 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
     scheduleDriftChange();
 
     return () => {
+      console.log('Game loop cleanup, clearing interval. Total frames:', frameCountRef.current);
       if (gameLoopRef.current) clearInterval(gameLoopRef.current);
       if (driftTimerRef.current) clearTimeout(driftTimerRef.current);
     };
@@ -146,19 +153,23 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
   useEffect(() => {
     if (!isRunning && timeRemaining === 0 && !gameEndedRef.current) {
       console.log('Game ended! Score:', score);
+      console.log('Total frames executed:', frameCountRef.current);
       gameEndedRef.current = true; // Mark as ended to prevent multiple calls
       
       const maxScore = 30 * 10 * 4; // 30 seconds * 10 FPS * 4 systems = 1200
-      const totalFrames = 30 * 10; // 300 frames total
+      const totalFrames = 30 * 10; // 300 frames total (expected)
+      const actualFrames = frameCountRef.current; // Actual frames counted
       const perfect = score >= maxScore * 0.95;
       try { playSound(perfect ? 'success' : 'negative'); } catch {}
       
-      // Calculate system performance statistics
+      console.log(`Expected ${totalFrames} frames, got ${actualFrames} frames (${((actualFrames/totalFrames)*100).toFixed(1)}%)`);
+      
+      // Calculate system performance statistics using ACTUAL frame count
       const systemStats: SystemPerformance[] = Object.entries(systemStatsRef.current).map(([name, framesOut]) => ({
         name,
         framesOutOfRange: framesOut,
-        percentOutOfRange: (framesOut / totalFrames) * 100,
-        secondsOutOfRange: (framesOut / 10), // 10 FPS, so frames / 10 = seconds
+        percentOutOfRange: (framesOut / actualFrames) * 100, // Use actual frames
+        secondsOutOfRange: (framesOut / 10), // 10 FPS
       })).sort((a, b) => b.framesOutOfRange - a.framesOutOfRange); // Sort by worst performer first
       
       console.log('System stats:', systemStats);
