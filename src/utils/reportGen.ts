@@ -613,14 +613,29 @@ export function generateReport(cfg: GeneratorConfig & { crewManifest?: CrewMembe
       } else {
         // Follow-up sentences respect humor level
         if (isPerfectPerformance) {
-          // For perfect performance, add positive follow-ups
-          const perfectFollowUps = [
-            `All subsystems operated at peak efficiency with zero variance from baseline parameters.`,
-            `Diagnostic suite confirms exceptional warp core stability throughout the monitoring period.`,
-            `Crew performance commended for maintaining optimal system balance under simulated stress conditions.`,
-            `Results validate current maintenance protocols and crew training standards.`
-          ];
-          sentences.push(pick(perfectFollowUps, rnd));
+          // For perfect performance, add positive follow-ups with humor if enabled
+          if (humor <= 2) {
+            const perfectFollowUps = [
+              `All subsystems operated at peak efficiency with zero variance from baseline parameters.`,
+              `Diagnostic suite confirms exceptional warp core stability throughout the monitoring period.`,
+              `Crew performance commended for maintaining optimal system balance under simulated stress conditions.`,
+              `Results validate current maintenance protocols and crew training standards.`
+            ];
+            sentences.push(pick(perfectFollowUps, rnd));
+          } else {
+            // Humorous perfect performance follow-ups
+            const humorousPerfect = [
+              `The warp core was so stable, the diagnostic equipment thought it was malfunctioning.`,
+              `Engineering team spent most of the exercise trying to find something - anything - to fix. No luck.`,
+              `All systems performed so perfectly that the computer ran a self-diagnostic to make sure it wasn't broken.`,
+              `Crew demonstrated exemplary skill, or possibly just exceptional boredom watching perfectly nominal readings.`,
+              `Zero anomalies detected. Engineering is both pleased and slightly disappointed by the lack of excitement.`,
+              `The warp core operated so smoothly that several crew members fell asleep monitoring it.`,
+              `Systems remained so stable that we suspect the drift simulation was secretly disabled. Investigation pending.`,
+              `All parameters nominal. Coffee consumption was at an all-time low due to lack of emergencies.`
+            ];
+            sentences.push(pick(humorousPerfect, rnd));
+          }
         } else if (humor <= 2) {
           const followUps = [
             `Post-repair diagnostics indicate nominal operation across monitored parameters. Continued observation scheduled for ${randint(2,6,rnd)} duty cycles.`,

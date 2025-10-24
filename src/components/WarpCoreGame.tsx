@@ -304,15 +304,20 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
             <p className="text-lg text-slate-300 mb-2">
               Performance: {scorePercentage}%
             </p>
-            <p className="text-sm text-slate-400 mb-4">
+            <p className="text-sm text-slate-400 mb-6">
               {scorePercentage >= 95 ? '🏆 Perfect stabilization! Commendation recommended.' :
                scorePercentage >= 80 ? '✅ Excellent work. Systems nominal.' :
                scorePercentage >= 60 ? '⚠️ Adequate performance. Minor issues noted.' :
                '❌ Critical failures detected. Incident report required.'}
             </p>
-            <p className="text-xs text-amber-400/70 italic">
-              Generating engineering report... This may take a few seconds.
-            </p>
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
+              <p className="text-base text-amber-300 font-semibold">
+                ⏳ Generating engineering report...
+              </p>
+              <p className="text-sm text-amber-400/80 mt-1">
+                Please wait a few seconds. Do not close this window.
+              </p>
+            </div>
           </div>
         )}
 
