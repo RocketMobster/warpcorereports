@@ -304,11 +304,14 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
             <p className="text-lg text-slate-300 mb-2">
               Performance: {scorePercentage}%
             </p>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-slate-400 mb-4">
               {scorePercentage >= 95 ? '🏆 Perfect stabilization! Commendation recommended.' :
                scorePercentage >= 80 ? '✅ Excellent work. Systems nominal.' :
                scorePercentage >= 60 ? '⚠️ Adequate performance. Minor issues noted.' :
                '❌ Critical failures detected. Incident report required.'}
+            </p>
+            <p className="text-xs text-amber-400/70 italic">
+              Generating engineering report... This may take a few seconds.
             </p>
           </div>
         )}
