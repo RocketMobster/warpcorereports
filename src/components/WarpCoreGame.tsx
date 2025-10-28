@@ -235,7 +235,10 @@ export default function WarpCoreGame({ onComplete, onCancel, onOpenHelp }: WarpC
           <div className="flex items-center gap-2">
             {onOpenHelp && (
               <button
-                onClick={() => onOpenHelp("warp-core")}
+                onClick={() => {
+                  onOpenHelp("warp-core");
+                  onCancel(); // Close the game to show help
+                }}
                 className="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-amber-300 rounded text-sm transition-colors"
                 title="Open help about Warp Core Diagnostic"
                 aria-label="Open help"
