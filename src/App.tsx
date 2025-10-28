@@ -149,7 +149,7 @@ export default function App() {
       try { window.dispatchEvent(new CustomEvent('wcr-live', { detail: 'High contrast mode disabled' })); } catch {}
     }
   }, [highContrast]);
-  const [helpTarget, setHelpTarget] = useState<"templates"|"figure-bias"|"presets"|"produce-reroll"|"references"|"crew-size"|"crew-panel"|undefined>(undefined);
+  const [helpTarget, setHelpTarget] = useState<"templates"|"figure-bias"|"presets"|"produce-reroll"|"references"|"crew-size"|"crew-panel"|"warp-core"|undefined>(undefined);
   
   
   // Initialize sound system
@@ -1114,6 +1114,7 @@ export default function App() {
         <WarpCoreGame 
           onComplete={handleWarpCoreComplete}
           onCancel={() => setShowWarpCoreGame(false)}
+          onOpenHelp={(target) => { setHelpTarget(target); setShowHelp(true); }}
         />
       )}
       {report && (

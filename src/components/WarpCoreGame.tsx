@@ -4,6 +4,7 @@ import { playSound } from '../utils/sounds';
 interface WarpCoreGameProps {
   onComplete: (score: number, perfect: boolean, systemStats: SystemPerformance[], playerName: string, enableHumor: boolean) => void;
   onCancel: () => void;
+  onOpenHelp?: (target: "warp-core") => void;
 }
 
 interface SystemState {
@@ -20,7 +21,7 @@ interface SystemPerformance {
   secondsOutOfRange: number;
 }
 
-export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps) {
+export default function WarpCoreGame({ onComplete, onCancel, onOpenHelp }: WarpCoreGameProps) {
   const [timeRemaining, setTimeRemaining] = useState(30);
   const [isRunning, setIsRunning] = useState(false);
   const [score, setScore] = useState(0);
@@ -179,7 +180,7 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
       const maxScore = 30 * 10 * 4; // 30 seconds * 10 FPS * 4 systems = 1200
       const totalFrames = 30 * 10; // 300 frames total (expected)
       const actualFrames = frameCountRef.current; // Actual frames counted
-      const perfect = score >= maxScore * 0.95;
+      const perfect = score === maxScore; // Require exactly 100% for perfect
       try { playSound(perfect ? 'success' : 'negative'); } catch {}
       
       console.log(`Expected ${totalFrames} frames, got ${actualFrames} frames (${((actualFrames/totalFrames)*100).toFixed(1)}%)`);
@@ -231,14 +232,26 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
             <h2 className="text-2xl font-bold text-amber-300 uppercase tracking-wider">Warp Core Stabilization</h2>
             <p className="text-xs text-slate-400 mt-1">Keep all systems in optimal range (40-60)</p>
           </div>
-          <button
-            onClick={onCancel}
-            className="text-slate-400 hover:text-amber-300 text-2xl leading-none transition-colors"
-            title="Close game"
-            aria-label="Close game"
-          >
-            ×
-          </button>
+          <div className="flex items-center gap-2">
+            {onOpenHelp && (
+              <button
+                onClick={() => onOpenHelp("warp-core")}
+                className="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-amber-300 rounded text-sm transition-colors"
+                title="Open help about Warp Core Diagnostic"
+                aria-label="Open help"
+              >
+                ℹ️
+              </button>
+            )}
+            <button
+              onClick={onCancel}
+              className="text-slate-400 hover:text-amber-300 text-2xl leading-none transition-colors"
+              title="Close game"
+              aria-label="Close game"
+            >
+              ×
+            </button>
+          </div>
         </div>
 
         {/* Game status */}
@@ -305,9 +318,9 @@ export default function WarpCoreGame({ onComplete, onCancel }: WarpCoreGameProps
               Performance: {scorePercentage}%
             </p>
             <p className="text-sm text-slate-400 mb-6">
-              {scorePercentage >= 95 ? '🏆 Perfect stabilization! Commendation recommended.' :
-               scorePercentage >= 80 ? '✅ Excellent work. Systems nominal.' :
-               scorePercentage >= 60 ? '⚠️ Adequate performance. Minor issues noted.' :
+              {scorePercentage === 100 ? '🏆 Perfect stabilization! Commendation recommended.' :
+               scorePercentage >= 90 ? '✅ Excellent work. Systems nominal.' :
+               scorePercentage >= 70 ? '⚠️ Adequate performance. Minor issues noted.' :
                '❌ Critical failures detected. Incident report required.'}
             </p>
             <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">

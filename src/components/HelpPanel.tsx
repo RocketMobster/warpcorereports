@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 
-export default function HelpPanel({ onClose, target }: { onClose: () => void, target?: "templates"|"figure-bias"|"presets"|"produce-reroll"|"references"|"crew-size"|"crew-panel" }) {
+export default function HelpPanel({ onClose, target }: { onClose: () => void, target?: "templates"|"figure-bias"|"presets"|"produce-reroll"|"references"|"crew-size"|"crew-panel"|"warp-core" }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const sectionRefs = {
@@ -10,7 +10,8 @@ export default function HelpPanel({ onClose, target }: { onClose: () => void, ta
     'figure-bias': useRef<HTMLDivElement>(null),
     'references': useRef<HTMLDivElement>(null),
     'crew-size': useRef<HTMLDivElement>(null),
-    'crew-panel': useRef<HTMLDivElement>(null)
+    'crew-panel': useRef<HTMLDivElement>(null),
+    'warp-core': useRef<HTMLDivElement>(null)
   } as const;
 
   const openerRef = useRef<HTMLElement | null>(null);
@@ -134,6 +135,18 @@ export default function HelpPanel({ onClose, target }: { onClose: () => void, ta
               <li><strong>Departments</strong>: Department chips update automatically from the role; filters show subsets for quick review.</li>
               <li><strong>Constraints</strong>: Ship’s Captain requires a senior rank (Lt. Cmdr., Commander, Captain). Roles with “officer” use officer ranks.</li>
               <li><strong>Reset</strong>: Clears all edits and generates a fresh manifest; use with caution.</li>
+            </ul>
+          </div>
+          <div ref={sectionRefs['warp-core']}>
+            <div className="lcars-label">Warp Core Diagnostic Mini-Game</div>
+            <ul className="list-disc pl-6 text-sm space-y-1">
+              <li><strong>Objective</strong>: Keep all four warp core systems (EPS Flow, Plasma Temp, Matter/Antimatter, Dilithium Matrix) within the optimal range (40-60) for 30 seconds.</li>
+              <li><strong>Controls</strong>: Use the ▲ (increase) and ▼ (decrease) buttons to adjust each system's value. Systems drift randomly, requiring constant attention.</li>
+              <li><strong>Performance</strong>: You earn 1 point per frame (10 per second) for each system in the optimal range. Maximum score is 1,200 points (30 seconds × 10 FPS × 4 systems).</li>
+              <li><strong>Perfect Score</strong>: Achieving exactly 100% (1,200/1,200) generates a "perfect performance" report with no anomalies. Any system leaving optimal range, even briefly, will be documented with the exact duration.</li>
+              <li><strong>Settings</strong>: Before starting, enter your name (optional) and toggle humor on/off. These settings affect the generated report's tone and signature.</li>
+              <li><strong>Report Generation</strong>: After the diagnostic completes, your performance is analyzed and a custom engineering report is generated based on which systems failed and for how long. Wait for the report to load before closing the window.</li>
+              <li><strong>Difficulty</strong>: The game runs at 10 FPS with drift changes every 2-4 seconds at ±0.2 per frame, designed to be challenging but achievable with focus.</li>
             </ul>
           </div>
           <div ref={sectionRefs['references']}>
