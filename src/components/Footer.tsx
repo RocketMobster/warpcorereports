@@ -72,6 +72,39 @@ Any other relevant information.`
           </a>
         </div>
       </div>
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-3 opacity-60 text-xs">
+        <span>Built with</span>
+        <a
+          href="https://react.dev"
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1.5 hover:opacity-100 transition-opacity"
+          title="React"
+          aria-label="Built with React"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="2" fill="#61DAFB" stroke="#61DAFB"/>
+            <ellipse cx="12" cy="12" rx="10" ry="4" stroke="#61DAFB" fill="none"/>
+            <ellipse cx="12" cy="12" rx="10" ry="4" stroke="#61DAFB" fill="none" transform="rotate(60 12 12)"/>
+            <ellipse cx="12" cy="12" rx="10" ry="4" stroke="#61DAFB" fill="none" transform="rotate(120 12 12)"/>
+          </svg>
+          <span style={{ color: '#61DAFB' }}>React</span>
+        </a>
+        <span>+</span>
+        <a
+          href="https://tailwindcss.com"
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1.5 hover:opacity-100 transition-opacity"
+          title="Tailwind CSS"
+          aria-label="Built with Tailwind CSS"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 54 33" fill="none">
+            <path d="M13.5 6.75C18 6.75 20.25 9 21 13.5C22.5 9 25.5 6.75 30 6.75C36.75 6.75 40.5 10.5 40.5 16.5V16.5C40.5 22.5 36.75 26.25 30 26.25C25.5 26.25 22.5 24 21 19.5C20.25 24 18 26.25 13.5 26.25C6.75 26.25 3 22.5 3 16.5V16.5C3 10.5 6.75 6.75 13.5 6.75Z" fill="#06B6D4"/>
+          </svg>
+          <span style={{ color: '#06B6D4' }}>Tailwind CSS</span>
+        </a>
+      </div>
     </footer>
   );
 }
