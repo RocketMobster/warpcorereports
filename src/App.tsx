@@ -56,6 +56,12 @@ export default function App() {
   const [showStardateCalc, setShowStardateCalc] = useState(false);
   const [stardateOverride, setStardateOverride] = useState("");
   const [useStardateOverride, setUseStardateOverride] = useState(false);
+  const [stardateMode, setStardateMode] = useState<"simple" | "canon">(() => {
+    try { return localStorage.getItem('wcr_stardate_mode') === 'canon' ? 'canon' : 'simple'; } catch { return 'simple'; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('wcr_stardate_mode', stardateMode); } catch {}
+  }, [stardateMode]);
   // Chart editing state
   const [chartEditingEnabled, setChartEditingEnabled] = useState(false);
   // Toast notification state
@@ -950,6 +956,8 @@ export default function App() {
             onStardateChange={(sd)=>setStardateOverride(sd)}
             useStardateOverride={useStardateOverride}
             onUseStardateToggle={(v)=>setUseStardateOverride(v)}
+            stardateMode={stardateMode}
+            onStardateModeChange={setStardateMode}
             variant="desktop"
           />
         )}
@@ -966,6 +974,8 @@ export default function App() {
               onStardateChange={(sd)=>setStardateOverride(sd)}
               useStardateOverride={useStardateOverride}
               onUseStardateToggle={(v)=>setUseStardateOverride(v)}
+              stardateMode={stardateMode}
+              onStardateModeChange={setStardateMode}
               variant="mobile"
             />
           </div>

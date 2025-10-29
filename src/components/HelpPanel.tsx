@@ -109,11 +109,27 @@ export default function HelpPanel({ onClose, target }: { onClose: () => void, ta
             <div className="lcars-label">Mission Templates</div>
             <ul className="list-disc pl-6 text-sm space-y-1">
               <li><strong>Purpose</strong>: Bias the content domain without changing your numeric controls.</li>
-              <li><strong>Incident</strong>: Favors systems like Deflector, Shields, EPS, SIF, and Transporters; chart types skew to status/impact (bar, gauge, step, etc.).</li>
-              <li><strong>Survey</strong>: Favors Sensors, Subspace comms, Bussard Collectors, etc.; charts skew to trends/distributions (line, scatter, heatmap, pie, radar).</li>
+              <li><strong>Incident</strong>: Emergency response scenario. Favors systems like Deflector, Shields, EPS, SIF, and Transporters; charts skew to status/impact (bar, gauge, step, etc.).</li>
+              <li><strong>Survey</strong>: Exploration and scientific mission. Favors Sensors, Subspace comms, Bussard Collectors, etc.; charts skew to trends/distributions (line, scatter, heatmap, pie, radar).</li>
+              <li><strong>Maintenance</strong>: Scheduled routine work. Favors preventive repairs, system upgrades, calibrations; procedural tone with planned maintenance language.</li>
+              <li><strong>Shakedown</strong>: New ship or post-refit testing. Favors initial systems integration, calibration, breaking-in new equipment; exploratory tone discovering quirks.</li>
               <li><strong>Reroll behavior</strong>: Reroll keeps the chosen template for the current report.</li>
               <li><strong>Shareable settings</strong>: The settings link encodes the template as well.</li>
               <li><strong>Also affects</strong>: Header recipients (To/CC/Submitted To), narrative tone in Abstract/Conclusion, figure captions, and reference sources are gently biased by the template.</li>
+            </ul>
+          </div>
+          <div ref={sectionRefs['figure-bias']}>
+            <div className="lcars-label">Figure Bias</div>
+            <ul className="list-disc pl-6 text-sm space-y-1">
+              <li><strong>Purpose</strong>: Influences which engineering system appears most frequently in generated charts and technical diagrams.</li>
+              <li><strong>Auto</strong>: Automatically selects based on mission template and problem types. Balanced across all systems.</li>
+              <li><strong>Warp</strong>: Favors warp core, plasma injectors, matter/antimatter systems, dilithium chamber charts.</li>
+              <li><strong>EPS</strong>: Favors Electro-Plasma System conduits, power distribution, energy flow diagrams.</li>
+              <li><strong>SIF</strong>: Favors Structural Integrity Field, hull stress, gravimetric shear charts.</li>
+              <li><strong>Deflector</strong>: Favors navigational deflector, subspace field harmonics, particle deflection charts.</li>
+              <li><strong>Transporter</strong>: Favors transporter buffers, pattern integrity, confinement beam charts.</li>
+              <li><strong>Inertial</strong>: Favors inertial dampeners, acceleration compensation, force distribution charts.</li>
+              <li><strong>Independence</strong>: Figure bias works independently of mission templates - you can have a Survey mission with Warp bias, or a Shakedown with Transporter bias.</li>
             </ul>
           </div>
           <div ref={sectionRefs['crew-size']}>

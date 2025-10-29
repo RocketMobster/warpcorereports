@@ -2,6 +2,80 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2025-10-29
+
+### Added
+- **Warp Core Stabilization Mini-Game**: Interactive diagnostic game to test your engineering skills
+  - Real-time system monitoring with four critical systems (Antimatter Containment, Dilithium Chamber, EPS Manifold, Plasma Conduit)
+  - 30-second timed challenge with difficulty scaling
+  - Real-time stability indicator showing overall system health
+  - Performance-based scoring (300 max points = perfect performance)
+  - Automatic report generation based on actual game performance
+  - Custom problem titles and durations from detected anomalies
+  - Player name input and humor toggle for generated reports
+  - Perfect performance detection (100% required, not 95%)
+  - Help modal integration with game instructions
+  - Accessible via "Play Warp Core Game" button in header
+  - Modal closes when opening help to prevent stacking issues
+- **Stardate Calculation Modes**: Choose between two stardate formulas
+  - **Simple Mode** (default): Clean 1000 stardates/year approximation for easy mental math
+  - **Canon Mode**: TrekGuide.com-derived formula (~918.23 stardates/year) based on episode analysis
+  - Mode selector dropdown in Stardate Calculator
+  - Detailed formula documentation with KaTeX-rendered equations
+  - Links to authoritative sources (TrekGuide.com)
+  - Explains production inconsistencies and why both modes exist
+  - Preference saved to localStorage
+  - All report stardates (including references) use selected mode
+- **Mission Templates Expansion**: Two new mission template options
+  - **Maintenance Template**: Routine preventive maintenance context
+    - Engineering/Ops focused recipients
+    - Baseline/calibration language in chart captions
+    - Technical manual and maintenance log journal references
+    - Procedural, scheduled narrative tone
+  - **Shakedown Template**: New ship testing/commissioning context
+    - Shipyard/Certification focused recipients
+    - Integration/characterization language in chart captions
+    - Test protocol and acceptance journal references
+    - Testing/calibration narrative tone
+  - Template-specific text in abstracts and conclusions for all humor levels
+  - Famous author bias updated (both templates favor engineering names)
+- **Bug Reporting**: Direct feedback mechanism
+  - "Report a Bug" button in footer with 🐛 emoji
+  - Pre-fills GitHub issue with app version, template, and user agent
+  - Opens in new tab to GitHub issues page
+- **Desktop Stardate Calculator**: Three-column layout optimization
+  - Stardate calculator now available on desktop view
+  - Balanced three-column grid layout
+  - Consistent with mobile accordion design
+
+### Changed
+- **Perfect Performance Requirements**: Tightened score threshold
+  - Now requires exactly 100% (1200/1200 points) instead of ≥95%
+  - Prevents "perfect" designation when brief anomalies occurred
+  - Updated performance tier display thresholds
+- **Warp Core Game Timing**: Fixed duration tracking accuracy
+  - Separated system tracking from React state updates
+  - Added frame deduplication to prevent React Strict Mode double-counting
+  - Tracks exactly 300 frames in 30 seconds
+  - Drift timer updates no longer cause extra tracking increments
+- **Control Panel Organization**: Improved desktop layout
+  - Moved Rank field after "Add Name to References" checkbox
+  - Added section dividers for better visual grouping
+  - Three-column balanced grid for optimal space usage
+
+### Fixed
+- **Warp Core Game Issues**:
+  - Timer freeze and incorrect score calculation resolved
+  - Game completion handler now fires correctly
+  - Missing stardate in generated reports fixed
+  - Performance duration now accurately tracks gameplay time
+  - Real-time stability indicator updates smoothly
+  - Perfect performance detection works correctly
+- **Modal Stacking**: Help modal no longer appears behind Warp Core game
+- **Control Reordering**: Rank field logically placed after signature reference toggle
+- **Humor Level**: Set to 8 for full humor in abstract and conclusion text
+- **Report Generation Notice**: More prominent timing expectation ("may take a few seconds")
+
 ## [0.3.0] - 2025-10-21
 
 ### Added

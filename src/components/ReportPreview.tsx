@@ -14,7 +14,7 @@ interface ReportPreviewProps {
   onCopyReferences?: () => void;
   onCopyProblemItem?: (index: number) => void;
   onCopyCrewManifest?: () => void;
-  missionTemplate?: "none" | "incident" | "survey";
+  missionTemplate?: "none" | "incident" | "survey" | "maintenance" | "shakedown";
 }
 
 export default function ReportPreview({ report, onReportUpdate, editEnabled = false, onCopyHeaderLine, onCopyAbstract, onCopyProblems, onCopyConclusion, onCopyReferences, onCopyProblemItem, onCopyCrewManifest, missionTemplate = "none" }: ReportPreviewProps) {

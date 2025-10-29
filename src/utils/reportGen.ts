@@ -2,6 +2,7 @@ import { GeneratorConfig, Report, Figure, CrewMember, FigureBias, MissionTemplat
 import { Reference } from "../types";
 import { STARFLEET_VESSELS } from "../types";
 import { pick, randint, POOLS, humorousAside, xorshift32, seedFromConfig, pickCrewName } from "./helpers";
+import { dateToStardate } from "./stardate";
 
 type FigType = "line" | "bar" | "scatter" | "gauge" | "pie" | "area" | "radar" | "heatmap" | "step" | "boxplot";
 
@@ -53,6 +54,46 @@ export function randomRecipient(
         "Federation Science Council",
         "Starfleet Science and Research",
         "Astrometrics Directorate"
+      ]
+    },
+    maintenance: {
+      to: [
+        "Chief Engineer",
+        "Starfleet Maintenance Division",
+        "Engineering Department Head",
+        "Ship's Captain"
+      ],
+      cc: [
+        "First Officer",
+        "Systems Engineering",
+        "Preventive Maintenance Coordinator",
+        "Fleet Operations",
+        "Engineering NCO Staff"
+      ],
+      submittedTo: [
+        "Starfleet Maintenance Division",
+        "Engineering Command",
+        "Fleet Maintenance Board"
+      ]
+    },
+    shakedown: {
+      to: [
+        "Shipyard Superintendent",
+        "Starfleet Acceptance Test Board",
+        "Fleet Systems Integration Command",
+        "New Construction Oversight"
+      ],
+      cc: [
+        "Test Engineering Lead",
+        "Quality Assurance Division",
+        "Commissioning Officer",
+        "Yard Engineering Staff",
+        "Fleet Readiness Board"
+      ],
+      submittedTo: [
+        "Starfleet Acceptance Test Board",
+        "Shipyard Quality Control",
+        "Fleet Integration Command"
       ]
     }
   } as const;
@@ -264,7 +305,27 @@ function makeFigure(i:number, anchorId:string, sys:string, bias:FigureBias, rnd:
         "Signal-to-noise profile across passbands.",
         "Exploratory analysis suitable for further study."
       ];
-      options = options.concat(missionTemplate === 'incident' ? incidentAdds : surveyAdds);
+      const maintenanceAdds = [
+        "Routine maintenance cycle performance baseline.",
+        "Preventive calibration drift analysis.",
+        "Scheduled service interval compliance metrics.",
+        "Pre/post-maintenance comparison data."
+      ];
+      const shakedownAdds = [
+        "Initial integration testing results.",
+        "Post-refit system characterization data.",
+        "Baseline performance establishment metrics.",
+        "New equipment calibration profile."
+      ];
+      if (missionTemplate === 'incident') {
+        options = options.concat(incidentAdds);
+      } else if (missionTemplate === 'survey') {
+        options = options.concat(surveyAdds);
+      } else if (missionTemplate === 'maintenance') {
+        options = options.concat(maintenanceAdds);
+      } else if (missionTemplate === 'shakedown') {
+        options = options.concat(shakedownAdds);
+      }
     }
     // Filter out used captions
     const used = (globalThis as any).__usedFigureCaptions;
@@ -443,6 +504,45 @@ export function generateReport(cfg: GeneratorConfig & { crewManifest?: CrewMembe
         "Federation Science Council",
         "Starfleet Science and Research",
         "Astrometrics Directorate"
+      ]
+    },
+    maintenance: {
+      to: [
+        "Chief Engineer",
+        "Starfleet Maintenance Operations",
+        "Engineering Division",
+        "Ship's Captain"
+      ],
+      cc: [
+        "Operations Officer",
+        "Maintenance Scheduling",
+        "Systems Integration Team",
+        "Quality Assurance"
+      ],
+      submittedTo: [
+        "Starfleet Engineering Command",
+        "Fleet Maintenance Directorate",
+        "Technical Services Bureau"
+      ]
+    },
+    shakedown: {
+      to: [
+        "Starfleet Yard Operations",
+        "Ship's Captain",
+        "Chief Engineer",
+        "Systems Integration Command"
+      ],
+      cc: [
+        "Test and Evaluation Team",
+        "Engineering Division",
+        "Quality Control",
+        "Certification Board",
+        "First Officer"
+      ],
+      submittedTo: [
+        "Fleet Readiness Review Board",
+        "Starfleet Yard Operations",
+        "Ship Certification Authority"
       ]
     }
   } as const;
@@ -763,6 +863,12 @@ export function generateReport(cfg: GeneratorConfig & { crewManifest?: CrewMembe
     const surveyJournals = [
       "Federation Science Quarterly", "Vulcan Science Directorate Bulletin", "Journal of Warp Field Theory", "Subspace Mechanics Digest", "Starfleet Journal of Advanced Propulsion", "Astrometrics Survey Records"
     ];
+    const maintenanceJournals = [
+      "Starfleet Maintenance Protocols", "Engineering Best Practices", "Starfleet Technical Orders", "Systems Calibration Handbook", "Preventive Maintenance Digest", "Starfleet Engineering Manual"
+    ];
+    const shakedownJournals = [
+      "Starfleet Integration Test Protocols", "New Construction Engineering Review", "Shipyard Performance Analysis", "Acceptance Testing Procedures", "Starfleet Systems Commissioning Journal", "Federation Shipwrights Quarterly"
+    ];
     const famousAuthors = [
       "Geordi La Forge", "Montgomery Scott", "Miles O'Brien", "B'Elanna Torres", "Jadzia Dax", "Spock", "Ezri Dax", "Worf", "Barclay", "Trip Tucker", "Hoshi Sato", "Odo", "Quark", "Elim Garak",
       "Seven of Nine", "Beverly Crusher", "Data", "T'Pol", "Christine Chapel", "Nyota Uhura"
@@ -831,18 +937,10 @@ export function generateReport(cfg: GeneratorConfig & { crewManifest?: CrewMembe
       const refYear = randint(2300, maxYear, rnd);
       const refMonth = 1 + Math.floor(rnd() * 12);
       const refDay = 1 + Math.floor(rnd() * 28);
-      // Calculate day of year
-      const daysInMonth = [31,28,31,30,31,30,31,31,30,31,30,31];
-      let dayOfYear = refDay;
-      for (let m = 1; m < refMonth; m++) dayOfYear += daysInMonth[m-1];
-      // Stardate formula
-      let stardateNum;
-      if (refYear < 2323) {
-        stardateNum = 1000 * (refYear - 2323) + (dayOfYear / 365) * 1000;
-      } else {
-        stardateNum = 41000 + (refYear - 2364) * 1000 + (dayOfYear / 365) * 1000;
-      }
-      return stardateNum.toFixed(1);
+      // Build a date and use the proper stardate conversion
+      const refDate = new Date(Date.UTC(refYear, refMonth - 1, refDay));
+      const mode = cfg.stardateMode || 'simple';
+      return dateToStardate(refDate, mode).toFixed(1);
     }
     // Track recent famous authors via localStorage for gentle rotation
     let recent: string[] = [];
@@ -915,11 +1013,13 @@ export function generateReport(cfg: GeneratorConfig & { crewManifest?: CrewMembe
             "Seven of Nine": 0.6, "Beverly Crusher": 0.5, "Data": 0.6, "T'Pol": 0.5, "Christine Chapel": 0.35, "Nyota Uhura": 0.4
           };
           const pool = famousAuthors.filter(name => !recent.includes(name) || rnd() < 0.25);
-          // Template bias: incident → engineers/tactical; survey → science/research
+          // Template bias: incident → engineers/tactical; survey → science/research; maintenance → engineers; shakedown → engineers/test
           function tplBoost(name: string): number {
             if (!cfg.missionTemplate || cfg.missionTemplate === 'none') return 0;
             if (cfg.missionTemplate === 'incident' && /La Forge|O'Brien|Torres|Worf|Scott|Tucker|Odo/i.test(name)) return 0.2;
             if (cfg.missionTemplate === 'survey' && /Spock|Dax|Hoshi/i.test(name)) return 0.2;
+            if (cfg.missionTemplate === 'maintenance' && /La Forge|O'Brien|Torres|Scott|Tucker/i.test(name)) return 0.2;
+            if (cfg.missionTemplate === 'shakedown' && /La Forge|O'Brien|Torres|Scott|Tucker|Barclay/i.test(name)) return 0.2;
             return 0;
           }
           const vesselYears = getVesselYears(vessel) as [number, number];
@@ -958,7 +1058,15 @@ export function generateReport(cfg: GeneratorConfig & { crewManifest?: CrewMembe
       // Template-weighted journal selection
       let journalPool = journals;
       if (cfg.missionTemplate && cfg.missionTemplate !== 'none') {
-        journalPool = cfg.missionTemplate === 'incident' ? journals.concat(incidentJournals).concat(incidentJournals) : journals.concat(surveyJournals).concat(surveyJournals);
+        if (cfg.missionTemplate === 'incident') {
+          journalPool = journals.concat(incidentJournals).concat(incidentJournals);
+        } else if (cfg.missionTemplate === 'survey') {
+          journalPool = journals.concat(surveyJournals).concat(surveyJournals);
+        } else if (cfg.missionTemplate === 'maintenance') {
+          journalPool = journals.concat(maintenanceJournals).concat(maintenanceJournals);
+        } else if (cfg.missionTemplate === 'shakedown') {
+          journalPool = journals.concat(shakedownJournals).concat(shakedownJournals);
+        }
       }
       // If authors include a famous name associated with science/engineering, bias journal domain gently
       const hasFamousScience = authors.some(a => /Spock|Dax|Science/i.test(a));
@@ -1107,17 +1215,23 @@ function generateAbstract(problems: any[], humorLevel: number, rnd: () => number
       ? `During incident response aboard ${vessel}, anomalies were detected in the ${systemList}.`
       : mt === 'survey'
       ? `During survey operations aboard ${vessel}, anomalies were observed in the ${systemList}.`
+      : mt === 'maintenance'
+      ? `During scheduled maintenance procedures aboard ${vessel}, anomalies were identified in the ${systemList}.`
+      : mt === 'shakedown'
+      ? `During shakedown testing aboard ${vessel}, discrepancies were noted in the ${systemList}.`
       : `During routine operations aboard ${vessel}, anomalies were detected in the ${systemList}.`;
     return `${intro} Diagnostic procedures were conducted according to Starfleet Engineering Protocol ${randint(100, 999, rnd)}-${String.fromCharCode(65 + Math.floor(rnd() * 26))}. All issues have been addressed and systems are now functioning within acceptable parameters. Continued monitoring is recommended. Engineering team will review system logs and schedule additional diagnostics as needed.`;
   } else if (humorLevel <= 7) {
     // Balanced, multi-sentence
-    const context = mt === 'incident' ? 'anomalies encountered during incident response' : mt === 'survey' ? 'observations recorded during survey operations' : 'anomalies encountered during standard operations';
+    const context = mt === 'incident' ? 'anomalies encountered during incident response' : mt === 'survey' ? 'observations recorded during survey operations' : mt === 'maintenance' ? 'issues identified during scheduled maintenance' : mt === 'shakedown' ? 'discrepancies noted during shakedown testing' : 'anomalies encountered during standard operations';
     return `This report documents ${problems.length} engineering ${problems.length === 1 ? 'anomaly' : 'anomalies'} in the ${systemList} ${context} aboard ${vessel}. Engineering staff diagnosed and implemented corrective measures with minimal disruption to ship functions. Post-repair diagnostics indicate all systems are now operating within Starfleet specifications. Crew members involved in repairs have logged recommendations for future maintenance. Mission readiness is confirmed.`;
   } else {
     // Absurd, multi-sentence
     const absurdIntros = [
       mt === 'incident' ? `Following a highly exciting red-alert sequence aboard ${vessel}, we experienced issues involving` :
       mt === 'survey' ? `While charting remarkably peaceful star phenomena aboard ${vessel}, we noted curiosities in the` :
+      mt === 'maintenance' ? `During what should have been routine preventive maintenance aboard ${vessel}, we encountered surprises in the` :
+      mt === 'shakedown' ? `While testing systems that are supposed to be brand-new and perfect aboard ${vessel}, we discovered personality traits in the` :
       `What started as a perfectly ordinary day aboard ${vessel} quickly turned into an engineering adventure involving`,
       `In what can only be described as an impressive display of Murphy's Law, the following systems decided to simultaneously express their creativity:`,
       `This report documents what happens when you let ensigns near the`,
@@ -1165,11 +1279,11 @@ function generateConclusion(problems: any[], humorLevel: number, rnd: () => numb
   
   if (humorLevel <= 2) {
     // Dry technical, multi-sentence
-    const tail = mt === 'incident' ? `Incident response logs updated and submitted to Operations.` : mt === 'survey' ? `Survey logs updated and transmitted to Science.` : `Maintenance schedule updated in the engineering database.`;
+    const tail = mt === 'incident' ? `Incident response logs updated and submitted to Operations.` : mt === 'survey' ? `Survey logs updated and transmitted to Science.` : mt === 'maintenance' ? `Maintenance schedule updated in the engineering database.` : mt === 'shakedown' ? `Acceptance test results submitted to shipyard oversight.` : `Maintenance schedule updated in the engineering database.`;
     return `All reported anomalies in the ${systemList} have been successfully addressed. Systems have been recalibrated to operate within Starfleet specifications. It is recommended that routine monitoring continue for the next ${randint(3, 5, rnd)} duty cycles to ensure stabilization. ${tail} Engineering team will review system logs and schedule additional diagnostics as needed.`;
   } else if (humorLevel <= 7) {
     // Balanced, multi-sentence
-    const context = mt === 'incident' ? 'incident post-analysis' : mt === 'survey' ? 'survey follow-up' : 'maintenance follow-up';
+    const context = mt === 'incident' ? 'incident post-analysis' : mt === 'survey' ? 'survey follow-up' : mt === 'maintenance' ? 'preventive maintenance' : mt === 'shakedown' ? 'integration testing' : 'maintenance follow-up';
     return `All identified issues have been resolved and the ${systemList} are now functioning within normal parameters. The engineering team recommends implementing a ${randint(2, 7, rnd)}-hour diagnostic cycle for the affected systems over the next ${randint(3, 10, rnd)} days to ensure long-term stability. Crew members have logged recommendations for future ${context}. Mission operations may proceed without restriction. Continued vigilance is advised.`;
   } else {
     // Absurd, multi-sentence

@@ -39,6 +39,7 @@ export interface GeneratorConfig {
   famousRecentMemory?: number; // LRU size to reduce repeat famous authors (0 = no memory)
   customProblemTitles?: string[]; // Custom problem titles (e.g., from warp core game)
   customProblemDurations?: number[]; // Duration in seconds for each custom problem
+  stardateMode?: StardateMode; // Stardate calculation mode (simple = 1000/year, canon = 918.23/year)
 }
 
 export interface ProblemSection { id: string; title: string; summary: string; }
@@ -84,7 +85,10 @@ export interface CrewMember { name: string; rank: string; role: string; }
 export type FigureBias = "auto" | "warp" | "eps" | "sif" | "deflector" | "transporter" | "inertial";
 
 // Mission Templates bias content selection without changing control values
-export type MissionTemplate = "none" | "incident" | "survey";
+export type MissionTemplate = "none" | "incident" | "survey" | "maintenance" | "shakedown";
 
 // Frequency control for famous/canon author appearances
 export type FamousAuthorFrequency = "off" | "rare" | "occasional" | "frequent";
+
+// Stardate calculation mode
+export type StardateMode = "simple" | "canon";

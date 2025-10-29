@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import StardateCalculator from "./StardateCalculator";
-import { GeneratorConfig, Rank, STARFLEET_VESSELS, FigureBias, MissionTemplate, FamousAuthorFrequency } from "../types";
+import { GeneratorConfig, Rank, STARFLEET_VESSELS, FigureBias, MissionTemplate, FamousAuthorFrequency, StardateMode } from "../types";
 import { pick, hashCode, xorshift32, POOLS, pickCrewName } from "../utils/helpers";
 
 const ranks: Rank[] = [
@@ -27,7 +27,7 @@ function AccordionSection({ title, children, defaultOpen=false, railClass="bg-am
   );
 }
 
-export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate, manifestPanelOpen, onOpenHelp, persistZoom, onTogglePersistZoom, variant = 'desktop', stardateOverride, onStardateChange, useStardateOverride, onUseStardateToggle }: {
+export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate, manifestPanelOpen, onOpenHelp, persistZoom, onTogglePersistZoom, variant = 'desktop', stardateOverride, onStardateChange, useStardateOverride, onUseStardateToggle, stardateMode = 'simple', onStardateModeChange }: {
   onGenerate: (cfg: GeneratorConfig) => void,
   onPreviewCrew: (count?:number, seed?:string)=>void,
   onRegenerate?: () => void,
@@ -39,7 +39,9 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
   stardateOverride?: string,
   onStardateChange?: (sd: string) => void,
   useStardateOverride?: boolean,
-  onUseStardateToggle?: (v: boolean) => void
+  onUseStardateToggle?: (v: boolean) => void,
+  stardateMode?: StardateMode,
+  onStardateModeChange?: (mode: StardateMode) => void
 }) {
   // Semantic text for humor level for screen readers (aria-valuetext)
   const humorValueText = (v: number): string => {
@@ -332,7 +334,8 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
       filterCanonByEra,
       famousAuthorFrequency,
       famousRecentMemory,
-      stardate: ""
+      stardate: "",
+      stardateMode
     };
     onGenerate(cfg);
   };
@@ -521,6 +524,8 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
                   <option value="none">None</option>
                   <option value="incident">Incident</option>
                   <option value="survey">Survey</option>
+                  <option value="maintenance">Maintenance</option>
+                  <option value="shakedown">Shakedown</option>
                 </select>
               </div>
               <div>
@@ -614,7 +619,7 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
                       <span className="lcars-small">Current: {stardateOverride || "—"}</span>
                     )}
                   </div>
-                  <StardateCalculator onStardateChange={onStardateChange} currentStardate={stardateOverride || ""} />
+                  <StardateCalculator onStardateChange={onStardateChange} currentStardate={stardateOverride || ""} stardateMode={stardateMode} onStardateModeChange={onStardateModeChange} />
                 </div>
               )}
             </div>
@@ -682,7 +687,7 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
                   <span className="lcars-small">Current: {stardateOverride || "—"}</span>
                 )}
               </div>
-              <StardateCalculator onStardateChange={onStardateChange} currentStardate={stardateOverride || ""} />
+              <StardateCalculator onStardateChange={onStardateChange} currentStardate={stardateOverride || ""} stardateMode={stardateMode} onStardateModeChange={onStardateModeChange} />
             </div>
           )}
         </div>
@@ -922,6 +927,8 @@ export default function ReportControls({ onGenerate, onPreviewCrew, onRegenerate
               <option value="none">None</option>
               <option value="incident">Incident</option>
               <option value="survey">Survey</option>
+              <option value="maintenance">Maintenance</option>
+              <option value="shakedown">Shakedown</option>
             </select>
         </div>
       </div>

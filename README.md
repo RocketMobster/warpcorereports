@@ -20,17 +20,20 @@ Open the app and click "Produce Report" to generate your first report. Try "Rero
 - **LCARS-Style Interface**: Authentic Star Trek UI design with iconic colors and layout
 - **Dynamic Report Generation**: Create unique engineering reports with randomized but coherent technical content
 - **Interactive Charts**: Visualize system statuses with LCARS-style charts and diagrams
+- **Warp Core Stabilization Mini-Game**: Interactive diagnostic game where you stabilize a fluctuating warp core by solving technical prompts, with scoring and report generation
 - **Crew Manifest Integration**: Include crew references in your reports with drag-and-drop reordering
 - **Multiple Export Formats**: Download reports as PDF, DOCX, or TXT
 - **Sharing Capabilities**: Share reports via email or shareable links
 - **Customization Options**: Control report length, detail level, and humor level
 - **Seed-Based Generation**: Use seeds for reproducible reports
+- **Stardate Calculation Modes**: Choose between Simple Mode (1000 stardates/year) or Canon Mode (918.23 stardates/year based on TrekGuide.com analysis)
 - **LCARS Sound Effects**: Authentic Star Trek computer sounds for UI interactions
 - **Chart Editing**: Modify charts and visualizations with interactive editing tools
 - **Text-Only Zoom**: Scales typography (0.8ז1.4�) while keeping charts visually stable
-- **Mission Templates**: Choose Incident or Survey templates to bias content and chart types
+- **Mission Templates**: Choose from Incident, Survey, Maintenance, or Shakedown templates to bias content and chart types
 - **Presets**: One-click combinations for common report scenarios
 - **Accessibility Features**: Full keyboard navigation, screen reader support, high contrast mode, and verbose announcement controls
+- **Bug Reporting**: Quick access to GitHub issue creation with pre-filled templates
 - **Privacy-First**: All processing happens locally in your browser�no data sent to external servers
 
 ## Usage Guide
@@ -87,7 +90,7 @@ Open the app and click "Produce Report" to generate your first report. Try "Rero
 #### Presets vs Mission Templates vs Figure Bias
 
 - **Presets**: One-click combinations that set numbers and toggles (problem count, detail level, graphs on/off and count, humor) and a default figure bias. You can tweak after selecting; the preset badge will show "Modified".
-- **Mission Templates**: Content bias without changing your numeric controls. Incident favors systems like Deflector, Shields, EPS, SIF, Transporters and nudges charts to status/impact (bar, gauge, step, etc.). Survey favors Sensors/Subspace/Bussard and nudges charts to trends/distributions (line, scatter, heatmap, pie, radar). Reroll keeps the chosen template.
+- **Mission Templates**: Content bias without changing your numeric controls. Incident favors systems like Deflector, Shields, EPS, SIF, Transporters and nudges charts to status/impact (bar, gauge, step, etc.). Survey favors Sensors/Subspace/Bussard and nudges charts to trends/distributions (line, scatter, heatmap, pie, radar). Maintenance focuses on routine systems diagnostics and preventive work. Shakedown emphasizes new systems testing and verification procedures. Reroll keeps the chosen template.
 - **Figure Bias**: A global nudge for chart type selection (Warp/EPS/SIF/Deflector/etc.). If a Mission Template is set, its nudges apply first; figure bias further refines the choice. "Auto" lets the generator choose based on each problem's system context.
 
 #### References & Canon Names
@@ -107,9 +110,22 @@ For quick exploration and fine-tuned randomness:
 #### Stardate Calculator
 
 - Access the Stardate controls from the mobile "Stardate" accordion or desktop controls
-- Convert Calendar Date ? Stardate using common TOS/TNG-era approximations
+- Convert Calendar Date ↔ Stardate using two calculation modes:
+  - **Simple Mode** (default): 1000 stardates per year for easy mental math
+  - **Canon Mode**: 918.23186 stardates per year based on TrekGuide.com episode analysis of "Data's Day" and "Homestead"
+- Toggle between modes to see how your stardate changes
 - Enable "Use Stardate in Report" to apply the calculator's stardate to generated reports
 - Click the info icon to view formulas (rendered with KaTeX for clarity)
+
+#### Warp Core Stabilization Mini-Game
+
+- Access from the "Play Warp Core Game" button in the controls
+- Stabilize a fluctuating warp core by answering technical prompts within the time limit
+- Three difficulty levels: Ensign (easy), Lieutenant (medium), Commander (hard)
+- Scoring based on correct answers, response time, and remaining stability
+- Perfect scores require 100% accuracy and finishing before timer expires
+- Generate a full engineering report from your game session results
+- Leaderboard tracks your best performances (stored locally)
 
 ### Sharing Your Report
 
@@ -167,6 +183,17 @@ If you notice an accessibility gap, open an issue with the label `a11y` describi
 For detailed accessibility implementation notes, see [A11Y_NOTES.md](A11Y_NOTES.md).
 
 ## Recent Updates
+
+### v0.4.0 (October 2025)
+- **Added**: Warp Core Stabilization Mini-Game with scoring, leaderboard, and report generation
+- **Added**: Stardate Calculation Modes - Simple (1000/year) and Canon (918.23/year) based on TrekGuide.com
+- **Added**: Mission Templates expansion - Maintenance and Shakedown templates
+- **Added**: Desktop Stardate Calculator with mode toggle and detailed formula explanations
+- **Added**: Bug Reporting button with pre-filled GitHub issue templates
+- **Changed**: Perfect score threshold now 90+ (was 95+) to balance difficulty
+- **Changed**: Warp Core game timing tweaks for smoother gameplay
+- **Fixed**: Warp Core game issues with timer precision and stability mechanics
+- **Fixed**: Modal stacking z-index conflicts
 
 ### v0.3.0 (October 2025)
 - **Added**: DEV mode structural overlay with keyboard shortcut (Ctrl+Alt+L)
