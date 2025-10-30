@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.1] - 2025-10-30
+
+### Added
+- **Footer Technology Badges**: Added "Built with React + Tailwind CSS" badges with official logos and links
+
 ## [0.4.0] - 2025-10-29
 
 ### Added
